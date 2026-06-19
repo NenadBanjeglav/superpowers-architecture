@@ -1,6 +1,8 @@
 ---
 name: brainstorming
-description: Use before feature work, architecture changes, behavior changes, new components, or unclear requirements. Explores intent, Design Understanding, module shape, interfaces, seams, adapters, data flow, and test surface before planning or implementation.
+description: Use before make/build/create/implement requests for apps, sites, tools, components, UI, APIs, workflows, feature work, architecture changes, behavior changes, or unclear requirements; writes a local design spec before planning or coding
+metadata:
+  priority: 100
 ---
 
 # Brainstorming
@@ -8,6 +10,12 @@ description: Use before feature work, architecture changes, behavior changes, ne
 <HARD-GATE>
 Do not write implementation code, scaffold production files, create implementation plans, or invoke implementation skills until the written local spec has been approved by the user.
 </HARD-GATE>
+
+## Priority
+
+Use this skill before frontend, app-builder, design, framework, implementation, or coding skills for generic app/site/tool/component prompts such as `Let's make a react todo list`.
+
+Only skip this skill when the user explicitly provides an approved implementation plan path, explicitly asks to bypass design/spec work, or asks for a narrow mechanical edit that already has complete requirements.
 
 ## Inputs
 
@@ -29,6 +37,8 @@ Before asking design questions:
 ## Adaptive Architecture Grilling
 
 Ask one concise question at a time until the design is decision-complete. Increase rigor when language, module ownership, interfaces, seams, adapters, data flow, test surface, or acceptance criteria are unclear.
+
+For terse or generic prompts such as `Let's make a react todo list`, ask at least one design question before writing the spec. Do not draft the spec entirely from assumptions.
 
 Use the vocabulary from `codebase-design`:
 

@@ -1,11 +1,15 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use Superpowers Architecture skills before design, planning, implementation, debugging, or review work
+description: Use when starting a conversation to route make/build/create/implement app, site, tool, component, UI, API, workflow, or behavior requests to brainstorming before frontend, design, framework, or implementation skills
+metadata:
+  priority: 100
 ---
 
 # Using Superpowers Architecture
 
 Superpowers Architecture is an architecture-first software development workflow for Codex.
+
+Before selecting any other skill, apply this priority rule: for any request to make, build, create, implement, add, change, or design a feature, app, site, tool, component, workflow, UI, API, or behavior, use `brainstorming` before frontend, app-builder, design, framework, implementation, or coding skills unless the user explicitly provides an approved implementation plan path or explicitly asks to bypass design/spec work.
 
 If a Superpowers Architecture skill applies to the task, use it before acting. For feature work, behavior changes, architecture changes, or unclear requirements, the default phase flow is:
 
@@ -18,7 +22,7 @@ Generated downstream files under `docs/superpowers/**` are local developer worki
 
 ## Required Skill Discipline
 
-- If the user asks for feature work, behavior changes, architecture changes, or unclear requirements, use `brainstorming` before implementation.
+- If the user asks for feature work, behavior changes, architecture changes, generic app/site/tool/component creation, or unclear requirements, use `brainstorming` before implementation or frontend/app-builder skills.
 - If the user asks to debug a bug, failing test, broken build, regression, or unexpected behavior, use `systematic-debugging` before proposing a fix.
 - If the user provides an approved spec path and asks for a plan, use `writing-plans`.
 - If the user provides an approved plan path and asks for implementation, use `subagent-driven-development` for mostly independent tasks or `executing-plans` for linear execution.
@@ -26,7 +30,7 @@ Generated downstream files under `docs/superpowers/**` are local developer worki
 
 ## Skill Priority
 
-1. `brainstorming` for new feature work, behavior changes, architecture changes, or unclear requirements.
+1. `brainstorming` for new feature work, behavior changes, architecture changes, generic make/build/create/implement requests, or unclear requirements. This outranks frontend, app-builder, design, framework, implementation, and coding skills unless an approved implementation plan path is provided or the user explicitly asks to bypass design/spec work.
 2. `systematic-debugging` for bugs, failing tests, broken builds, regressions, or unexpected behavior.
 3. `writing-plans` only when an approved local spec path is available.
 4. `subagent-driven-development` or `executing-plans` only when an approved local plan path is available.

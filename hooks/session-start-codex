@@ -20,6 +20,6 @@ escape_for_json() {
 }
 
 using_superpowers_escaped="$(escape_for_json "$using_superpowers_content")"
-session_context="<EXTREMELY_IMPORTANT>\nYou have Superpowers Architecture.\n\nBelow is the full content of your 'superpowers-architecture:using-superpowers' skill. For all other skills, follow Codex skill-loading behavior and the instructions in that skill.\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have Superpowers Architecture.\n\nBefore selecting any other skill, apply Superpowers Architecture skill priority. For any request to make, build, create, implement, add, change, or design a feature, app, site, tool, component, workflow, UI, API, or behavior, the brainstorming skill has priority over frontend, app-builder, design, framework, implementation, and coding skills unless the user explicitly provides an approved implementation plan path or explicitly asks to bypass design/spec work. Do not write implementation code or scaffold production files for those requests before an approved local spec exists.\n\nBelow is the full content of your 'superpowers-architecture:using-superpowers' skill. For all other skills, follow Codex skill-loading behavior and the instructions in that skill.\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
 
 printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
