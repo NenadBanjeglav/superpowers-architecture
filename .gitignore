@@ -1,0 +1,10 @@
+# Local Superpowers working state
+docs/superpowers/
+
+# Local worktree scratch space
+.worktrees/
+worktrees/
+
+# Operating system noise
+.DS_Store
+Thumbs.db

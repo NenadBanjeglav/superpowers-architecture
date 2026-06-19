@@ -1,0 +1,23 @@
+{
+  "name": "superpowers-architecture",
+  "version": "0.1.0",
+  "description": "Architecture-first Superpowers workflow for Codex",
+  "private": false,
+  "license": "MIT",
+  "homepage": "https://github.com/NenadBanjeglav/superpowers-architecture",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NenadBanjeglav/superpowers-architecture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NenadBanjeglav/superpowers-architecture/issues"
+  },
+  "keywords": [
+    "codex",
+    "agent-skills",
+    "superpowers",
+    "architecture",
+    "tdd",
+    "developer-tools"
+  ]
+}
