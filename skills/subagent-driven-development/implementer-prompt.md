@@ -47,6 +47,18 @@ Subagent (general-purpose):
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.
 
+    ## Pre-Commit Local Docs Guard
+
+    Before committing, inspect staged files. If any path under
+    `docs/superpowers/` is staged, unstage it unless the user explicitly
+    requested committing local Superpowers docs. Never commit local
+    Superpowers docs by default.
+
+    ```bash
+    git diff --cached --name-only
+    git restore --staged docs/superpowers 2>/dev/null || true
+    ```
+
     ## Code Organization
 
     You reason best about code you can hold in context at once, and your edits are more

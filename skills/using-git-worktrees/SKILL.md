@@ -75,17 +75,19 @@ Follow this priority order. Explicit user preference always beats observed files
 
 3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
 
-#### Safety Verification (project-local directories only)
+## Ignore Safety
 
-**MUST verify directory is ignored before creating worktree:**
+Before creating a project-local worktree directory, verify it is ignored.
 
-```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```
+If it is not ignored, stop and ask the user whether to:
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+1. add the ignore rule themselves,
+2. allow you to edit `.gitignore`, or
+3. choose a different worktree location.
 
-**Why critical:** Prevents accidentally committing worktree contents to repository.
+Do not edit or commit `.gitignore` automatically.
+
+If `docs/superpowers/**` exists and is tracked or unignored, warn the user before implementation. Do not modify `.gitignore` automatically.
 
 #### Create the Worktree
 
@@ -151,7 +153,7 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Add to .gitignore + commit |
+| Directory not ignored | Stop and ask user how to proceed |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |

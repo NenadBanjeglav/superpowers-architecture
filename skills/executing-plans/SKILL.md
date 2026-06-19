@@ -5,6 +5,21 @@ description: Use when you have a written implementation plan to execute in a sep
 
 # Executing Plans
 
+## Required Input
+
+Start only from a written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context.
+
+## Local Superpowers Docs Guard
+
+Before each task commit, inspect staged files. If any path under `docs/superpowers/` is staged, unstage it unless the user explicitly requested committing local Superpowers docs.
+
+Use:
+
+```bash
+git diff --cached --name-only
+git restore --staged docs/superpowers 2>/dev/null || true
+```
+
 ## Overview
 
 Load plan, review critically, execute all tasks, report when complete.
@@ -34,7 +49,7 @@ For each task:
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+- Follow that skill to run final verification, confirm local Superpowers docs are not staged, summarize commits, changed files, tests, and risks, then stop unless the user explicitly asks to push, merge, open a PR, or discard work.
 
 ## When to Stop and Ask for Help
 

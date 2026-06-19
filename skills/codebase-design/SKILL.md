@@ -112,3 +112,14 @@ Good interfaces make testing natural:
 
 - **Deepening a cluster given its dependencies** — see [DEEPENING.md](DEEPENING.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [DESIGN-IT-TWICE.md](DESIGN-IT-TWICE.md): spin up parallel sub-agents to design the interface several radically different ways, then compare on depth, locality, and seam placement.
+
+## Integration With Superpowers Architecture
+
+Use this skill during:
+
+- `brainstorming` to shape Design Understanding.
+- `writing-plans` to preserve module, interface, seam, adapter, data-flow, and test-surface decisions.
+- implementation review to detect shallow modules, leaky seams, weak adapters, poor locality, and tests that cross the wrong interface.
+- architecture review to produce markdown-only local reviews under `docs/superpowers/architecture-reviews/`.
+
+Do not create `context.md` or ADRs from this skill in this plugin. Put feature-specific architecture decisions into the local spec or architecture review.

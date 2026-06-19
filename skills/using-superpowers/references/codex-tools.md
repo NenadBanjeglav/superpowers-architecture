@@ -44,8 +44,8 @@ cell by `cell_id`; it is not the spawned-agent result tool.
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create worktrees should detect their environment with read-only
+git commands before proceeding:
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -54,19 +54,17 @@ BRANCH=$(git branch --show-current)
 ```
 
 - `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `BRANCH` empty → detached HEAD (externally managed workspace)
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+See `using-git-worktrees` Step 0 for how that skill uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+By default, `finishing-a-development-branch` is summary-only on Codex:
+run final verification, confirm local Superpowers docs are not staged,
+summarize commits, changed files, tests, and risks, then stop.
 
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
-- **"Hand off to local"** — transfers work to the user's local checkout
-
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+Only push, merge, open a PR, or discard work when the user explicitly asks.
+For those explicit requests, use normal git safety checks first, including
+checking branch state, staged files, and whether the workspace is externally
+managed or detached.
