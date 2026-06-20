@@ -26,6 +26,7 @@ Claude Code project instructions normally live in `CLAUDE.md`. This repository u
 Claude Code can load personal and project skills, and plugin skills are namespaced by plugin name. For this plugin, Claude Code invocations use:
 
 ```text
+/superpowers-architecture:project-setup
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development

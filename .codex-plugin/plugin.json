@@ -30,6 +30,7 @@
       "Write"
     ],
     "defaultPrompt": [
+      "I am starting a new project and want to create AGENTS.md, CONTEXT.md, and a high-level roadmap.",
       "I have a feature idea and want to design it before implementation.",
       "Help me turn this ticket into an architecture-aware implementation plan."
     ],

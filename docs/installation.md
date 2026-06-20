@@ -8,7 +8,7 @@ Superpowers Architecture is installable as a skills.sh package:
 npx skills@latest add NenadBanjeglav/superpowers-architecture
 ```
 
-The CLI discovers the skills from this repository's `skills/<name>/SKILL.md` layout. It should list 15 skills.
+The CLI discovers the skills from this repository's `skills/<name>/SKILL.md` layout. It should list 16 skills.
 
 To preview the available skills without installing:
 
@@ -71,6 +71,7 @@ In Claude Code:
 Invoke skills with the plugin namespace:
 
 ```text
+/superpowers-architecture:project-setup
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development

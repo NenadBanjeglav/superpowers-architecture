@@ -18,6 +18,7 @@ skills/<skill>/SKILL.md
 Claude plugin skills are namespaced:
 
 ```text
+/superpowers-architecture:project-setup
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development

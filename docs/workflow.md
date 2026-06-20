@@ -2,6 +2,14 @@
 
 Superpowers Architecture uses phase-separated fresh sessions by default.
 
+## 0. Project Setup
+
+Use `project-setup` when starting a new project from scratch or establishing project-wide operating instructions and context.
+
+The agent inspects the repo, asks one question at a time, writes root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, asks for review, and stops. It does not write specs, plans, app code, CI, or deployment configuration.
+
+After approval, start a fresh `brainstorming` session for one roadmap task.
+
 ## 1. Brainstorming
 
 Use `brainstorming` for feature work, behavior changes, architecture changes, new components, or unclear requirements.
@@ -33,6 +41,7 @@ With skills.sh or Codex skill installs, use the skill names directly.
 With the Claude Code plugin, use the plugin namespace:
 
 ```text
+/superpowers-architecture:project-setup
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development
