@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Claude Code SessionStart hook for Superpowers Architecture.
+
+set -euo pipefail
+
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+else
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+fi
+
+SKILL_PATH="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
+
+using_superpowers_content="$(cat "${SKILL_PATH}" 2>&1 || printf 'Error reading using-superpowers skill')"
+
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
+using_superpowers_escaped="$(escape_for_json "$using_superpowers_content")"
+session_context="Superpowers Architecture is available in this Claude Code session.\n\nWorkflow priority: for any request to make, build, create, implement, add, change, or design a feature, app, site, tool, component, workflow, UI, API, or behavior, the brainstorming skill has priority over frontend, app-builder, design, framework, implementation, and coding skills unless the user explicitly provides an approved implementation plan path or explicitly asks to bypass design/spec work. Implementation starts only after an approved local spec and written implementation plan exist.\n\nBelow is the full content of the 'superpowers-architecture:using-superpowers' skill. For all other skills, follow Claude Code skill-loading behavior and the instructions in that skill.\n\n${using_superpowers_escaped}"
+
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
