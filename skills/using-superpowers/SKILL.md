@@ -68,7 +68,7 @@ Do not continue from project setup to spec, from spec to plan, or from plan to i
 At the end of project setup, stop and provide the first-`brainstorming` handoff prompt.
 At the end of brainstorming, stop and describe what will happen after spec approval under the selected Phase Mode.
 At the end of planning, stop and describe what will happen after plan approval under the selected Phase Mode.
-Implementation starts only from an explicit plan path.
+Implementation starts only from an explicit approved plan path.
 
 ## Local Working State
 
