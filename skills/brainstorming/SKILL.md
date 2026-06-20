@@ -29,10 +29,21 @@ Before asking design questions:
 
 - Inspect the repo shape enough to identify affected backend, frontend, mobile, shared, or infrastructure areas.
 - Search for related modules, tests, and prior patterns.
+- If root `CONTEXT.md` exists, read it before asking feature questions and use it as durable project context.
+- If root `CONTEXT.md` does not exist, continue without it and keep task-specific language and architecture context inside the local spec.
 - Search local `docs/superpowers/specs/` and `docs/superpowers/architecture-reviews/` if they exist.
-- Do not create or update `context.md`.
+- Do not create `CONTEXT.md` from this skill.
+- Do not create or update lowercase `context.md`.
 - Do not create ADRs.
 - Do not offer or use a visual companion.
+
+## Project Context Updates
+
+If root `CONTEXT.md` exists and feature design reveals durable changes to domain language, architecture, stack decisions, verification, risks, or roadmap direction, propose a concise update and wait for user approval before editing `CONTEXT.md`.
+
+When approved, update the existing statement in place. Do not append feature history, task transcripts, implementation-plan detail, or completed-work logs.
+
+If root `CONTEXT.md` does not exist, do not create it from `brainstorming`; keep the discovered context in the local design spec under `docs/superpowers/specs/`.
 
 ## Adaptive Architecture Grilling
 

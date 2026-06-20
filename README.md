@@ -6,6 +6,8 @@ Architecture-first Superpowers for Codex and Claude Code.
 
 Superpowers Architecture is a shared skill pack and runtime plugin for developers who want an agent to agree on design before it writes plans or code. It keeps the best parts of Superpowers - specs, plans, TDD, reviews, worktree-aware implementation, task commits, and final verification - and strengthens the first phase with module, interface, seam, adapter, data-flow, and test-surface thinking.
 
+For a brand-new project, start with `project-setup`. It creates root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap before any feature-level specs or implementation plans exist.
+
 ## Why
 
 Coding agents often jump from a rough ticket to implementation. That is fast, but it can create shallow modules, unclear interfaces, brittle tests, and rework.
@@ -60,6 +62,7 @@ In Claude Code, add the marketplace and install the plugin:
 Then invoke skills with the plugin namespace:
 
 ```text
+/superpowers-architecture:project-setup
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development
@@ -74,12 +77,13 @@ claude --plugin-dir .
 
 ## Workflow
 
-1. `brainstorming` writes and reviews a local architecture-aware spec.
-2. Start a fresh session.
-3. `writing-plans` writes and reviews an implementation plan from the approved spec.
-4. Start a fresh session.
-5. `subagent-driven-development` or `executing-plans` implements the plan with TDD, reviews, and code commits.
-6. `finishing-a-development-branch` verifies and summarizes the work.
+1. Optional for new projects: `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap.
+2. `brainstorming` writes and reviews a local architecture-aware spec for a selected roadmap task or feature.
+3. Start a fresh session.
+4. `writing-plans` writes and reviews an implementation plan from the approved spec.
+5. Start a fresh session.
+6. `subagent-driven-development` or `executing-plans` implements the plan with TDD, reviews, and code commits.
+7. `finishing-a-development-branch` verifies and summarizes the work.
 
 ## Local Working Docs
 
@@ -93,6 +97,7 @@ Do not commit them unless you explicitly choose to.
 
 ## What Changed From Superpowers
 
+- Documentation-first project setup for new downstream projects.
 - Architecture-first brainstorming.
 - Design Understanding in specs.
 - Phase-separated fresh sessions.

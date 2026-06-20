@@ -25,7 +25,7 @@ If `docs/superpowers/specs/2026-06-19-superpowers-architecture-release-plan-desi
 - V1 remains Codex-first.
 - Post-V1 Claude Plugin Availability may add `.claude-plugin/`, `hooks/hooks.json`, and `hooks/session-start-claude` only as runtime adapters over the shared skill core.
 - Keep the layout future-compatible with Claude by using shared `skills/<skill>/SKILL.md` files and resources inside the plugin root.
-- Do not create or maintain `context.md`.
+- Do not create or maintain plugin-local lowercase `context.md` or root `CONTEXT.md`; `project-setup` may create uppercase root `CONTEXT.md` only in downstream projects.
 - Do not create ADR files.
 - Do not include Matt issue, PRD, or triage flows.
 - Remove visual companion behavior from shipped brainstorming behavior.
@@ -37,10 +37,11 @@ If `docs/superpowers/specs/2026-06-19-superpowers-architecture-release-plan-desi
 
 The finished plugin should enforce phase-separated fresh sessions:
 
-1. `brainstorming` writes a local architecture-aware spec and stops.
-2. A fresh session runs `writing-plans` from an approved spec path and stops.
-3. A fresh session runs `subagent-driven-development` or `executing-plans` from an approved plan path.
-4. `finishing-a-development-branch` verifies and summarizes without pushing, merging, opening PRs, or discarding work unless explicitly asked.
+1. For new downstream projects, `project-setup` writes root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, then stops.
+2. `brainstorming` writes a local architecture-aware spec and stops.
+3. A fresh session runs `writing-plans` from an approved spec path and stops.
+4. A fresh session runs `subagent-driven-development` or `executing-plans` from an approved plan path.
+5. `finishing-a-development-branch` verifies and summarizes without pushing, merging, opening PRs, or discarding work unless explicitly asked.
 
 Generated downstream docs are local developer working state:
 
@@ -56,6 +57,7 @@ Use the hybrid adaptation model:
 
 - Copy upstream Superpowers skills first to preserve operational machinery.
 - Clean-rewrite high-policy skills:
+  - `project-setup`
   - `using-superpowers`
   - `brainstorming`
   - `writing-plans`

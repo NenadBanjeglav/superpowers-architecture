@@ -15,6 +15,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Keep skills shared and future-compatible with Claude by using `skills/<skill>/SKILL.md`.
 - Shared skill workflow policy must stay runtime-neutral; host-specific tool and install details belong in runtime adapters or `skills/using-superpowers/references/`.
 - Do not create or maintain `context.md`.
+- `project-setup` may instruct downstream projects to create uppercase root `CONTEXT.md`; this plugin repository must not create its own root `CONTEXT.md`.
 - Do not create ADR files.
 - Do not include Matt issue, PRD, or triage flows.
 - Remove visual companion behavior from active brainstorming behavior.
@@ -22,7 +23,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 
 ## Work Guidance
 
-- Clean-rewrite high-policy skills only when changing workflow policy: `using-superpowers`, `brainstorming`, `writing-plans`, `finishing-a-development-branch`, and `improve-codebase-architecture`.
+- Clean-rewrite high-policy skills only when changing workflow policy: `project-setup`, `using-superpowers`, `brainstorming`, `writing-plans`, `finishing-a-development-branch`, and `improve-codebase-architecture`.
 - `brainstorming` grilling questions must put the question first and immediately follow it with a concrete recommendation and short reason.
 - Patch operational skills narrowly: `subagent-driven-development`, `executing-plans`, `using-git-worktrees`, review, debugging, and TDD skills.
 - Keep helper scripts executable and aligned with their owning skill docs.

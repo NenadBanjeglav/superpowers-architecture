@@ -117,6 +117,7 @@ Good interfaces make testing natural:
 
 Use this skill during:
 
+- `project-setup` to establish project-wide domain language, modules, interfaces, seams, adapters, data flow, and test surface in downstream `CONTEXT.md`.
 - `brainstorming` to shape Design Understanding.
 - `writing-plans` to preserve module, interface, seam, adapter, data-flow, and test-surface decisions.
 - implementation review to detect shallow modules, leaky seams, weak adapters, poor locality, and tests that cross the wrong interface.
