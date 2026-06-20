@@ -1,6 +1,9 @@
 # Local Superpowers working state
 docs/superpowers/
 
+# Local agent working contract
+/AGENTS.md
+
 # Local worktree scratch space
 .worktrees/
 worktrees/

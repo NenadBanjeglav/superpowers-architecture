@@ -8,11 +8,11 @@ Public documentation and local Superpowers working docs.
 
 - Owns committed docs under `docs/`.
 - `docs/superpowers/AGENTS.md` owns ignored local generated specs, plans, and architecture reviews.
-- Root AGENTS.md owns product identity, V1 boundaries, and release validation.
+- Root AGENTS.md owns product identity, release boundaries, and release validation.
 
 ## Local Contracts
 
-- Public docs must describe V1 as Codex-first.
+- Public docs must describe Codex and Claude Code support as shipped runtime adapters over the shared skill core.
 - Public docs must clearly distinguish skills.sh, Codex plugin, and Claude Code plugin install paths.
 - Mentions of removed upstream behavior must be descriptive, not active instructions.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
@@ -26,7 +26,7 @@ Public documentation and local Superpowers working docs.
 ## Verification
 
 - Review Markdown links and headings after documentation edits.
-- For Claude-related docs, confirm they do not conflict with the Codex-first V1 boundary.
+- For runtime-related docs, confirm Codex and Claude Code guidance stays aligned with shared skill policy.
 
 ## Child DOX Index
 

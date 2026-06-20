@@ -8,7 +8,7 @@ assignees: ""
 
 ## Environment
 
-- Codex version:
+- Runtime and version:
 - Plugin version:
 - Operating system:
 

@@ -1,6 +1,6 @@
-# Claude Plugin Availability
+# Claude Code Plugin
 
-Superpowers Architecture ships Claude Code support as a post-V1 runtime adapter over the shared skill core.
+Superpowers Architecture ships Claude Code support as a runtime adapter over the shared skill core.
 
 The Claude adapter includes:
 
@@ -35,4 +35,4 @@ claude --bg --name "spa-<phase>-<artifact-slug>" "<canonical next-phase prompt>"
 
 If background agents are unavailable or disabled, the agent prints a quoting-safe command and the canonical prompt instead of launching automatically.
 
-The first Claude release does not add Claude agents, MCP servers, LSP servers, monitors, output styles, or runtime-specific skill forks.
+The Claude adapter does not add Claude agents, MCP servers, LSP servers, monitors, output styles, or runtime-specific skill forks.
