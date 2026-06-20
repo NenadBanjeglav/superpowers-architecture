@@ -167,7 +167,7 @@ Project setup written to `AGENTS.md`, `CONTEXT.md`, and any child `AGENTS.md` fi
 
 ## Terminal State
 
-After the user approves project setup, stop. Do not invoke `brainstorming` in the same session unless the user has already selected same-session mode in durable project instructions.
+After the user approves project setup, stop. Do not invoke `brainstorming` in the same session.
 
 Print:
 
