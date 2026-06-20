@@ -1,5 +1,7 @@
 # Superpowers Architecture
 
+[![skills.sh](https://skills.sh/b/NenadBanjeglav/superpowers-architecture)](https://skills.sh/NenadBanjeglav/superpowers-architecture)
+
 Architecture-first Superpowers for Codex.
 
 Superpowers Architecture is a Codex skill pack for developers who want an agent to agree on design before it writes plans or code. It keeps the best parts of Superpowers - specs, plans, TDD, reviews, worktree-aware implementation, task commits, and final verification - and strengthens the first phase with module, interface, seam, adapter, data-flow, and test-surface thinking.
@@ -20,17 +22,27 @@ This plugin makes the agent stop first and build **Design Understanding**:
 
 ## Quickstart
 
-V1 targets Codex.
+Install the skills package:
 
-1. Clone this repo:
+```bash
+npx skills@latest add NenadBanjeglav/superpowers-architecture
+```
 
-   ```powershell
-   git clone https://github.com/NenadBanjeglav/superpowers-architecture.git
-   ```
+Then pick the skills you want and the agent you want to install them into. For a non-interactive Codex install of all skills:
 
-2. Install it through your local Codex plugin workflow.
-3. Start a fresh Codex session.
-4. Say: `I want to design a feature before implementation.`
+```bash
+npx skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -a codex -g -y
+```
+
+On Windows PowerShell, use `npx.cmd` if the `npx.ps1` shim is blocked by execution policy:
+
+```powershell
+npx.cmd skills@latest add NenadBanjeglav/superpowers-architecture
+```
+
+Start a fresh Codex session and say: `I want to design a feature before implementation.`
+
+The `npx skills` flow installs the shared skills. The Codex plugin manifest and session-start hook are also included in this repo for Codex plugin packaging, but those require Codex's plugin install or marketplace flow.
 
 ## Workflow
 

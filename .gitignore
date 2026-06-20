@@ -5,6 +5,10 @@ docs/superpowers/
 .worktrees/
 worktrees/
 
+# Local skills.sh install output
+.agents/
+skills-lock.json
+
 # Operating system noise
 .DS_Store
 Thumbs.db

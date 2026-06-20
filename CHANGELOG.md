@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Documents the `npx skills@latest add NenadBanjeglav/superpowers-architecture` installation path.
+
 ## 0.1.0
 
 - Initial Codex-first public release.
