@@ -38,6 +38,16 @@ Before asking design questions:
 
 Ask one concise question at a time until the design is decision-complete. Increase rigor when language, module ownership, interfaces, seams, adapters, data flow, test surface, or acceptance criteria are unclear.
 
+Every design question must be immediately followed by the agent's recommendation. Use this shape:
+
+```text
+<one concise question>
+
+Recommendation: <the option or answer the agent recommends, with a short reason.>
+```
+
+The recommendation must be concrete and opinionated enough for the user to accept, reject, or modify. It must not replace waiting for the user's answer.
+
 For terse or generic prompts such as `Let's make a react todo list`, ask at least one design question before writing the spec. Do not draft the spec entirely from assumptions.
 
 Use the vocabulary from `codebase-design`:
