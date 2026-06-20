@@ -15,7 +15,7 @@ Plugin hook manifests and hook runner scripts.
 ## Local Contracts
 
 - Keep Codex and Claude hook manifests separate: `hooks/hooks-codex.json` uses `${PLUGIN_ROOT}`, and `hooks/hooks.json` uses `${CLAUDE_PLUGIN_ROOT}`.
-- Hook scripts must preserve phase-separated workflow priority by injecting `using-superpowers` context without creating implementation files.
+- Hook scripts must inject `using-superpowers` startup context that preserves Superpowers Architecture workflow priority, including the selected Phase Mode / first-brainstorming phase-mode decision, without creating implementation files.
 - Claude hook output must follow Claude Code hook JSON, including `hookSpecificOutput.hookEventName`.
 
 ## Work Guidance
