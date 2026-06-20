@@ -7,9 +7,11 @@ metadata:
 
 # Using Superpowers Architecture
 
-Superpowers Architecture is an architecture-first software development workflow for Codex.
+Superpowers Architecture is an architecture-first software development workflow for agentic coding runtimes.
 
 Before selecting any other skill, apply this priority rule: for any request to make, build, create, implement, add, change, or design a feature, app, site, tool, component, workflow, UI, API, or behavior, use `brainstorming` before frontend, app-builder, design, framework, implementation, or coding skills unless the user explicitly provides an approved implementation plan path or explicitly asks to bypass design/spec work.
+
+Host-specific tool names live in `references/`. Use `codex-tools.md` on Codex and `claude-code-tools.md` on Claude Code. Keep shared workflow policy runtime-neutral.
 
 If a Superpowers Architecture skill applies to the task, use it before acting. For feature work, behavior changes, architecture changes, or unclear requirements, the default phase flow is:
 
