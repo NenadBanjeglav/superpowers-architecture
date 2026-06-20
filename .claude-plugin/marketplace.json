@@ -7,10 +7,7 @@
   "plugins": [
     {
       "name": "superpowers-architecture",
-      "source": {
-        "source": "github",
-        "repo": "NenadBanjeglav/superpowers-architecture"
-      },
+      "source": "./",
       "description": "Architecture-first Superpowers workflow for Claude Code.",
       "author": {
         "name": "Nenad Banjeglav"
