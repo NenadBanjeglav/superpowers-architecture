@@ -35,13 +35,14 @@ If `docs/superpowers/specs/2026-06-19-superpowers-architecture-release-plan-desi
 
 ## Workflow Goals
 
-The finished plugin should enforce phase-separated fresh sessions:
+The finished plugin should enforce written review gates and establish a phase mode during the first `brainstorming` session:
 
 1. For new downstream projects, `project-setup` writes root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, then stops.
-2. `brainstorming` writes a local architecture-aware spec and stops.
-3. A fresh session runs `writing-plans` from an approved spec path and stops.
-4. A fresh session runs `subagent-driven-development` or `executing-plans` from an approved plan path.
-5. `finishing-a-development-branch` verifies and summarizes without pushing, merging, opening PRs, or discarding work unless explicitly asked.
+2. The first `brainstorming` session asks whether approved next steps should start in automated fresh sessions or continue in the same session, records the selected mode, writes a local architecture-aware spec, and stops at the written-spec review gate.
+3. In automated fresh-session mode, approval starts `writing-plans` in a fresh Codex or Claude session from the approved spec path; in same-session mode, approval continues to `writing-plans` in the current session after re-reading the approved spec and codebase from disk.
+4. `writing-plans` writes a local implementation plan from the approved spec and stops at the written-plan review gate.
+5. In automated fresh-session mode, plan approval starts `subagent-driven-development` or `executing-plans` in a fresh Codex or Claude session from the approved plan path; in same-session mode, plan approval continues to implementation in the current session after re-reading the approved plan, referenced spec, and codebase from disk.
+6. `finishing-a-development-branch` verifies and summarizes without pushing, merging, opening PRs, or discarding work unless explicitly asked.
 
 Generated downstream docs are local developer working state:
 
@@ -204,6 +205,8 @@ Default section order:
 ## User Preferences
 
 When the user requests a durable behavior change, record it here or in the relevant child AGENTS.md
+
+- During first `brainstorming`, ask whether approved next steps should use automated fresh sessions or same-session continuation; follow that selected phase mode for later approval gates.
 
 ## Child DOX Index
 

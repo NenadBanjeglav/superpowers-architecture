@@ -172,9 +172,9 @@ After the user approves project setup, stop. Do not invoke `brainstorming` in th
 Print:
 
 ```text
-Start a fresh session in the same checkout and say:
+Start a first brainstorming session in the same checkout and say:
 
 Use the brainstorming skill to write a design spec for the next roadmap task from `CONTEXT.md`.
 
-Read `AGENTS.md`, `CONTEXT.md`, and the codebase fresh. Store the spec under docs/superpowers/specs/. Stop after the written spec is reviewed.
+Read `AGENTS.md`, `CONTEXT.md`, and the codebase fresh. During this first brainstorming session, establish whether approved next steps should use automated fresh sessions or same-session continuation. Store the spec under docs/superpowers/specs/. Stop after the written spec is reviewed.
 ```

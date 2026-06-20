@@ -1,13 +1,13 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when executing written implementation plans linearly after written plan approval
 ---
 
 # Executing Plans
 
 ## Required Input
 
-Start only from a written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context.
+Start only from an approved written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
 
 ## Local Superpowers Docs Guard
 
@@ -26,7 +26,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** If subagents are available and the plan's tasks are mostly independent, use superpowers:subagent-driven-development instead of this skill. Use this skill for linear plans, no-subagent runtimes, or tasks that require tight sequential control.
 
 ## The Process
 

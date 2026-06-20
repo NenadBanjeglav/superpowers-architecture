@@ -9,4 +9,4 @@ It adapts ideas, workflow structure, and selected MIT-licensed material from:
 
 This project is not affiliated with, endorsed by, or maintained by either upstream project.
 
-The goal is a narrower workflow: Architecture-first Superpowers for Codex and Claude Code, with Design Understanding, local specs and plans, worktree-aware implementation, code commits, TDD, reviews, and phase-separated fresh sessions.
+The goal is a narrower workflow: Architecture-first Superpowers for Codex and Claude Code, with Design Understanding, local specs and plans, selected phase handoffs, worktree-aware implementation, code commits, TDD, reviews, and verified summaries.

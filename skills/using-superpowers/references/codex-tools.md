@@ -58,6 +58,42 @@ BRANCH=$(git branch --show-current)
 
 See `using-git-worktrees` Step 0 for how that skill uses these signals.
 
+## Automated Phase Handoff In Codex App
+
+When automated fresh-session mode is selected and an artifact has been explicitly approved, Codex may start the next phase in a fresh project thread.
+
+Use this adapter only after approval. Do not use `fork_thread` for phase handoff because the fresh phase session must not inherit the current conversation history.
+
+Adapter steps:
+
+1. Build the canonical next-phase prompt from the approved artifact path.
+2. Call `list_projects` and select the current repository's project.
+3. Call `create_thread` with the canonical prompt and a project target in the local checkout:
+
+```json
+{
+  "prompt": "<canonical next-phase prompt>",
+  "target": {
+    "type": "project",
+    "projectId": "<projectId from list_projects>",
+    "environment": {
+      "type": "local"
+    }
+  }
+}
+```
+
+4. If the tool returns a `threadId`, report the new thread and emit the Codex App created-thread directive required by the host.
+5. If project-scoped creation is unavailable, print the canonical prompt unchanged as the manual fallback and stop.
+
+The canonical prompt must include:
+
+- the next skill to use
+- the approved spec or plan path
+- instruction to read `AGENTS.md`, optional root `CONTEXT.md`, the approved artifact, and the codebase fresh
+- the output path for the next artifact when planning
+- the local docs guard: never stage or commit `docs/superpowers/**` unless explicitly asked
+
 ## Codex App Finishing
 
 By default, `finishing-a-development-branch` is summary-only on Codex:

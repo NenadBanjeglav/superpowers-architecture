@@ -1,6 +1,6 @@
 # Workflow
 
-Superpowers Architecture uses phase-separated fresh sessions by default.
+Superpowers Architecture uses written review gates and a selected Phase Mode.
 
 ## 0. Project Setup
 
@@ -8,25 +8,35 @@ Use `project-setup` when starting a new project from scratch or establishing pro
 
 The agent inspects the repo, asks one question at a time, writes root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, asks for review, and stops. It does not write specs, plans, app code, CI, or deployment configuration.
 
-After approval, start a fresh `brainstorming` session for one roadmap task.
+After approval, start a first `brainstorming` session for one roadmap task. That first `brainstorming` session establishes the Phase Mode when no durable preference already exists.
 
 ## 1. Brainstorming
 
 Use `brainstorming` for feature work, behavior changes, architecture changes, new components, or unclear requirements.
 
-The agent inspects the repo, asks one question at a time, builds Design Understanding, writes a local spec under `docs/superpowers/specs/`, asks for review, and stops.
+Before writing the spec, the first `brainstorming` session asks whether approvals should use automated fresh-session mode or same-session mode when no durable preference already exists.
+
+The agent inspects the repo, asks one question at a time, builds Design Understanding, records the selected Phase Mode in the spec, writes a local spec under `docs/superpowers/specs/`, asks for review, and stops.
 
 ## 2. Planning
 
-Start a fresh session with the approved spec path.
+Planning starts only after written spec approval.
 
-The agent reads the spec and repo from disk, writes an exact implementation plan under `docs/superpowers/plans/`, asks for review, and stops.
+In automated fresh-session mode, approval starts a fresh Codex or Claude planning session when a runtime adapter is available. If no adapter is available, the agent prints the exact planning prompt or command.
+
+In same-session mode, approval continues to `writing-plans` in the current conversation after the agent re-reads the approved spec and codebase from disk.
+
+The planning phase writes an exact implementation plan under `docs/superpowers/plans/`, asks for review, and stops.
 
 ## 3. Implementation
 
-Start a fresh session with the approved plan path.
+Implementation starts only after written plan approval.
 
-Use `subagent-driven-development` for mostly independent tasks or `executing-plans` for linear execution. Implementation commits code per task and must not commit `docs/superpowers/**` unless explicitly requested.
+In automated fresh-session mode, approval starts a fresh Codex or Claude implementation session when a runtime adapter is available. If no adapter is available, the agent prints the exact implementation prompt or command.
+
+In same-session mode, approval continues to `subagent-driven-development` or `executing-plans` in the current conversation after the agent re-reads the approved plan, referenced spec, and codebase from disk.
+
+Implementation commits code per task and must not commit `docs/superpowers/**` unless explicitly requested.
 
 ## 4. Finish
 
@@ -47,6 +57,14 @@ With the Claude Code plugin, use the plugin namespace:
 /superpowers-architecture:subagent-driven-development
 /superpowers-architecture:finishing-a-development-branch
 ```
+
+## Runtime Handoffs
+
+Codex App automated fresh-session handoff uses a fresh project thread when the Codex thread tool is available.
+
+Claude Code automated fresh-session handoff uses `claude --bg --name "<name>" "<prompt>"` when Claude Code background agents are available.
+
+Both adapters fall back to printing the exact next-phase prompt or command when automatic launch is unavailable, disabled, or unsafe.
 
 ## Worktrees
 

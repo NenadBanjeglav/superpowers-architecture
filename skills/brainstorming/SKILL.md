@@ -45,6 +45,25 @@ When approved, update the existing statement in place. Do not append feature his
 
 If root `CONTEXT.md` does not exist, do not create it from `brainstorming`; keep the discovered context in the local design spec under `docs/superpowers/specs/`.
 
+## Phase Mode Selection
+
+Before writing the first spec for a project or task chain, determine the Phase Mode.
+
+1. Read root `AGENTS.md` and optional root `CONTEXT.md` for an existing Superpowers Architecture phase-mode preference.
+2. If a durable preference exists, use it and do not ask again.
+3. If no durable preference exists, ask this question before writing the spec:
+
+```text
+Do you want approvals in this workflow to start each next phase in a fresh session automatically, or should I continue through planning and implementation in this same session after each approval?
+
+Recommendation: Use automated fresh sessions for larger or architecture-sensitive work because each phase starts with clean context from the approved artifact. Use same-session mode only when speed matters more than context isolation.
+```
+
+4. Record the selected Phase Mode in the spec.
+5. If root `AGENTS.md` exists and the user wants this preference to be durable for the project, propose a concrete root `AGENTS.md` update that records the selected Phase Mode explicitly, including the selected mode, the reason, and that the preference is durable for later approval gates. Wait for user approval before editing the downstream root `AGENTS.md`. Keep any existing generic first-`brainstorming` preference bullet intact unless the downstream project owner explicitly asks to replace it.
+
+If no root `AGENTS.md` exists, do not create one from `brainstorming`; record the selected Phase Mode only in the spec and current workflow chain.
+
 ## Adaptive Architecture Grilling
 
 Ask one concise question at a time until the design is decision-complete. Increase rigor when language, module ownership, interfaces, seams, adapters, data flow, test surface, or acceptance criteria are unclear.
@@ -99,6 +118,12 @@ Every spec must include:
 <One or two sentence definition.>
 _Avoid_: <rejected synonyms>
 
+### Phase Mode
+
+**Selected Mode:** <Automated fresh-session mode or same-session mode>
+**Reason:** <one sentence>
+**Durability:** <Durable in root AGENTS.md or workflow-chain-local>
+
 ### Architecture
 
 - **Modules involved:**
@@ -131,25 +156,38 @@ These files are local developer working state. Do not commit them. If `docs/supe
 
 ## Written Spec Review Gate
 
-After writing the spec, ask:
+After writing the spec, ask one of these based on the selected Phase Mode.
+
+Automated fresh-session mode:
 
 ```text
-Spec written to `<path>`. Please review it before planning. I will not create an implementation plan until you approve this written spec.
+Spec written to `<path>`. Please review it before planning. After you approve it, I will start planning in a fresh session using the selected automated fresh-session mode.
+```
+
+Same-session mode:
+
+```text
+Spec written to `<path>`. Please review it before planning. After you approve it, I will continue to planning in this same session using the selected same-session mode.
 ```
 
 If the user requests changes, update the spec and repeat the review gate.
 
 ## Terminal State
 
-After the user approves the written spec, stop. Do not invoke `writing-plans` in the same session.
+After writing the spec, stop. Do not invoke `writing-plans` until the user explicitly approves the written spec.
+
+After approval:
+
+- In automated fresh-session mode, build the canonical planning prompt, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
+- In same-session mode, announce that approval is noted, use `writing-plans`, re-read the approved spec and codebase from disk, write the implementation plan, and stop at the written-plan review gate.
+
+Canonical planning prompt:
 
 Print:
 
 ```text
-Start a fresh session in the same checkout and say:
-
 Use the writing-plans skill to create an implementation plan from:
 <absolute-or-repo-relative-spec-path>
 
-Read the spec and codebase fresh. Save the plan under docs/superpowers/plans/. Stop after the written plan is reviewed.
+Read the spec and codebase fresh. Save the plan under docs/superpowers/plans/. Stop after the written plan is reviewed. Do not stage or commit docs/superpowers/** unless I explicitly ask.
 ```

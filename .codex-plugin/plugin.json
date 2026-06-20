@@ -1,6 +1,6 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Architecture-first Superpowers for Codex: design understanding, local specs, exact plans, TDD, reviews, and verified implementation.",
   "author": {
     "name": "Nenad Banjeglav"
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Superpowers Architecture",
     "shortDescription": "Architecture-first Superpowers workflow for Codex",
-    "longDescription": "Use Superpowers Architecture to guide Codex through Design Understanding, local specs, exact implementation plans, TDD, reviews, and final verification summaries.",
+    "longDescription": "Use Superpowers Architecture to guide Codex through Design Understanding, local specs, exact implementation plans, selected phase handoffs, TDD, reviews, and final verification summaries.",
     "developerName": "Nenad Banjeglav",
     "category": "Coding",
     "capabilities": [
@@ -32,7 +32,7 @@
     "defaultPrompt": [
       "I am starting a new project and want to create AGENTS.md, CONTEXT.md, and a high-level roadmap.",
       "I have a feature idea and want to design it before implementation.",
-      "Help me turn this ticket into an architecture-aware implementation plan."
+      "I want approvals to start each next phase in fresh sessions automatically."
     ],
     "websiteURL": "https://github.com/NenadBanjeglav/superpowers-architecture",
     "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",

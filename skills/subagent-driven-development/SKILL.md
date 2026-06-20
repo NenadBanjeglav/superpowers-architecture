@@ -1,13 +1,13 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with mostly independent tasks in a fresh or same session after written plan approval
 ---
 
 # Subagent-Driven Development
 
 ## Required Input
 
-Start only from a written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context.
+Start only from an approved written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
 
 ## Local Superpowers Docs Guard
 
@@ -37,22 +37,23 @@ ledger and the tool results carry the record.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
+    "Subagents available?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Have implementation plan?" -> "brainstorm first" [label="no - no approved plan yet"];
+    "Tasks mostly independent?" -> "Subagents available?" [label="yes"];
+    "Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or linear"];
+    "Subagents available?" -> "subagent-driven-development" [label="yes"];
+    "Subagents available?" -> "executing-plans" [label="no - subagents unavailable"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
+**vs. Executing Plans (linear or no-subagent fallback):**
+- Mostly tightly coupled tasks or plans that need sequential control
+- Falls back here when subagents are unavailable
 - Fresh subagent per task (no context pollution)
 - Review after each task (spec compliance + code quality), broad review at the end
 - Faster iteration (no human-in-loop between tasks)
@@ -430,4 +431,4 @@ Done!
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers:executing-plans** - Use for linear implementation plans or when subagents are unavailable.

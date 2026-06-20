@@ -1,8 +1,8 @@
 {
   "name": "superpowers-architecture",
   "displayName": "Superpowers Architecture",
-  "version": "0.3.0",
-  "description": "Architecture-first Superpowers for Claude Code: design understanding, local specs, exact plans, TDD, reviews, and verified implementation.",
+  "version": "0.4.0",
+  "description": "Architecture-first Superpowers for Claude Code: design understanding, local specs, exact plans, selected phase handoffs, TDD, reviews, and verified implementation.",
   "author": {
     "name": "Nenad Banjeglav"
   },
