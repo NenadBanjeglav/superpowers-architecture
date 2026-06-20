@@ -1,0 +1,20 @@
+{
+  "name": "superpowers-architecture",
+  "owner": {
+    "name": "Nenad Banjeglav"
+  },
+  "description": "Claude Code marketplace for Superpowers Architecture.",
+  "plugins": [
+    {
+      "name": "superpowers-architecture",
+      "source": {
+        "source": "github",
+        "repo": "NenadBanjeglav/superpowers-architecture"
+      },
+      "description": "Architecture-first Superpowers workflow for Claude Code.",
+      "author": {
+        "name": "Nenad Banjeglav"
+      }
+    }
+  ]
+}
