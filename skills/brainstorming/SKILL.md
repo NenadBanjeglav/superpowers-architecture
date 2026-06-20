@@ -60,7 +60,7 @@ Recommendation: Use automated fresh sessions for larger or architecture-sensitiv
 ```
 
 4. Record the selected Phase Mode in the spec.
-5. If root `AGENTS.md` exists and the user wants this preference to be durable for the project, propose a concrete root `AGENTS.md` update that records the selected Phase Mode explicitly, including the selected mode, the reason, and that the preference is durable for later approval gates. Keep any existing generic first-`brainstorming` preference bullet intact unless the downstream project owner explicitly asks to replace it.
+5. If root `AGENTS.md` exists and the user wants this preference to be durable for the project, propose a concrete root `AGENTS.md` update that records the selected Phase Mode explicitly, including the selected mode, the reason, and that the preference is durable for later approval gates. Wait for user approval before editing the downstream root `AGENTS.md`. Keep any existing generic first-`brainstorming` preference bullet intact unless the downstream project owner explicitly asks to replace it.
 
 If no root `AGENTS.md` exists, do not create one from `brainstorming`; record the selected Phase Mode only in the spec and current workflow chain.
 
