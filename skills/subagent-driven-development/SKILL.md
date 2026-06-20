@@ -1,13 +1,13 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with mostly independent tasks in a fresh or same session after written plan approval
 ---
 
 # Subagent-Driven Development
 
 ## Required Input
 
-Start only from a written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context.
+Start only from an approved written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
 
 ## Local Superpowers Docs Guard
 
@@ -430,4 +430,4 @@ Done!
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers:executing-plans** - Use for linear implementation plans or when subagents are unavailable.

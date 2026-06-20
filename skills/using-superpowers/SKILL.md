@@ -16,15 +16,30 @@ Before selecting any other skill, apply these priority rules:
 
 Host-specific tool names live in `references/`. Use `codex-tools.md` on Codex and `claude-code-tools.md` on Claude Code. Keep shared workflow policy runtime-neutral.
 
-If a Superpowers Architecture skill applies to the task, use it before acting. The default phase flow is:
+If a Superpowers Architecture skill applies to the task, use it before acting. The selected phase flow is:
 
-1. For new downstream projects, `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and the initial high-level roadmap.
-2. In a fresh session after project setup, `brainstorming` writes and reviews a local architecture-aware spec for a selected roadmap task or other feature request.
-3. A fresh session uses `writing-plans` to create an exact implementation plan from that spec.
-4. A fresh session uses `subagent-driven-development` or `executing-plans` to implement from that plan.
-5. `finishing-a-development-branch` verifies and summarizes the completed branch.
+1. For new downstream projects, `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, then stops.
+2. The first `brainstorming` session for a project or task chain establishes the Phase Mode when no durable preference already exists, writes and reviews a local architecture-aware spec, and stops at the written-spec review gate.
+3. After written spec approval, the selected Phase Mode controls planning:
+   - Automated fresh-session mode starts `writing-plans` in a fresh Codex or Claude session from the approved spec path when a runtime adapter is available.
+   - Same-session mode invokes `writing-plans` in the current conversation after re-reading the approved spec and codebase from disk.
+4. `writing-plans` writes and reviews an exact implementation plan from the approved spec, then stops at the written-plan review gate.
+5. After written plan approval, the selected Phase Mode controls implementation:
+   - Automated fresh-session mode starts `subagent-driven-development` or `executing-plans` in a fresh Codex or Claude session from the approved plan path when a runtime adapter is available.
+   - Same-session mode invokes `subagent-driven-development` or `executing-plans` in the current conversation after re-reading the approved plan, referenced spec, and codebase from disk.
+6. `finishing-a-development-branch` verifies and summarizes the completed branch without pushing, merging, opening PRs, discarding work, or publishing unless the user explicitly asks.
 
 Generated downstream files under `docs/superpowers/**` are local developer working state. Do not stage or commit them unless the user explicitly asks.
+
+## Phase Modes
+
+**Phase Mode** is the workflow progression rule selected during the first `brainstorming` session when no durable preference already exists.
+
+**Automated fresh-session mode** means artifact approval starts the next phase in a fresh Codex or Claude session using a self-contained prompt. If the runtime adapter is unavailable, disabled, or unsafe, print the exact fallback prompt or command and stop.
+
+**Same-session mode** means artifact approval continues to the next phase in the current conversation. Before producing the next artifact or implementation, re-read `AGENTS.md`, optional root `CONTEXT.md`, the approved artifact, and relevant codebase files from disk. Ignore prior design conclusions unless they are present in the approved artifact or project docs.
+
+Approval must be explicit in both modes. Never infer approval from silence, from artifact creation, or from a request to continue that does not identify the approved artifact.
 
 ## Required Skill Discipline
 
@@ -48,12 +63,11 @@ Generated downstream files under `docs/superpowers/**` are local developer worki
 
 ## Phase Boundaries
 
-Do not automatically continue from project setup to spec, from spec to plan, or from plan to implementation in the same session.
+Do not continue from project setup to spec, from spec to plan, or from plan to implementation before the relevant written artifact is approved.
 
-At the end of project setup, stop and provide the exact next-session prompt for brainstorming.
-Do not treat selected roadmap-item work as part of project setup; that work starts in the next fresh brainstorming session.
-At the end of brainstorming, stop and provide the exact next-session prompt for planning.
-At the end of planning, stop and provide the exact next-session prompt for implementation.
+At the end of project setup, stop and provide the first-`brainstorming` handoff prompt.
+At the end of brainstorming, stop and describe what will happen after spec approval under the selected Phase Mode.
+At the end of planning, stop and describe what will happen after plan approval under the selected Phase Mode.
 Implementation starts only from an explicit plan path.
 
 ## Local Working State
@@ -76,7 +90,7 @@ The shipped skills must not actively instruct agents to:
 - create or maintain ADRs
 - run Matt issue, PRD, or triage flows
 - commit generated specs or plans automatically
-- continue from project setup to spec, spec to plan, or plan to implementation in the same session
+- continue from project setup to spec, spec to plan, or plan to implementation before the relevant written artifact is approved
 - present the default merge, PR, or discard finish menu
 
 Mentions of removed behavior are allowed in public docs only when they clearly describe what this plugin removed from upstream workflows. `project-setup` may create uppercase root `CONTEXT.md` only in downstream projects.
