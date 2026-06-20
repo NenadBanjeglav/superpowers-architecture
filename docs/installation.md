@@ -68,7 +68,7 @@ If the runtime cannot launch a fresh session automatically, Superpowers Architec
 
 ## Claude Code Plugin
 
-Claude support is shipped through a post-V1 Claude Code plugin adapter over the same shared skills.
+Claude support is shipped through a Claude Code plugin adapter over the same shared skills.
 
 In Claude Code:
 

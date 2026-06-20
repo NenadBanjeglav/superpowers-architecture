@@ -12,7 +12,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 
 ## Local Contracts
 
-- Keep skills shared and future-compatible with Claude by using `skills/<skill>/SKILL.md`.
+- Keep skills shared across Codex and Claude Code by using `skills/<skill>/SKILL.md`.
 - Shared skill workflow policy must stay runtime-neutral; host-specific tool and install details belong in runtime adapters or `skills/using-superpowers/references/`.
 - Do not create or maintain `context.md`.
 - `project-setup` may instruct downstream projects to create uppercase root `CONTEXT.md`; this plugin repository must not create its own root `CONTEXT.md`.

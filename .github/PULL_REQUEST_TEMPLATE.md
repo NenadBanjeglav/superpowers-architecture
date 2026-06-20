@@ -12,7 +12,7 @@ If this changes skill behavior, include before/after examples or transcripts.
 
 ## Manual Testing
 
-- [ ] Codex plugin manifest JSON parses
+- [ ] Codex and Claude plugin manifest JSON parses
 - [ ] Skill frontmatter includes `name` and `description`
 - [ ] Removed active behavior is absent from shipped skills
 - [ ] Clean-session smoke test performed when behavior changed

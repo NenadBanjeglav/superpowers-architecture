@@ -13,9 +13,9 @@ Claude Code plugin and marketplace metadata for Superpowers Architecture.
 
 ## Local Contracts
 
-- Claude packaging is a post-V1 runtime adapter over shared `skills/<skill>/SKILL.md`.
+- Claude packaging is a shipped runtime adapter over shared `skills/<skill>/SKILL.md`.
 - Use plugin name `superpowers-architecture` so skills invoke as `/superpowers-architecture:<skill>`.
-- Do not duplicate skills, add Claude agents, MCP servers, LSP servers, monitors, or output styles in the first Claude release.
+- Do not duplicate skills, add Claude agents, MCP servers, LSP servers, monitors, or output styles unless the user explicitly expands the release scope.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
 - Marketplace metadata must not imply official affiliation with Anthropic, Claude, `obra/superpowers`, or `mattpocock/skills`.
 
