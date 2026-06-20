@@ -1,6 +1,6 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Architecture-first Superpowers for Codex: design understanding, local specs, exact plans, TDD, reviews, and verified implementation.",
   "author": {
     "name": "Nenad Banjeglav"

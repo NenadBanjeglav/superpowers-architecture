@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Adds a documentation-first `project-setup` skill for downstream project inception.
 - Routes new-project setup requests to `project-setup` before `brainstorming`.
