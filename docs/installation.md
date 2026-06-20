@@ -57,6 +57,15 @@ git clone https://github.com/NenadBanjeglav/superpowers-architecture.git
 - Package name: `superpowers-architecture`
 - Repository: `https://github.com/NenadBanjeglav/superpowers-architecture`
 
+## Runtime Handoff Prerequisites
+
+Automated fresh-session mode depends on runtime support.
+
+- Codex App: use a project-scoped fresh thread when thread creation tools are available.
+- Claude Code: use background agents with `claude --bg --name "<name>" "<prompt>"`.
+
+If the runtime cannot launch a fresh session automatically, Superpowers Architecture prints the exact next-phase prompt or command and stops.
+
 ## Claude Code Plugin
 
 Claude support is shipped through a post-V1 Claude Code plugin adapter over the same shared skills.

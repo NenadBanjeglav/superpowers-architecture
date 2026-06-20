@@ -31,4 +31,4 @@ Tests should verify behavior through the correct interface. If a test must reach
 
 ## Planning Impact
 
-Implementation plans should preserve the Design Understanding decisions from the approved spec. If implementation reveals the design is wrong, stop and revise the spec or plan rather than silently changing architecture.
+Implementation plans should preserve the Design Understanding decisions from the approved spec. This is true whether later phases run in automated fresh-session mode or same-session mode: the approved artifact is the source of truth, and the next phase must re-read it from disk. If implementation reveals the design is wrong, stop and revise the spec or plan rather than silently changing architecture.

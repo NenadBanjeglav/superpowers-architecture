@@ -78,12 +78,13 @@ claude --plugin-dir .
 ## Workflow
 
 1. Optional for new projects: `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap.
-2. `brainstorming` writes and reviews a local architecture-aware spec for a selected roadmap task or feature.
-3. Start a fresh session.
-4. `writing-plans` writes and reviews an implementation plan from the approved spec.
-5. Start a fresh session.
-6. `subagent-driven-development` or `executing-plans` implements the plan with TDD, reviews, and code commits.
-7. `finishing-a-development-branch` verifies and summarizes the work.
+2. First `brainstorming` for a roadmap task or feature asks whether later approvals should use automated fresh-session mode or same-session mode when no durable preference already exists.
+3. `brainstorming` writes and reviews a local architecture-aware spec under `docs/superpowers/specs/`.
+4. After written spec approval, automated fresh-session mode starts planning in a fresh Codex or Claude session; same-session mode continues to planning in the current conversation after re-reading the spec and codebase from disk.
+5. `writing-plans` writes and reviews an exact implementation plan under `docs/superpowers/plans/`.
+6. After written plan approval, automated fresh-session mode starts implementation in a fresh Codex or Claude session; same-session mode continues to implementation in the current conversation after re-reading the plan, referenced spec, and codebase from disk.
+7. `subagent-driven-development` or `executing-plans` implements the plan with TDD, reviews, and code commits.
+8. `finishing-a-development-branch` verifies and summarizes the work.
 
 ## Local Working Docs
 
@@ -100,7 +101,7 @@ Do not commit them unless you explicitly choose to.
 - Documentation-first project setup for new downstream projects.
 - Architecture-first brainstorming.
 - Design Understanding in specs.
-- Phase-separated fresh sessions.
+- Phase-mode handoffs: automated fresh sessions or same-session continuation after explicit approval.
 - Local specs, plans, and architecture reviews.
 - Worktree workflow remains available.
 - Code commits remain allowed during implementation.
