@@ -25,8 +25,6 @@ Claude plugin skills are namespaced:
 /superpowers-architecture:finishing-a-development-branch
 ```
 
-The first Claude release does not add Claude agents, MCP servers, LSP servers, monitors, output styles, or runtime-specific skill forks.
-
 ## Automated Fresh-Session Handoff
 
 Claude Code automated fresh-session mode uses background sessions:
@@ -36,3 +34,5 @@ claude --bg --name "spa-<phase>-<artifact-slug>" "<canonical next-phase prompt>"
 ```
 
 If background agents are unavailable or disabled, the agent prints a quoting-safe command and the canonical prompt instead of launching automatically.
+
+The first Claude release does not add Claude agents, MCP servers, LSP servers, monitors, output styles, or runtime-specific skill forks.
