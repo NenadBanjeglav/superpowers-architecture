@@ -2,7 +2,14 @@
 
 ## Unreleased
 
-- Documents the `npx skills@latest add NenadBanjeglav/superpowers-architecture` installation path.
+- No unreleased changes.
+
+## 0.2.0
+
+- Adds Claude Code plugin metadata and marketplace catalog.
+- Adds a Claude SessionStart hook adapter that injects Superpowers Architecture startup context through Claude hook JSON.
+- Adds Claude Code tool mapping guidance while keeping shared skill policy runtime-neutral.
+- Documents skills.sh, Codex plugin, and Claude Code plugin install paths separately.
 
 ## 0.1.0
 

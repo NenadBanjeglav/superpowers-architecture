@@ -26,6 +26,19 @@ Use `finishing-a-development-branch` after implementation tasks are complete.
 
 The agent runs final verification, checks git status, confirms local Superpowers docs are not staged, summarizes commits, changed files, tests, satisfied requirements, and residual risks, then stops.
 
+## Invocation Names
+
+With skills.sh or Codex skill installs, use the skill names directly.
+
+With the Claude Code plugin, use the plugin namespace:
+
+```text
+/superpowers-architecture:brainstorming
+/superpowers-architecture:writing-plans
+/superpowers-architecture:subagent-driven-development
+/superpowers-architecture:finishing-a-development-branch
+```
+
 ## Worktrees
 
 Worktree isolation remains available. The agent may use it when requested or already active. The worktree skill must not edit or commit `.gitignore` automatically.

@@ -57,6 +57,34 @@ git clone https://github.com/NenadBanjeglav/superpowers-architecture.git
 - Package name: `superpowers-architecture`
 - Repository: `https://github.com/NenadBanjeglav/superpowers-architecture`
 
-## Claude
+## Claude Code Plugin
 
-Claude support is not shipped in V1. See `docs/claude-roadmap.md`.
+Claude support is shipped through a post-V1 Claude Code plugin adapter over the same shared skills.
+
+In Claude Code:
+
+```text
+/plugin marketplace add NenadBanjeglav/superpowers-architecture
+/plugin install superpowers-architecture@superpowers-architecture
+```
+
+Invoke skills with the plugin namespace:
+
+```text
+/superpowers-architecture:brainstorming
+/superpowers-architecture:writing-plans
+/superpowers-architecture:subagent-driven-development
+/superpowers-architecture:finishing-a-development-branch
+```
+
+For local development from the repository root:
+
+```bash
+claude --plugin-dir .
+```
+
+After editing plugin manifests or hooks in an active Claude session, run:
+
+```text
+/reload-plugins
+```

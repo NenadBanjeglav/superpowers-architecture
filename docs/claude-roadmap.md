@@ -1,26 +1,27 @@
-# Claude Roadmap
+# Claude Plugin Availability
 
-V1 is Codex-first.
+Superpowers Architecture ships Claude Code support as a post-V1 runtime adapter over the shared skill core.
 
-Claude support should be added only after the Codex release is stable.
-
-Future Claude support should add:
+The Claude adapter includes:
 
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `hooks/hooks.json`
-- Claude-specific `session-start` hook using `${CLAUDE_PLUGIN_ROOT}`
+- `hooks/session-start-claude`
 
-Shared skill files should remain in:
+Shared skill files remain in:
 
 ```text
 skills/<skill>/SKILL.md
 ```
 
-Claude plugin skills should be namespaced, for example:
+Claude plugin skills are namespaced:
 
 ```text
 /superpowers-architecture:brainstorming
+/superpowers-architecture:writing-plans
+/superpowers-architecture:subagent-driven-development
+/superpowers-architecture:finishing-a-development-branch
 ```
 
-Do not ship `.claude-plugin/` in V1.
+The first Claude release does not add Claude agents, MCP servers, LSP servers, monitors, output styles, or runtime-specific skill forks.

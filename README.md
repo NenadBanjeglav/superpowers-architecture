@@ -2,9 +2,9 @@
 
 [![skills.sh](https://skills.sh/b/NenadBanjeglav/superpowers-architecture)](https://skills.sh/NenadBanjeglav/superpowers-architecture)
 
-Architecture-first Superpowers for Codex.
+Architecture-first Superpowers for Codex and Claude Code.
 
-Superpowers Architecture is a Codex skill pack for developers who want an agent to agree on design before it writes plans or code. It keeps the best parts of Superpowers - specs, plans, TDD, reviews, worktree-aware implementation, task commits, and final verification - and strengthens the first phase with module, interface, seam, adapter, data-flow, and test-surface thinking.
+Superpowers Architecture is a shared skill pack and runtime plugin for developers who want an agent to agree on design before it writes plans or code. It keeps the best parts of Superpowers - specs, plans, TDD, reviews, worktree-aware implementation, task commits, and final verification - and strengthens the first phase with module, interface, seam, adapter, data-flow, and test-surface thinking.
 
 ## Why
 
@@ -22,7 +22,9 @@ This plugin makes the agent stop first and build **Design Understanding**:
 
 ## Quickstart
 
-Install the skills package:
+### Skills CLI
+
+Install the shared skills package:
 
 ```bash
 npx skills@latest add NenadBanjeglav/superpowers-architecture
@@ -42,7 +44,33 @@ npx.cmd skills@latest add NenadBanjeglav/superpowers-architecture
 
 Start a fresh Codex session and say: `I want to design a feature before implementation.`
 
+### Codex Plugin Package
+
 The `npx skills` flow installs the shared skills. The Codex plugin manifest and session-start hook are also included in this repo for Codex plugin packaging, but those require Codex's plugin install or marketplace flow.
+
+### Claude Code Plugin
+
+In Claude Code, add the marketplace and install the plugin:
+
+```text
+/plugin marketplace add NenadBanjeglav/superpowers-architecture
+/plugin install superpowers-architecture@superpowers-architecture
+```
+
+Then invoke skills with the plugin namespace:
+
+```text
+/superpowers-architecture:brainstorming
+/superpowers-architecture:writing-plans
+/superpowers-architecture:subagent-driven-development
+/superpowers-architecture:finishing-a-development-branch
+```
+
+For local plugin development from a clone of this repository:
+
+```bash
+claude --plugin-dir .
+```
 
 ## Workflow
 
