@@ -40,12 +40,12 @@ digraph when_to_use {
     "Subagents available?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
+    "Have implementation plan?" -> "brainstorm first" [label="no - no approved plan yet"];
     "Tasks mostly independent?" -> "Subagents available?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
+    "Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or linear"];
     "Subagents available?" -> "subagent-driven-development" [label="yes"];
     "Subagents available?" -> "executing-plans" [label="no - subagents unavailable"];
 }

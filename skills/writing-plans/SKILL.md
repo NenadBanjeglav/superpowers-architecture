@@ -114,10 +114,15 @@ After approval:
 
 Canonical implementation prompt:
 
-Print:
+Print the prompt that matches the approved plan shape:
+
+- Use `subagent-driven-development` for mostly independent tasks where fresh subagents can work task-by-task.
+- Use `executing-plans` for tightly coupled, linear, or no-subagent execution.
+
+Prompt:
 
 ```text
-Use subagent-driven-development to implement:
+Use <implementation-skill> to implement:
 <absolute-or-repo-relative-plan-path>
 
 Read the plan, referenced spec, and codebase fresh. Use worktree isolation if I request it or if one is already active. Commit code per task, but never commit docs/superpowers/** unless I explicitly ask.
