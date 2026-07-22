@@ -16,7 +16,7 @@ Before selecting any other skill, apply these priority rules:
 
 Host-specific tool names live in `references/`. Use `codex-tools.md` on Codex and `claude-code-tools.md` on Claude Code. Keep shared workflow policy runtime-neutral.
 
-Subagent workflows use the request in `references/dispatch-contract.md`: role, context policy, capability tier, bounded prompt path, artifact paths, and workspace policy. Shared skills never name host tools or concrete models. Phase handoff is a separate interface and must create a genuinely new user-owned session rather than a subagent.
+Subagent workflows use the request in `references/dispatch-contract.md`: role, context policy, capability tier, bounded prompt path, artifact paths, and workspace policy. Shared skills never name host tools or concrete models. Phase handoff uses the separate `prepare handoff` preflight in `references/phase-handoff.md` and must create a genuinely new user-owned session rather than a subagent.
 
 If a Superpowers Architecture skill applies to the task, use it before acting. The selected phase flow is:
 
@@ -42,6 +42,8 @@ Generated downstream files under `docs/superpowers/**` are local developer worki
 **Same-session mode** means artifact approval continues to the next phase in the current conversation. Before producing the next artifact or implementation, re-read `AGENTS.md`, optional root `CONTEXT.md`, the approved artifact, and relevant codebase files from disk. Ignore prior design conclusions unless they are present in the approved artifact or project docs.
 
 Approval must be explicit in both modes. Never infer approval from silence, from artifact creation, or from a request to continue that does not identify the approved artifact.
+
+Before an automated fresh-session launch, run `prepare handoff` and bind the prompt to the exact repository remote, checkout root, branch or detached commit, worktree identity, Approved artifact revision, source spec when applicable, plugin source/root, and `same-checkout` policy. The receiving session must acknowledge every field and independently revalidate it before the next skill begins. If the runtime cannot address the exact checkout or prove plugin and ignored-artifact affinity, print the complete canonical fallback and do not launch.
 
 <!-- STARTUP-CONTRACT:START -->
 Artifact lifecycle routing rule: specs and plans remain Draft until the user approves their exact SHA-256 revision; filenames and chat memory never prove approval, and every next phase revalidates the artifact from disk.

@@ -53,27 +53,63 @@ A subagent remains part of one Claude session. It is never a substitute for the 
 
 ## Automated Phase Handoff In Claude Code
 
-When automated fresh-session mode is selected and an artifact has been explicitly approved, Claude Code may start the next phase in a background session.
+When automated fresh-session mode is selected and an artifact has been
+explicitly approved, Claude Code may start the next phase in a named background
+session. First run `prepare handoff` from
+[phase-handoff.md](phase-handoff.md) and build the canonical prompt from the
+complete verified record.
 
-Use this adapter only after approval. Do not use `/bg` to background the current conversation for phase handoff because the fresh phase session must start from the canonical prompt, not from current conversation history.
+Do not use `/bg` to background the current conversation. The fresh session must
+start from the canonical prompt without current conversation history.
 
-From the shell, run:
+Before launch:
+
+1. Resolve and change to the exact `checkoutRoot`. Re-run the remote,
+   branch/commit, worktree, ignored-artifact, and lifecycle checks there.
+2. Inspect the installed `claude --help`. Require it to advertise `--bg` and
+   `--name`; command syntax that is absent from the installed CLI is not safe to
+   assume. Also require Agent View/background operation to be enabled and the
+   current authentication to work.
+3. For `pluginSource: installed`, require `claude plugin list --json` to contain
+   the Superpowers Architecture plugin and repeat that inventory check in the
+   target prompt.
+4. For `pluginSource: local-plugin-dir`, require the installed CLI to advertise
+   `--plugin-dir`, verify the exact absolute `pluginRoot`, and include
+   `--plugin-dir <pluginRoot>` in the launch. For `skills-install`, verify the
+   exact installed skill root on both sides.
+5. Require the new session's first output to acknowledge all thirteen fields
+   and show the exact `checkoutRoot`, `branch`, `artifactPath`, and
+   `approvedRevision` before invoking the next phase skill.
+
+Only after every check passes, launch from the verified checkout. For an
+installed plugin:
 
 ```bash
 claude --bg --name "spa-<phase>-<artifact-slug>" "<canonical next-phase prompt>"
 ```
 
-Official Claude Code docs state that `--bg` starts a background agent and returns immediately, while `--name` sets the session display name. Claude prints the session ID and management commands such as `claude agents`, `claude attach <id>`, `claude logs <id>`, and `claude stop <id>`.
+For an exact local plugin root:
+
+```bash
+claude --plugin-dir "<verified-absolute-plugin-root>" --bg --name "spa-<phase>-<artifact-slug>" "<canonical next-phase prompt>"
+```
+
+The installed CLI's output is the authority for the created session identity
+and available management commands. The current official background-agent
+documentation is [Agent View](https://code.claude.com/docs/en/agent-view), but
+installed capability discovery remains mandatory because CLI flags can differ
+by version.
 
 PowerShell quoting-safe launch:
 
 ```powershell
-$promptPath = Join-Path $env:TEMP 'superpowers-next-phase-prompt.txt'
+$handoffPromptPath = Join-Path $env:TEMP 'superpowers-next-phase-prompt.txt'
 @'
-<canonical next-phase prompt>
-'@ | Set-Content -NoNewline -Encoding UTF8 -LiteralPath $promptPath
-$prompt = Get-Content -Raw -LiteralPath $promptPath
-claude --bg --name "spa-<phase>-<artifact-slug>" $prompt
+<canonical prompt with complete handoff record and target-side gate>
+'@ | Set-Content -NoNewline -Encoding UTF8 -LiteralPath $handoffPromptPath
+$handoffPrompt = Get-Content -Raw -LiteralPath $handoffPromptPath
+Set-Location -LiteralPath '<verified-checkout-root>'
+claude --plugin-dir '<verified-plugin-root>' --bg --name 'spa-<phase>-<artifact-slug>' $handoffPrompt
 ```
 
 Bash quoting-safe launch:
@@ -81,20 +117,24 @@ Bash quoting-safe launch:
 ```bash
 prompt_file="$(mktemp)"
 cat > "$prompt_file" <<'EOF'
-<canonical next-phase prompt>
+<canonical prompt with complete handoff record and target-side gate>
 EOF
-claude --bg --name "spa-<phase>-<artifact-slug>" "$(cat "$prompt_file")"
+cd -- '<verified-checkout-root>'
+claude --plugin-dir '<verified-plugin-root>' --bg --name 'spa-<phase>-<artifact-slug>' "$(cat "$prompt_file")"
 ```
 
-If `claude` is unavailable, authentication is missing, background agents are disabled by `disableAgentView` or `CLAUDE_CODE_DISABLE_AGENT_VIEW=1`, or launching from the current runtime is unsafe, print the quoting-safe command and canonical prompt unchanged as the manual fallback.
+For `installed` or `skills-install`, omit `--plugin-dir` from those fallback
+templates. The canonical prompt names the next skill as
+`/superpowers-architecture:<skill>` when plugin namespacing is required and
+contains every field from [phase-handoff.md](phase-handoff.md).
 
-The canonical prompt must include:
-
-- the next skill to use, namespaced as `/superpowers-architecture:<skill>` when the plugin namespace is required
-- the approved spec or plan path
-- instruction to read `AGENTS.md`, optional root `CONTEXT.md`, the approved artifact, and the codebase fresh
-- the output path for the next artifact when planning
-- the local docs guard: never stage or commit `docs/superpowers/**` unless explicitly asked
+If `claude` is unavailable, authentication or background agents are disabled,
+the installed help lacks `--bg`, `--name`, or a required `--plugin-dir`, plugin
+inventory does not match, the exact checkout cannot be entered, or any affinity
+check is ambiguous, do not launch. Print the applicable quoting-safe command,
+the complete canonical prompt, and the failed preflight field. Missing
+installed-host evidence remains a release blocker; a printed fallback is not
+successful phase-handoff evidence.
 
 ## Finishing
 

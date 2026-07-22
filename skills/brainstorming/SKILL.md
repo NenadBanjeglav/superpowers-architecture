@@ -205,7 +205,7 @@ After writing and reviewing the Draft spec, stop. Do not invoke `writing-plans` 
 After approval:
 
 - Run `artifact approve --path <path> --type "Design Spec" --expected-revision <reviewed sha256>` before any handoff. If approval fails, stop and require renewed review of the actual refreshed revision.
-- In automated fresh-session mode, build the canonical planning prompt from the approved artifact, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
+- In automated fresh-session mode, run the host-neutral `prepare handoff` preflight from `using-superpowers/references/phase-handoff.md`. Build the canonical planning prompt from the resulting immutable record, use the runtime adapter only when it can preserve every affinity field, report the new session identity or complete fallback prompt, then stop.
 - In same-session mode, use `writing-plans`, revalidate the Approved spec at its exact revision, re-read the spec and codebase from disk, write the implementation plan, and stop at the written-plan review gate.
 
 Canonical planning prompt:
@@ -222,9 +222,30 @@ Approved artifact:
 - Repository remote: <canonical remote>
 - Checkout root: <absolute checkout root>
 - Branch: <branch or detached commit>
+- Worktree identity: <main-checkout | linked-worktree | codex-managed-worktree | detached>
 - Workspace policy: same-checkout
 - Plugin source: <installed | local-plugin-dir | skills-install>
+- Plugin root: <verified absolute path or none>
 - Phase Mode: <selected mode>
+
+Handoff record:
+{
+  "phase": "planning",
+  "repositoryRemote": "<canonical remote>",
+  "checkoutRoot": "<absolute checkout root>",
+  "branch": "<branch or detached commit>",
+  "worktreeIdentity": "<main-checkout | linked-worktree | codex-managed-worktree | detached>",
+  "artifactPath": "<absolute-spec-path>",
+  "artifactType": "Design Spec",
+  "approvedRevision": "<exact approved sha256 digest>",
+  "sourceSpecPath": "none",
+  "sourceSpecRevision": "none",
+  "pluginSource": "<installed | local-plugin-dir | skills-install>",
+  "pluginRoot": "<verified absolute path or none>",
+  "workspacePolicy": "same-checkout"
+}
+
+Before invoking writing-plans, acknowledge every handoff field with the exact received value. Then independently re-run repository, checkout, branch, worktree, artifact lifecycle/revision, ignored-file, and plugin-source checks from disk. Do not begin planning if any target-side value is missing, differs, or cannot be proven. Report the mismatch and stop.
 
 Validate the Approved Design Spec at that exact revision before inspecting the codebase. Read the spec and codebase fresh. Save the Draft plan under docs/superpowers/plans/, refresh and review its exact revision, and stop at the written-plan review gate. Do not stage or commit docs/superpowers/** unless I explicitly ask.
 ```

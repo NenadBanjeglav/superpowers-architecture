@@ -38,6 +38,15 @@ Report with branch state:
 
 **If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
 
+Record the resolved identity for later phase handoff:
+
+- `main-checkout` for a normal checkout on a branch;
+- `linked-worktree` when Git and common directories differ and the repository is not a submodule;
+- `codex-managed-worktree` only when the active Codex host explicitly identifies the current workspace that way; or
+- `detached` when no branch is checked out, together with the exact `git rev-parse HEAD` commit.
+
+For a submodule, use the submodule root and remote as the repository boundary and do not infer `linked-worktree` from the relocated Git directory.
+
 Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
 
 > "Would you like me to set up an isolated worktree? It protects your current branch from changes."
@@ -132,6 +141,19 @@ npm test / cargo test / pytest / go test ./...
 **If tests fail:** Report failures, ask whether to proceed or investigate.
 
 **If tests pass:** Report ready.
+
+## Phase Handoff Affinity
+
+When this workspace later enters automated fresh-session mode, pass the exact
+checkout path and recorded worktree identity to `prepare handoff`. The
+`same-checkout` policy means an adapter must target this existing checkout; it
+must not create a replacement worktree or copy ignored `docs/superpowers/**`
+artifacts elsewhere. Detached work stays at the recorded commit, and a dirty
+tree is disclosed and preserved rather than staged, stashed, or discarded.
+
+If the runtime cannot target this exact main checkout, linked worktree,
+Codex-managed worktree, detached checkout, or submodule boundary, automatic
+handoff is unsafe. Print the complete canonical fallback prompt and stop.
 
 ### Report
 

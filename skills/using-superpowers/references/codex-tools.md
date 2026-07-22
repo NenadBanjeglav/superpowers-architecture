@@ -69,22 +69,39 @@ See `using-git-worktrees` Step 0 for how that skill uses these signals.
 
 ## Automated Phase Handoff In Codex App
 
-When automated fresh-session mode is selected and an artifact has been explicitly approved, Codex may start the next phase in a fresh project thread.
+When automated fresh-session mode is selected and an artifact has been
+explicitly approved, Codex may start the next phase in a fresh user-owned task.
+First run `prepare handoff` from [phase-handoff.md](phase-handoff.md) and build
+the canonical prompt from the complete verified record.
 
-Use this adapter only after approval. Do not use `fork_thread` for phase handoff because the fresh phase session must not inherit the current conversation history.
+Use `create_thread` only. Never use `fork_thread` for phase handoff because a
+fork inherits conversation state and is not a fresh phase session.
 
-Adapter steps:
+Before launch:
 
-1. Build the canonical next-phase prompt from the approved artifact path.
-2. Call `list_projects` and select the current repository's project.
-3. Call `create_thread` with the canonical prompt and a project target in the local checkout:
+1. Inspect the active `list_projects` and `create_thread` schemas rather than
+   assuming an older app shape.
+2. Select a saved project only when its resolved path equals `checkoutRoot`
+   exactly. Require the selected environment to guarantee that same existing
+   path. A generic request for a new worktree does not preserve an existing
+   linked or Codex-managed worktree and cannot satisfy `same-checkout`.
+3. Verify `installed` or `skills-install` plugin affinity is available to a new
+   task. For `local-plugin-dir`, launch only if the active app API or saved
+   project configuration proves it will load the exact `pluginRoot`; otherwise
+   use fallback.
+4. Pass the complete canonical prompt, including all thirteen handoff fields,
+   to a new user-owned task. Omit model overrides unless the user explicitly
+   selected one and the active schema advertises it.
+
+When the current schema proves that a local project target resolves to the
+exact saved `checkoutRoot`, the request has this shape:
 
 ```json
 {
-  "prompt": "<canonical next-phase prompt>",
+  "prompt": "<canonical prompt with complete handoff record and target-side gate>",
   "target": {
     "type": "project",
-    "projectId": "<projectId from list_projects>",
+    "projectId": "<exact-path projectId from list_projects>",
     "environment": {
       "type": "local"
     }
@@ -92,16 +109,22 @@ Adapter steps:
 }
 ```
 
-4. If the tool returns a `threadId`, report the new thread and emit the Codex App created-thread directive required by the host.
-5. If project-scoped creation is unavailable, print the canonical prompt unchanged as the manual fallback and stop.
+After `create_thread` succeeds, use the active task-wait/read surface to inspect
+the target's first output. It must acknowledge every field and must show the
+exact `checkoutRoot`, `branch`, `artifactPath`, and `approvedRevision` before
+`writing-plans`, `executing-plans`, or `subagent-driven-development` begins. If
+the acknowledgement or target-side validation reports a mismatch, do not ask
+that task to continue. Report the failed handoff.
 
-The canonical prompt must include:
+If no project path equals `checkoutRoot`, an exact linked/managed/detached
+workspace cannot be addressed, local plugin affinity is not guaranteed, or the
+active API has no exact-path guarantee, decline automatic launch. Print the
+complete canonical prompt and handoff record unchanged, tell the user to open a
+new task in the exact checkout, and stop. Never copy an ignored
+`docs/superpowers/**` artifact to make another checkout appear equivalent.
 
-- the next skill to use
-- the approved spec or plan path
-- instruction to read `AGENTS.md`, optional root `CONTEXT.md`, the approved artifact, and the codebase fresh
-- the output path for the next artifact when planning
-- the local docs guard: never stage or commit `docs/superpowers/**` unless explicitly asked
+On success, report the new task identity and emit the Codex App
+`created-thread` directive required by the host.
 
 ## Codex App Finishing
 

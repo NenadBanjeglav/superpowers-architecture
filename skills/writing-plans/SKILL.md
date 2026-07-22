@@ -128,7 +128,7 @@ After writing and reviewing the Draft plan, stop. Do not invoke implementation s
 After approval:
 
 - Run `artifact approve --path <plan> --type "Implementation Plan" --expected-revision <reviewed sha256>` before any implementation handoff. If approval fails, stop and require renewed review.
-- In automated fresh-session mode, build the canonical implementation prompt from the approved artifact, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
+- In automated fresh-session mode, run the host-neutral `prepare handoff` preflight from `using-superpowers/references/phase-handoff.md`. Build the canonical implementation prompt from the resulting immutable record, use the runtime adapter only when it can preserve every affinity field, report the new session identity or complete fallback prompt, then stop.
 - In same-session mode, invoke `subagent-driven-development` when tasks are mostly independent or `executing-plans` when they are linear; revalidate the Approved plan and its referenced Approved source spec, re-read both artifacts and the codebase from disk, and implement from the plan.
 
 Canonical implementation prompt:
@@ -152,9 +152,30 @@ Approved artifact:
 - Repository remote: <canonical remote>
 - Checkout root: <absolute checkout root>
 - Branch: <branch or detached commit>
+- Worktree identity: <main-checkout | linked-worktree | codex-managed-worktree | detached>
 - Workspace policy: same-checkout
 - Plugin source: <installed | local-plugin-dir | skills-install>
+- Plugin root: <verified absolute path or none>
 - Phase Mode: <selected mode>
+
+Handoff record:
+{
+  "phase": "implementation",
+  "repositoryRemote": "<canonical remote>",
+  "checkoutRoot": "<absolute checkout root>",
+  "branch": "<branch or detached commit>",
+  "worktreeIdentity": "<main-checkout | linked-worktree | codex-managed-worktree | detached>",
+  "artifactPath": "<absolute-plan-path>",
+  "artifactType": "Implementation Plan",
+  "approvedRevision": "<exact approved plan sha256 digest>",
+  "sourceSpecPath": "<absolute spec path>",
+  "sourceSpecRevision": "<exact approved spec sha256 digest>",
+  "pluginSource": "<installed | local-plugin-dir | skills-install>",
+  "pluginRoot": "<verified absolute path or none>",
+  "workspacePolicy": "same-checkout"
+}
+
+Before invoking <implementation-skill>, acknowledge every handoff field with the exact received value. Then independently re-run repository, checkout, branch, worktree, plan and source-spec lifecycle/revision, ignored-file, and plugin-source checks from disk. Do not begin implementation if any target-side value is missing, differs, or cannot be proven. Report the mismatch and stop.
 
 Validate the Approved plan and referenced Approved source spec at those exact revisions before acting. Read both artifacts and the codebase fresh. Commit public work per task, but never commit docs/superpowers/** unless I explicitly ask.
 ```
