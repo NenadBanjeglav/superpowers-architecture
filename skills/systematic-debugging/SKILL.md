@@ -208,7 +208,7 @@ You MUST complete each phase before proceeding to the next.
    - Are we "sticking with it through sheer inertia"?
    - Should we refactor architecture vs. continue fixing symptoms?
 
-   **Discuss with your human partner before attempting more fixes**
+   **Discuss with the user before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
@@ -231,7 +231,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## your human partner's Signals You're Doing It Wrong
+## User Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying
@@ -273,7 +273,7 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 3. Implement appropriate handling (retry, timeout, error message)
 4. Add monitoring/logging for future investigation
 
-**But:** 95% of "no root cause" cases are incomplete investigation.
+Treat a "no root cause" conclusion as provisional until the evidence rules out the code paths and environments you can inspect.
 
 ## Supporting Techniques
 
@@ -287,10 +287,8 @@ These techniques are part of systematic debugging and available in this director
 - **test-driven-development** - For creating failing test case (Phase 4, Step 1)
 - **verification-before-completion** - Verify fix worked before claiming success
 
-## Real-World Impact
+## Expected Outcome
 
-From debugging sessions:
-- Systematic approach: 15-30 minutes to fix
-- Random fixes approach: 2-3 hours of thrashing
-- First-time fix rate: 95% vs 40%
-- New bugs introduced: Near zero vs common
+A systematic investigation leaves a reproducible evidence trail, isolates one
+root-cause hypothesis at a time, and verifies the fix against the original
+symptom without relying on unsupported timing or success-rate claims.

@@ -14,7 +14,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
   "contextPolicy": "isolated",
   "capabilityTier": "balanced",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[ABSOLUTE_PLAN_FILE_PATH]", "[ABSOLUTE_SPEC_FILE_PATH]"],
+  "artifactPaths": ["[ABSOLUTE_PLAN_FILE_PATH]", "[ABSOLUTE_SPEC_FILE_PATH]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "read-only-review"
 }
 ```
@@ -24,6 +24,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
 
     Plan to review: [ABSOLUTE_PLAN_FILE_PATH]
     Spec for reference: [ABSOLUTE_SPEC_FILE_PATH]
+    Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 
     ## What to Check
 
@@ -35,13 +36,13 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
     | Buildability | An engineer can follow the plan without getting stuck |
     | Lifecycle | Artifact Type is Implementation Plan; Status is Draft; Revision is a complete sha256 digest; Approved Revision and Approved At are none |
     | Source Binding | Spec path and exact Approved Spec Revision are present and match the supplied source artifact |
-    | Architecture | Tasks preserve the spec's modules, interfaces, seams, adapters, data flow, and test surface |
+    | Architecture Conformance | Every task names and checks the Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface through the shared rubric |
 
     ## Calibration
 
     Only flag issues that would cause real implementation problems. Minor wording, stylistic preferences, and nice-to-have suggestions are not issues.
 
-    Return Ready for user review unless there are serious gaps, contradictions, placeholders, or unbuildable steps. Never write Approved; only the user can approve the exact artifact revision.
+    Return only Ready for user review or Issues found. Never write Approved or mutate lifecycle metadata; reviewers are advisory and only the user can approve the exact artifact revision.
 
     ## Output Format
 
@@ -57,3 +58,5 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
 ```
 
 **Reviewer returns:** `Ready for user review` or `Issues found`, plus issues and advisory recommendations. It never returns `Approved`.
+
+`[CONFORMANCE_RUBRIC_FILE]` is the absolute path to `codebase-design/ARCHITECTURE-CONFORMANCE.md`.

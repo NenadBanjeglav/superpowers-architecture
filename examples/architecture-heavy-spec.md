@@ -2,7 +2,11 @@
 
 **Source:** Example local architecture-heavy feature request
 **Date:** 2026-06-19
-**Status:** Example public spec
+**Artifact Type:** Design Spec
+**Status:** Draft
+**Revision:** sha256:442c6dcee14220a9db70854a528812a820beac51441ae45032928445c94ab861
+**Approved Revision:** none
+**Approved At:** none
 
 ## Problem
 
@@ -19,6 +23,12 @@ Create a deeper renewal retry module that owns retry scheduling, retry state tra
 - Do not build a new billing dashboard.
 
 ## Design Understanding
+
+### Phase Mode
+
+**Selected Mode:** Same-session mode
+**Reason:** The example demonstrates an explicitly selected same-session continuation with mandatory disk rereads after approval.
+**Durability:** Workflow-chain-local example
 
 ### Language
 

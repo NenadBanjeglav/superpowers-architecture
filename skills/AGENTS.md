@@ -23,7 +23,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Workspace preparation detection is a read-only shared Node operation. Applicable project instructions win; declarations outrank same-ecosystem lockfiles; ambiguity runs nothing; baseline verification is resolved independently and never inferred from the selected package manager.
 - Node.js 20 or newer is required for correctness-critical artifact operations. Missing Node or a missing sibling operation module must fail closed with actionable installation guidance.
 - Specs and implementation plans use the shared Draft/Approved lifecycle. Approval and downstream validation bind to the exact canonical SHA-256 payload revision, not a filename or conversation memory.
-- Spec and plan document reviewers are advisory only. Dispatch them with isolated read-only context when available; otherwise use the owning phase skill's deterministic self-review. Only the user can approve an exact artifact revision.
+- Spec and plan document reviewers are advisory only. Dispatch them with isolated read-only context and the shared architecture-conformance rubric when available; otherwise use the owning phase skill's deterministic self-review. They report only `Ready for user review` or `Issues found`; only the user can approve an exact artifact revision.
 - Do not create or maintain `context.md`.
 - `project-setup` may instruct downstream projects to create uppercase root `CONTEXT.md`; this plugin repository must not create its own root `CONTEXT.md`.
 - Do not create ADR files.
@@ -37,6 +37,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Clean-rewrite high-policy skills only when changing workflow policy: `project-setup`, `using-superpowers`, `brainstorming`, `writing-plans`, `finishing-a-development-branch`, and `improve-codebase-architecture`.
 - `brainstorming` grilling questions must put the question first and immediately follow it with a concrete recommendation and short reason.
 - Patch operational skills narrowly: `subagent-driven-development`, `executing-plans`, `using-git-worktrees`, review, debugging, and TDD skills.
+- Keep inherited examples self-contained: remove upstream project names, dated session claims, unsupported metrics, and runtime-specific fixture names that are not part of this plugin.
 - Keep helper scripts executable and aligned with their owning skill docs.
 - Keep every `SKILL.md` frontmatter with `name` and `description`.
 

@@ -120,7 +120,7 @@ If a step changes code, show the code. If a step validates behavior, show the ex
 
 ## Written Plan Review Gate
 
-After writing the complete Draft plan, run `artifact refresh --path <plan> --type "Implementation Plan"`. Then dispatch an isolated advisory document reviewer with the absolute plan path, absolute source spec path, isolated context, balanced capability, and read-only workspace policy.
+After writing the complete Draft plan, run `artifact refresh --path <plan> --type "Implementation Plan"`. Then dispatch an isolated advisory document reviewer with the absolute plan path, absolute source spec path, absolute `codebase-design/ARCHITECTURE-CONFORMANCE.md` path, isolated context, balanced capability, and read-only workspace policy.
 
 The reviewer may return only `Ready for user review` or `Issues found`; it cannot approve. If isolation is unavailable, run the exact Self-Review checklist below. Resolve issues before presenting the plan. Any content edit must run `artifact draft` first and `artifact refresh` afterward, followed by another advisory review or deterministic self-review.
 

@@ -2,7 +2,11 @@
 
 **Source:** Example local feature request
 **Date:** 2026-06-19
-**Status:** Example public spec
+**Artifact Type:** Design Spec
+**Status:** Draft
+**Revision:** sha256:454c4640dfc5589db9324b4b8375b0e17b6e9aa5bdec629e519c677dc9eb4b06
+**Approved Revision:** none
+**Approved At:** none
 
 ## Problem
 
@@ -19,6 +23,12 @@ Let users opt in or out of product updates and security alerts from an account s
 - Do not change password reset or required legal emails.
 
 ## Design Understanding
+
+### Phase Mode
+
+**Selected Mode:** Automated fresh-session mode
+**Reason:** The example demonstrates clean planning and implementation contexts from exact Approved artifacts.
+**Durability:** Workflow-chain-local example
 
 ### Language
 

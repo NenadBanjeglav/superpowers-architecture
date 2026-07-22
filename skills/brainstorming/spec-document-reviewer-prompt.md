@@ -14,7 +14,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
   "contextPolicy": "isolated",
   "capabilityTier": "balanced",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[ABSOLUTE_SPEC_FILE_PATH]"],
+  "artifactPaths": ["[ABSOLUTE_SPEC_FILE_PATH]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "read-only-review"
 }
 ```
@@ -23,6 +23,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
     You are an advisory spec document reviewer. Verify this Draft spec is complete and ready for user review. You cannot approve it.
 
     Spec to review: [ABSOLUTE_SPEC_FILE_PATH]
+    Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 
     ## What to Check
 
@@ -34,13 +35,15 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
     | Scope | One coherent planning unit, not multiple independent subsystems |
     | YAGNI | Unrequested features or over-engineering |
     | Lifecycle | Artifact Type is Design Spec; Status is Draft; Revision is a complete sha256 digest; Approved Revision and Approved At are none |
-    | Architecture | Modules, interfaces, seams, adapters, data flow, and test surface are decision-complete |
+    | Source Binding | Source is present and identifies the user prompt, supplied document, or ticket that governs the spec |
+    | Phase Mode | One supported Phase Mode, reason, and durability are recorded |
+    | Architecture Conformance | Modules, interfaces, seams, adapters, data flow, depth/locality/leverage intent, and test surface are decision-complete enough for the shared rubric |
 
     ## Calibration
 
     Only flag issues that would cause real problems during implementation planning. Minor wording and stylistic preferences are not issues.
 
-    Return Ready for user review unless there are serious gaps. Never write Approved; only the user can approve the exact artifact revision.
+    Return only Ready for user review or Issues found. Never write Approved or mutate lifecycle metadata; reviewers are advisory and only the user can approve the exact artifact revision.
 
     ## Output Format
 
@@ -56,3 +59,5 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
 ```
 
 **Reviewer returns:** `Ready for user review` or `Issues found`, plus issues and advisory recommendations. It never returns `Approved`.
+
+`[CONFORMANCE_RUBRIC_FILE]` is the absolute path to `codebase-design/ARCHITECTURE-CONFORMANCE.md`.

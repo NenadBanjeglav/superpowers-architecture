@@ -165,6 +165,7 @@ Resolve the sibling `using-superpowers` operation module and run `artifact refre
 After refreshing the Draft, dispatch an isolated advisory document reviewer with:
 
 - the absolute spec path;
+- the absolute `codebase-design/ARCHITECTURE-CONFORMANCE.md` path;
 - isolated context with no parent conversation turns;
 - balanced capability;
 - read-only workspace policy.

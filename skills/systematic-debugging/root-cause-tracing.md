@@ -161,10 +161,6 @@ digraph principle {
 **Include context:** Directory, cwd, environment variables, timestamps
 **Capture stack:** `new Error().stack` shows complete call chain
 
-## Real-World Impact
+## Expected Outcome
 
-From debugging session (2025-10-03):
-- Found root cause through 5-level trace
-- Fixed at source (getter validation)
-- Added 4 layers of defense
-- 1847 tests passed, zero pollution
+Tracing backward exposes the earliest invalid state, so the fix belongs at the source and the regression tests exercise the boundaries that previously allowed it through.
