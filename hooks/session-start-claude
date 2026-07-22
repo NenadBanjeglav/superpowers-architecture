@@ -1,30 +1,19 @@
 #!/usr/bin/env bash
-# Claude Code SessionStart hook for Superpowers Architecture.
-
 set -euo pipefail
 
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+  plugin_root="$CLAUDE_PLUGIN_ROOT"
 else
-  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-  PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+  script_dir="$(cd "$(dirname "$0")" && pwd)"
+  plugin_root="$(cd "$script_dir/.." && pwd)"
+fi
+script_path="$plugin_root/skills/using-superpowers/scripts/spa.mjs"
+
+if command -v node >/dev/null 2>&1; then
+  exec node "$script_path" startup render --host claude --plugin-root "$plugin_root"
+fi
+if command -v node.exe >/dev/null 2>&1 && command -v wslpath >/dev/null 2>&1; then
+  exec node.exe "$(wslpath -w "$script_path")" startup render --host claude --plugin-root "$(wslpath -w "$plugin_root")"
 fi
 
-SKILL_PATH="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
-
-using_superpowers_content="$(cat "${SKILL_PATH}" 2>&1 || printf 'Error reading using-superpowers skill')"
-
-escape_for_json() {
-  local s="$1"
-  s="${s//\\/\\\\}"
-  s="${s//\"/\\\"}"
-  s="${s//$'\n'/\\n}"
-  s="${s//$'\r'/\\r}"
-  s="${s//$'\t'/\\t}"
-  printf '%s' "$s"
-}
-
-using_superpowers_escaped="$(escape_for_json "$using_superpowers_content")"
-session_context="Superpowers Architecture is available in this Claude Code session.\n\nWorkflow priority: for new-project-from-scratch, repo inception, project contract, root CONTEXT.md, stack decision, architecture summary, domain language, or initial high-level roadmap requests, use project-setup before brainstorming or implementation. Project-setup owns only that initial roadmap creation during downstream project inception; selected roadmap-item work routes to a first brainstorming session. During first brainstorming, establish whether later approvals use automated fresh-session mode or same-session mode when no durable preference already exists. For feature, app, site, tool, component, workflow, UI, API, behavior, or architecture-change requests in an established project, the brainstorming skill has priority over frontend, app-builder, design, framework, implementation, and coding skills unless the user explicitly provides an approved implementation plan path or explicitly asks to bypass design/spec work. Implementation starts only after the appropriate setup or approved local spec and written implementation plan exist.\n\nBelow is the full content of the 'superpowers-architecture:using-superpowers' skill. For all other skills, follow Claude Code skill-loading behavior and the instructions in that skill.\n\n${using_superpowers_escaped}"
-
-printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Superpowers Architecture degraded mode: Node.js is unavailable. Manually load and follow using-superpowers before any action. Correctness-critical helpers and phase handoffs must stop until Node.js is installed."}}'

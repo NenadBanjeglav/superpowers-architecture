@@ -46,7 +46,12 @@ Approval must be explicit in both modes. Never infer approval from silence, from
 Before an automated fresh-session launch, run `prepare handoff` and bind the prompt to the exact repository remote, checkout root, branch or detached commit, worktree identity, Approved artifact revision, source spec when applicable, plugin source/root, and `same-checkout` policy. The receiving session must acknowledge every field and independently revalidate it before the next skill begins. If the runtime cannot address the exact checkout or prove plugin and ignored-artifact affinity, print the complete canonical fallback and do not launch.
 
 <!-- STARTUP-CONTRACT:START -->
-Artifact lifecycle routing rule: specs and plans remain Draft until the user approves their exact SHA-256 revision; filenames and chat memory never prove approval, and every next phase revalidates the artifact from disk.
+1. Route through an applicable skill before acting, and announce the selected skill.
+2. New-project inception uses project-setup and stops at its reviewed roadmap; established-project creation or architecture changes use brainstorming before planning or implementation.
+3. Local AGENTS.md and user instructions take precedence; never create plugin-root CONTEXT.md, lowercase context.md, ADRs, Matt flows, or visual companions.
+4. Specs and plans remain Draft until the user approves their exact SHA-256 revision; each next phase revalidates the artifact from disk.
+5. The selected Phase Mode controls whether approval launches a genuinely fresh user-owned session or continues after a same-session disk reread; never substitute a fork, resume, or subagent for a fresh phase session.
+6. Missing runtime capabilities must be reported explicitly. Never silently pretend routing, validation, isolation, checkout/plugin affinity, or startup injection succeeded.
 <!-- STARTUP-CONTRACT:END -->
 
 ## Artifact Lifecycle

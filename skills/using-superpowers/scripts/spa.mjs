@@ -15,6 +15,7 @@ import {
   readProgress,
   resolveSddWorkspace,
 } from './lib/sdd.mjs';
+import { renderStartupContext } from './lib/startup.mjs';
 
 const COMPLETE_REVISION = /^sha256:[0-9a-f]{64}$/;
 
@@ -126,10 +127,22 @@ async function runSdd(command, args) {
   fail(`Unknown sdd command ${command ?? '(missing)'}.`);
 }
 
+async function runStartup(command, args) {
+  if (command !== 'render') fail(`Unknown startup command ${command ?? '(missing)'}.`);
+  const options = parseOptions(args);
+  requireOnly(options, ['--host', '--plugin-root'], ['--degraded-reason']);
+  return renderStartupContext({
+    host: options['--host'],
+    pluginRoot: options['--plugin-root'],
+    degradedReason: options['--degraded-reason'],
+  });
+}
+
 export async function runSpa(argv) {
   const [group, command, ...args] = argv;
   if (group === 'artifact') return runArtifact(command, args);
   if (group === 'sdd') return runSdd(command, args);
+  if (group === 'startup') return runStartup(command, args);
   fail(`Unknown command group ${group ?? '(missing)'}.`);
 }
 
@@ -137,7 +150,9 @@ async function main() {
   try {
     const args = process.argv.slice(2);
     const result = await runSpa(args);
-    if (args[0] === 'sdd' && args[1] === 'workspace') {
+    if (args[0] === 'startup' && args[1] === 'render') {
+      process.stdout.write(result);
+    } else if (args[0] === 'sdd' && args[1] === 'workspace') {
       process.stdout.write(`${result}\n`);
     } else {
       process.stdout.write(`${JSON.stringify(result)}\n`);
