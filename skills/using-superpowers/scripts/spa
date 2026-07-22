@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "Superpowers Architecture requires Node.js 20 or newer. Install Node.js, then retry this correctness-critical operation." >&2
+  exit 127
+fi
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+exec node "$script_dir/spa.mjs" "$@"

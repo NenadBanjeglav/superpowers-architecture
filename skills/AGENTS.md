@@ -14,6 +14,9 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 
 - Keep skills shared across Codex and Claude Code by using `skills/<skill>/SKILL.md`.
 - Shared skill workflow policy must stay runtime-neutral; host-specific tool and install details belong in runtime adapters or `skills/using-superpowers/references/`.
+- `skills/using-superpowers/scripts/` owns the shared Node.js operation module, including artifact canonicalization and lifecycle state. Runtime adapters and consuming phase skills must call that module rather than reimplement its behavior.
+- Node.js 20 or newer is required for correctness-critical artifact operations. Missing Node or a missing sibling operation module must fail closed with actionable installation guidance.
+- Specs and implementation plans use the shared Draft/Approved lifecycle. Approval and downstream validation bind to the exact canonical SHA-256 payload revision, not a filename or conversation memory.
 - Do not create or maintain `context.md`.
 - `project-setup` may instruct downstream projects to create uppercase root `CONTEXT.md`; this plugin repository must not create its own root `CONTEXT.md`.
 - Do not create ADR files.

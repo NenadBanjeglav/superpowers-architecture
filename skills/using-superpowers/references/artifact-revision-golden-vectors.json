@@ -1,0 +1,32 @@
+[
+  {
+    "name": "lf-unicode",
+    "input": "# Café\n\nBody λ\n",
+    "bom": false,
+    "expected": "sha256:7aa51a0bd36c1dcd667bde148ffdfdfc21f30a85ccb9f525160fffb3cde09736"
+  },
+  {
+    "name": "crlf-bom-status",
+    "input": "**Status:** Approved\r\n# Café\r\n\r\nBody λ\r\n",
+    "bom": true,
+    "expected": "sha256:7aa51a0bd36c1dcd667bde148ffdfdfc21f30a85ccb9f525160fffb3cde09736"
+  },
+  {
+    "name": "cr-lifecycle-fields",
+    "input": "**Artifact Type:** Design Spec\r**Revision:** sha256:stale\r**Approved Revision:** sha256:stale\r**Approved At:** 2026-07-22T12:00:00.000Z\r# Café\r\rBody λ\r",
+    "bom": false,
+    "expected": "sha256:7aa51a0bd36c1dcd667bde148ffdfdfc21f30a85ccb9f525160fffb3cde09736"
+  },
+  {
+    "name": "trailing-blank-lines",
+    "input": "# Café\n\nBody λ\n\n\n",
+    "bom": false,
+    "expected": "sha256:7aa51a0bd36c1dcd667bde148ffdfdfc21f30a85ccb9f525160fffb3cde09736"
+  },
+  {
+    "name": "preserved-internal-blank-line",
+    "input": "# Café\n\n\nBody λ\n",
+    "bom": false,
+    "expected": "sha256:e877aac9bc1aa828cdd035ec5cd3143c16c9fd69b51be92769b5b4c3dc92a5af"
+  }
+]
