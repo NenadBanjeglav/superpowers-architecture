@@ -7,12 +7,22 @@ code quality.
 **Purpose:** Verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
 
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral dispatch request:
+
+```json
+{
+  "role": "task-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "[CAPABILITY_TIER]",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": ["[BRIEF_FILE]", "[REPORT_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "workspacePolicy": "read-only-review"
+}
 ```
-Subagent (general-purpose):
-  description: "Review Task N (spec + quality)"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
-  prompt: |
+
+The adapter must verify isolation and read-only realization or disclose the reduced guarantee before review.
+
+```text
     You are reviewing one task's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a task-scoped gate,
     not a merge review — a broad whole-branch review happens separately after
@@ -166,7 +176,8 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
+- `[CAPABILITY_TIER]` — REQUIRED: `balanced` for ordinary review or `strongest-available` for architecture-sensitive review; explicit user model choices win in the adapter
+- `[PROMPT_FILE]` — REQUIRED: absolute path to the rendered bounded reviewer prompt
 - `[BRIEF_FILE]` — REQUIRED: the task brief file (`scripts/task-brief PLAN N`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from

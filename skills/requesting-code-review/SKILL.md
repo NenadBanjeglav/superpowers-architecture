@@ -5,7 +5,7 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+Dispatch a code reviewer through the host-neutral dispatch contract to catch issues before they cascade. Request `contextPolicy: isolated`, a bounded prompt path, the requirements and diff artifacts, and `workspacePolicy: read-only-review`. The runtime adapter must verify that parent conversation turns were not inherited or disclose reduced isolation before review.
 
 **Core principle:** Review early, review often.
 
@@ -29,13 +29,14 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Dispatch code reviewer:**
 
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+Render [code-reviewer.md](code-reviewer.md) to a bounded prompt file, then dispatch `role: final-reviewer`, `contextPolicy: isolated`, `capabilityTier: strongest-available`, the prompt and artifact paths, and `workspacePolicy: read-only-review`. Explicit user model choices win; the adapter maps tiers only to active-host advertised capabilities.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
+- `{REQUIREMENTS_FILE}` - Absolute path to the approved plan or bounded requirements file
+- `{DIFF_FILE}` - Absolute path to the review package
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 

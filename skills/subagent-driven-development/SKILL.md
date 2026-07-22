@@ -24,9 +24,9 @@ git diff --cached --name-only
 git restore --staged docs/superpowers 2>/dev/null || true
 ```
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Execute the plan by requesting an isolated implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end through the host-neutral dispatch contract.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Why subagents:** You delegate tasks to specialized agents with a requested isolated context. Precisely craft the bounded prompt and artifact paths so the runtime adapter can verify that parent conversation turns were not inherited. If the host cannot prove isolation, report the reduced guarantee instead of promising it. This also preserves your own context for coordination work.
 
 **Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
 
@@ -83,7 +83,7 @@ digraph process {
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -98,7 +98,7 @@ digraph process {
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use finishing-a-development-branch";
 }
 ```
 
@@ -118,38 +118,17 @@ conflicts that only emerge from implementation.
 
 If implementation reveals that the approved modules, interfaces, seams, adapters, data flow, or test surface must change, stop before dispatching divergent work. Run `artifact draft` on the controlling spec (and the dependent plan when applicable), return the artifact to user review, and resume only from newly Approved revisions.
 
-## Model Selection
+## Dispatch Contract and Capability Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Every dispatch uses the request shape in `../using-superpowers/references/dispatch-contract.md`. Implementers and reviewers normally use `contextPolicy: isolated`; writers use `workspacePolicy: shared-checkout` and must run sequentially, while reviewers use `workspacePolicy: read-only-review`.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+An explicit user model choice wins. Otherwise select a capability tier and let the active runtime adapter map only to choices advertised by that host:
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+- Complete mechanical work in one or two files: `fast`.
+- Multi-file integration, debugging, or ordinary task review: `balanced`.
+- Architecture-sensitive work and the final whole-branch review: `strongest-available`.
 
-**Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
-
-**Review tasks**: choose the model with the same judgment, scaled to the
-diff's size, complexity, and risk. A small mechanical diff does not need the
-most capable model; a subtle concurrency change does.
-
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
-
-**Turn count beats token price.** Wall-clock and context cost scale with how
-many turns a subagent takes, and the cheapest models routinely take 2-3× the
-turns on multi-step work — costing more overall. Use a mid-tier model as the
-floor for reviewers and for implementers working from prose descriptions.
-When the task's plan text contains the complete code to write, the
-implementation is transcription plus testing: use the cheapest tier for
-that implementer. Single-file mechanical fixes also take the cheapest tier.
-
-**Task complexity signals (implementation tasks):**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+Do not name or invent a model in this shared skill. If the adapter cannot map a tier, it preserves the runtime default and discloses the reduced guarantee. If isolation cannot be proven, stop for roles that require independent judgment or use the owning workflow's deterministic fallback.
 
 ## Handling Implementer Status
 
@@ -289,7 +268,7 @@ a ledger file, not only in todos.
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
 - [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
-- Final whole-branch review: use superpowers:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
+- Final whole-branch review: use `requesting-code-review` and [code-reviewer.md](../requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
 
@@ -428,13 +407,13 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for the final whole-branch review
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **writing-plans** - Creates the plan this skill executes
+- **requesting-code-review** - Code review template for the final whole-branch review
+- **finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for linear implementation plans or when subagents are unavailable.
+- **executing-plans** - Use for linear implementation plans or when subagents are unavailable.

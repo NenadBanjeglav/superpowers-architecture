@@ -6,12 +6,20 @@ Use this template to dispatch an isolated advisory document reviewer through the
 
 **Dispatch after:** The spec is written under `docs/superpowers/specs/` and `artifact refresh` has recorded its exact revision.
 
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
+
+```json
+{
+  "role": "document-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "balanced",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": ["[ABSOLUTE_SPEC_FILE_PATH]"],
+  "workspacePolicy": "read-only-review"
+}
+```
+
 ```text
-Advisory document reviewer:
-  context policy: isolated
-  capability: balanced
-  workspace policy: read-only
-  prompt: |
     You are an advisory spec document reviewer. Verify this Draft spec is complete and ready for user review. You cannot approve it.
 
     Spec to review: [ABSOLUTE_SPEC_FILE_PATH]

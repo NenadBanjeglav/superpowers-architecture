@@ -7,7 +7,7 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 ## Overview
 
-You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+You delegate tasks through the host-neutral dispatch contract and request isolated context. Precisely craft one bounded prompt and artifact set per task. The runtime adapter must verify that parent conversation turns were not inherited or disclose reduced isolation before work begins.
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
@@ -65,16 +65,20 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-Issue all three subagent dispatches in the same response — they run in parallel:
+Write one bounded prompt file per independent domain. Issue all host-neutral dispatch requests together with `contextPolicy: isolated`, an appropriate capability tier, and a workspace policy that prevents interference. Use `read-only-review` for investigations and `isolated-worktree` for independent writers; do not run multiple writers concurrently in one shared checkout.
 
-```text
-Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
-# All three run concurrently.
+```json
+{
+  "role": "implementer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "balanced",
+  "promptPath": "<absolute bounded prompt path>",
+  "artifactPaths": ["<absolute relevant test or evidence path>"],
+  "workspacePolicy": "isolated-worktree"
+}
 ```
 
-Multiple dispatch calls in one response = parallel execution. One per response = sequential.
+Repeat the request per independent domain and issue them concurrently through the runtime adapter. If the host cannot verify isolation or safe workspaces, disclose the reduced guarantee and fall back to sequential execution.
 
 ### 4. Review and Integrate
 

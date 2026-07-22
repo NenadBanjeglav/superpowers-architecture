@@ -2,12 +2,22 @@
 
 Use this template when dispatching an implementer subagent.
 
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral dispatch request:
+
+```json
+{
+  "role": "implementer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "[CAPABILITY_TIER]",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": ["[BRIEF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "workspacePolicy": "shared-checkout"
+}
 ```
-Subagent (general-purpose):
-  description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
-  prompt: |
+
+The runtime adapter must verify the actual context policy and disclose any reduced guarantee. `[CAPABILITY_TIER]` is `fast`, `balanced`, or `strongest-available`; an explicit user model choice takes precedence in the adapter.
+
+```text
     You are implementing Task N: [task name]
 
     ## Task Description

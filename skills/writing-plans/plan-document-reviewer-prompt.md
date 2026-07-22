@@ -6,12 +6,20 @@ Use this template to dispatch an isolated advisory document reviewer through the
 
 **Dispatch after:** The complete plan is written and `artifact refresh` has recorded its exact revision.
 
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
+
+```json
+{
+  "role": "document-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "balanced",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": ["[ABSOLUTE_PLAN_FILE_PATH]", "[ABSOLUTE_SPEC_FILE_PATH]"],
+  "workspacePolicy": "read-only-review"
+}
+```
+
 ```text
-Advisory document reviewer:
-  context policy: isolated
-  capability: balanced
-  workspace policy: read-only
-  prompt: |
     You are an advisory plan document reviewer. Verify this Draft plan is complete and ready for user review. You cannot approve it.
 
     Plan to review: [ABSOLUTE_PLAN_FILE_PATH]

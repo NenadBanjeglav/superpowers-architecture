@@ -4,10 +4,20 @@ Use this template when dispatching a code reviewer subagent.
 
 **Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
 
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral dispatch request:
+
+```json
+{
+  "role": "final-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "strongest-available",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": ["[REQUIREMENTS_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "workspacePolicy": "read-only-review"
+}
 ```
-Subagent (general-purpose):
-  description: "Review code changes"
-  prompt: |
+
+```text
     You are a Senior Code Reviewer with expertise in software architecture,
     design patterns, and best practices. Your job is to review completed work
     against its plan or requirements and identify issues before they cascade.
@@ -18,17 +28,15 @@ Subagent (general-purpose):
 
     ## Requirements / Plan
 
-    [PLAN_OR_REQUIREMENTS]
+    Read [REQUIREMENTS_FILE].
 
     ## Git Range to Review
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
+    **Review package:** [DIFF_FILE]
 
-    ```bash
-    git diff --stat [BASE_SHA]..[HEAD_SHA]
-    git diff [BASE_SHA]..[HEAD_SHA]
-    ```
+    Read the review package once. It contains the commit list, stat summary, and full diff for the range.
 
     ## Read-Only Review
 
@@ -126,8 +134,12 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
+- `[PROMPT_FILE]` — absolute path to the rendered bounded reviewer prompt
 - `[DESCRIPTION]` — brief summary of what was built
-- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
+- `[REQUIREMENTS_FILE]` — absolute path to the approved plan or bounded requirements file
+- `[DIFF_FILE]` — absolute path to the review package
+- `[APPROVED_SPEC_FILE]` — absolute path to the Approved Design Spec
+- `[APPROVED_PLAN_FILE]` — absolute path to the Approved Implementation Plan
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 

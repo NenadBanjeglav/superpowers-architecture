@@ -12,10 +12,9 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
 | Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
 | Invoke a skill | Skills load natively — just follow the instructions |
-| Dispatch a subagent (`Subagent (general-purpose):` template) | `spawn_agent` (see [Subagent dispatch requires multi-agent support](#subagent-dispatch-requires-multi-agent-support)) |
+| Dispatch a host-neutral request | `spawn_agent` through the adapter below |
 | Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
 | Wait for subagent result | `wait_agent` |
-| Free up subagent slot when done | `close_agent` |
 | Task tracking ("create a todo", "mark complete") | `update_plan` |
 
 ## Instructions file
@@ -26,16 +25,26 @@ When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`**
 
 User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
-## Subagent dispatch requires multi-agent support
+## Host-Neutral Dispatch Adapter
 
-Add to your Codex config (`~/.codex/config.toml`):
+Consume the request in [dispatch-contract.md](dispatch-contract.md). Multi-agent support must be present in the active tool schema; installations that expose it through configuration may require:
 
 ```toml
 [features]
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+At dispatch time:
+
+1. Read the bounded `promptPath` and verify every `artifactPaths` entry is readable. Do not append controller history.
+2. Inspect the active `spawn_agent` schema. Discover available model overrides and context-fork values from that schema at use time.
+3. Map `contextPolicy: isolated` to `fork_turns: "none"`. Map `inherited` only when explicitly requested. If the active schema cannot express no-history isolation, report the reduced guarantee or use the caller's deterministic fallback.
+4. Use the requested role to form the bounded task name and pass the rendered prompt plus artifact paths. Do not substitute a phase handoff for a subagent dispatch.
+5. Preserve an explicit user model choice when it is advertised. Otherwise map the capability tier only to identifiers advertised by the active schema. If no valid mapping is available, omit the override, preserve the runtime default, and disclose the reduced guarantee.
+6. Realize `shared-checkout` in the current checkout, `read-only-review` through a read-only prompt plus post-dispatch Git-state verification, and `isolated-worktree` only through an available isolated-workspace mechanism.
+7. Report the operation used, actual context policy, model behavior, workspace realization, and any reduced guarantee.
+
+For isolation smoke evidence, place a unique token only in the controller conversation, write a different prompt token and artifact path into the bounded request, dispatch with `fork_turns: "none"`, and require the child to report the prompt token/path while confirming the controller-only token is unavailable.
 
 Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
 waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The

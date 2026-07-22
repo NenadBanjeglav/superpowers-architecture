@@ -37,6 +37,20 @@ Claude Code can load personal and project skills, and plugin skills are namespac
 
 Claude marketplace installs are copied into Claude's plugin cache. Hook scripts and skill references must use `${CLAUDE_PLUGIN_ROOT}` for bundled plugin files and must write generated project docs under the user's current repository, not inside the plugin cache.
 
+## Host-Neutral Dispatch Adapter
+
+Consume the request in [dispatch-contract.md](dispatch-contract.md) through the current Claude Code `Agent`/subagent surface. [Official Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) describes each new subagent as starting in a fresh context window without the parent conversation history, while receiving a composed delegation prompt and basic environment details.
+
+At dispatch time:
+
+1. Read the bounded `promptPath` and verify every `artifactPaths` entry is readable. Pass only that crafted prompt and those paths; do not paste controller history or accumulated task summaries.
+2. Inspect the installed Claude version and its advertised Agent/subagent schema or help. If that version does not provide or document the requested no-history behavior, disclose the reduced isolation before dispatch or use deterministic self-review.
+3. Preserve any explicit user model selection. Otherwise map `fast`, `balanced`, or `strongest-available` only to models or aliases advertised by the installed host. If no valid mapping is available, inherit the runtime default and disclose the reduced guarantee.
+4. Use a normal shared checkout only for sequential writers. Use read-only tools or prompt constraints for `read-only-review`, and `isolation: worktree` only when the installed Agent surface advertises it.
+5. Report the Agent operation used, actual isolation behavior, selected or inherited model behavior, workspace realization, and any reduced guarantee.
+
+A subagent remains part of one Claude session. It is never a substitute for the new named background session required by automated phase handoff.
+
 ## Automated Phase Handoff In Claude Code
 
 When automated fresh-session mode is selected and an artifact has been explicitly approved, Claude Code may start the next phase in a background session.

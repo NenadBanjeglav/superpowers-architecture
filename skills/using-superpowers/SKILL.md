@@ -16,6 +16,8 @@ Before selecting any other skill, apply these priority rules:
 
 Host-specific tool names live in `references/`. Use `codex-tools.md` on Codex and `claude-code-tools.md` on Claude Code. Keep shared workflow policy runtime-neutral.
 
+Subagent workflows use the request in `references/dispatch-contract.md`: role, context policy, capability tier, bounded prompt path, artifact paths, and workspace policy. Shared skills never name host tools or concrete models. Phase handoff is a separate interface and must create a genuinely new user-owned session rather than a subagent.
+
 If a Superpowers Architecture skill applies to the task, use it before acting. The selected phase flow is:
 
 1. For new downstream projects, `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap, then stops.

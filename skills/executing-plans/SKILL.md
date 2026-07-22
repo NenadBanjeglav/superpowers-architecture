@@ -30,7 +30,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** If subagents are available and the plan's tasks are mostly independent, use superpowers:subagent-driven-development instead of this skill. Use this skill for linear plans, no-subagent runtimes, or tasks that require tight sequential control.
+**Note:** If subagents are available and the plan's tasks are mostly independent, use `subagent-driven-development` instead of this skill. Use this skill for linear plans, no-subagent runtimes, or tasks that require tight sequential control.
 
 ## The Process
 
@@ -54,7 +54,7 @@ If implementation reveals that the approved modules, interfaces, seams, adapters
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use `finishing-a-development-branch`
 - Follow that skill to run final verification, confirm local Superpowers docs are not staged, summarize commits, changed files, tests, and risks, then stop unless the user explicitly asks to push, merge, open a PR, or discard work.
 
 ## When to Stop and Ask for Help
@@ -86,6 +86,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **writing-plans** - Creates the plan this skill executes
+- **finishing-a-development-branch** - Complete development after all tasks
