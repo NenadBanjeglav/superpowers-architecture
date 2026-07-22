@@ -110,35 +110,61 @@ cd "$path"
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
-## Step 2: Project Setup
+## Step 2: Prepare Workspace
 
-Auto-detect and run appropriate setup:
+Preparation and baseline verification are separate interfaces. Detection is
+read-only and never grants permission to guess a package manager, mutate a
+lockfile, or run a competing installer.
 
-```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
+### Prepare workspace
 
-# Rust
-if [ -f Cargo.toml ]; then cargo build; fi
+1. Read the applicable `AGENTS.md` chain and project documentation for an
+   explicit preparation command. An applicable explicit command wins.
+2. If no explicit command exists, run the shared `workspace detect --root
+   <checkout-root>` operation through the active host launcher. It inspects
+   manager declarations, lockfiles, and tool configuration without writing or
+   executing anything.
+3. If the result is `ambiguous`, show every `evidence` entry and ask the user
+   which manager/command governs. Run nothing while ambiguity remains.
+4. If the result is `none`, explain that no preparation evidence was found and
+   do not invent a command.
+5. If the result is `ready`, explain the selected evidence, manager, and exact
+   `prepareCommand` before executing it. A user-approved resolution to an
+   ambiguity is equally valid, but must be stated explicitly.
 
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+Manager declarations beat same-ecosystem lockfiles. Strong Python lock evidence
+beats a standalone `requirements.txt`. `pyproject.toml` alone never selects
+Poetry. Multiple equal-priority managers or multiple ecosystems are ambiguous.
 
-# Go
-if [ -f go.mod ]; then go mod download; fi
-```
+| Unambiguous evidence | Preparation command |
+| --- | --- |
+| npm declaration or `package-lock.json` | `npm ci` |
+| pnpm declaration or `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` |
+| Yarn declaration or `yarn.lock` | `yarn install --immutable` |
+| Bun declaration, `bun.lock`, or `bun.lockb` | `bun install --frozen-lockfile` |
+| `uv.lock` | `uv sync --frozen` |
+| `poetry.lock` | `poetry install` |
+| `requirements.txt` without stronger Python evidence | `python -m pip install -r requirements.txt` |
+| `Cargo.lock` | `cargo fetch` |
+| `go.sum` | `go mod download` |
 
-## Step 3: Verify Clean Baseline
+If Node.js or the shared operation module is unavailable, stop and print the
+full-package installation guidance. Do not fall back to filename guessing.
 
-Run tests to ensure workspace starts clean:
+## Step 3: Verify Baseline
 
-```bash
-# Use project-appropriate command
-npm test / cargo test / pytest / go test ./...
-```
+### Verify baseline
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+1. Resolve the verification command independently from the applicable
+   `AGENTS.md` chain and project documentation. The detector intentionally
+   returns `verifyCommand: null`; a package manager does not prove the project's
+   test command.
+2. Run the resolved verification after preparation, or explain why preparation
+   was not needed.
+3. If no verification command is documented, report that evidence gap and ask
+   the user which baseline command governs before implementation.
+4. If the baseline fails, report the failure and ask whether to investigate or
+   proceed. Do not reinterpret a preparation command as a test.
 
 **If tests pass:** Report ready.
 
@@ -178,7 +204,8 @@ Ready to implement <feature-name>
 | Directory not ignored | Stop and ask user how to proceed |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
+| Detection returns `none` | Explain no evidence; run no installer |
+| Detection returns `ambiguous` | Show evidence and ask; run nothing |
 
 ## Common Mistakes
 
@@ -207,6 +234,11 @@ Ready to implement <feature-name>
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
 
+### Guessing from shallow filenames
+
+- **Problem:** `package.json` triggers npm despite pnpm/Yarn/Bun evidence, or `pyproject.toml` triggers Poetry without a Poetry lock
+- **Fix:** Use the ranked read-only detector and stop on ambiguity
+
 ## Red Flags
 
 **Never:**
@@ -216,11 +248,15 @@ Ready to implement <feature-name>
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
+- Run a preparation command when evidence is ambiguous or absent
+- Infer Poetry from `pyproject.toml` alone
+- Mutate lockfiles during manager detection
 
 **Always:**
 - Run Step 0 detection first
 - Prefer native tools over git fallback
 - Follow directory priority: explicit instructions > existing project-local directory > default
 - Verify directory is ignored for project-local
-- Auto-detect and run project setup
+- Read instructions first, then rank declarations and lockfile evidence
+- Explain the selected evidence and command before workspace preparation
 - Verify clean test baseline

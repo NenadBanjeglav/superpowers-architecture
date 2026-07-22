@@ -16,6 +16,7 @@ import {
   resolveSddWorkspace,
 } from './lib/sdd.mjs';
 import { renderStartupContext } from './lib/startup.mjs';
+import { detectWorkspaceEvidence } from './lib/workspace.mjs';
 
 const COMPLETE_REVISION = /^sha256:[0-9a-f]{64}$/;
 
@@ -138,11 +139,19 @@ async function runStartup(command, args) {
   });
 }
 
+async function runWorkspace(command, args) {
+  if (command !== 'detect') fail(`Unknown workspace command ${command ?? '(missing)'}.`);
+  const options = parseOptions(args);
+  requireOnly(options, ['--root']);
+  return detectWorkspaceEvidence(options['--root']);
+}
+
 export async function runSpa(argv) {
   const [group, command, ...args] = argv;
   if (group === 'artifact') return runArtifact(command, args);
   if (group === 'sdd') return runSdd(command, args);
   if (group === 'startup') return runStartup(command, args);
+  if (group === 'workspace') return runWorkspace(command, args);
   fail(`Unknown command group ${group ?? '(missing)'}.`);
 }
 
