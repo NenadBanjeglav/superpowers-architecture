@@ -9,9 +9,11 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 ## Required Input
 
-Start only from an approved local spec path. Read the spec from disk and inspect the codebase fresh. Do not rely on prior conversation context.
+Start only from an approved local Design Spec path and its exact expected `sha256:` revision. Before inspecting the codebase, resolve the sibling `using-superpowers` operation module and run `artifact validate --path <spec> --type "Design Spec" --expected-revision <digest>`.
 
-If no spec path is provided, ask for it. Do not infer the feature from memory.
+If validation fails, Node.js or the operation module is unavailable, the artifact is Draft, or the digest differs, stop. Do not calculate approval independently or rely on prior conversation context. Read the validated spec from disk and inspect the codebase fresh.
+
+If no spec path or expected revision is provided, ask for it. Do not infer the feature or approval from memory.
 
 ## Phase Mode Input
 
@@ -68,6 +70,18 @@ Every plan must start with:
 
 **Spec:** `<path-to-approved-spec>`
 
+**Spec Revision:** `<exact approved sha256 digest>`
+
+**Artifact Type:** Implementation Plan
+
+**Status:** Draft
+
+**Revision:** none
+
+**Approved Revision:** none
+
+**Approved At:** none
+
 **Goal:** <one sentence>
 
 **Phase Mode:** <selected phase mode and durability>
@@ -87,30 +101,35 @@ If a step changes code, show the code. If a step validates behavior, show the ex
 
 ## Written Plan Review Gate
 
+After writing the complete Draft plan, run `artifact refresh --path <plan> --type "Implementation Plan"`. Then dispatch an isolated advisory document reviewer with the absolute plan path, absolute source spec path, isolated context, balanced capability, and read-only workspace policy.
+
+The reviewer may return only `Ready for user review` or `Issues found`; it cannot approve. If isolation is unavailable, run the exact Self-Review checklist below. Resolve issues before presenting the plan. Any content edit must run `artifact draft` first and `artifact refresh` afterward, followed by another advisory review or deterministic self-review.
+
 After writing the plan, ask one of these based on the selected Phase Mode.
 
 Automated fresh-session mode:
 
 ```text
-Plan written to `<path>`. Please review it before implementation. After you approve it, I will start implementation in a fresh session using the selected automated fresh-session mode.
+Draft plan written to `<path>` at `<sha256 revision>`. Please review that exact revision before implementation. After you explicitly approve it, I will record approval in the artifact and start implementation in a fresh session using the selected automated fresh-session mode.
 ```
 
 Same-session mode:
 
 ```text
-Plan written to `<path>`. Please review it before implementation. After you approve it, I will continue to implementation in this same session using the selected same-session mode.
+Draft plan written to `<path>` at `<sha256 revision>`. Please review that exact revision before implementation. After you explicitly approve it, I will record approval in the artifact and continue to implementation in this same session using the selected same-session mode.
 ```
 
-If the user requests changes, update the plan and repeat the review gate.
+If the user requests changes, run `artifact draft` before editing, update the plan, run `artifact refresh`, repeat advisory review or deterministic self-review, and repeat the review gate with the new digest.
 
 ## Terminal State
 
-After writing the plan, stop. Do not invoke implementation skills until the user explicitly approves the written plan.
+After writing and reviewing the Draft plan, stop. Do not invoke implementation skills until the user explicitly approves the reported exact revision.
 
 After approval:
 
-- In automated fresh-session mode, build the canonical implementation prompt, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
-- In same-session mode, announce that approval is noted, invoke `subagent-driven-development` when tasks are mostly independent or `executing-plans` when they are linear, re-read the approved plan, referenced spec, and codebase from disk, and implement from the plan.
+- Run `artifact approve --path <plan> --type "Implementation Plan" --expected-revision <reviewed sha256>` before any implementation handoff. If approval fails, stop and require renewed review.
+- In automated fresh-session mode, build the canonical implementation prompt from the approved artifact, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
+- In same-session mode, invoke `subagent-driven-development` when tasks are mostly independent or `executing-plans` when they are linear; revalidate the Approved plan and its referenced Approved source spec, re-read both artifacts and the codebase from disk, and implement from the plan.
 
 Canonical implementation prompt:
 
@@ -123,16 +142,30 @@ Prompt:
 
 ```text
 Use <implementation-skill> to implement:
-<absolute-or-repo-relative-plan-path>
+<absolute-plan-path>
 
-Read the plan, referenced spec, and codebase fresh. Use worktree isolation if I request it or if one is already active. Commit code per task, but never commit docs/superpowers/** unless I explicitly ask.
+Approved artifact:
+- Type: Implementation Plan
+- Revision: <exact approved plan sha256 digest>
+- Source spec: <absolute spec path>
+- Source spec revision: <exact approved spec sha256 digest>
+- Repository remote: <canonical remote>
+- Checkout root: <absolute checkout root>
+- Branch: <branch or detached commit>
+- Workspace policy: same-checkout
+- Plugin source: <installed | local-plugin-dir | skills-install>
+- Phase Mode: <selected mode>
+
+Validate the Approved plan and referenced Approved source spec at those exact revisions before acting. Read both artifacts and the codebase fresh. Commit public work per task, but never commit docs/superpowers/** unless I explicitly ask.
 ```
 
 ## Self-Review
 
 Before handing off the plan:
 
-1. Check every spec requirement has a task.
-2. Search for placeholder language and remove it.
-3. Verify file paths, function names, command names, and commit messages are consistent across tasks.
-4. Verify no task commits `docs/superpowers/**`.
+1. Check lifecycle metadata says `Artifact Type: Implementation Plan`, `Status: Draft`, and the plan binds the exact Approved source spec path and revision.
+2. Check every spec requirement has a task.
+3. Search for placeholder language and remove it.
+4. Verify file paths, function names, command names, and commit messages are consistent across tasks.
+5. Verify architecture decisions and test surface from the source spec are carried into tasks.
+6. Verify no task commits `docs/superpowers/**`.

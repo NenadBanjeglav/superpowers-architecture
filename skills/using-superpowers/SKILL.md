@@ -41,6 +41,18 @@ Generated downstream files under `docs/superpowers/**` are local developer worki
 
 Approval must be explicit in both modes. Never infer approval from silence, from artifact creation, or from a request to continue that does not identify the approved artifact.
 
+<!-- STARTUP-CONTRACT:START -->
+Artifact lifecycle routing rule: specs and plans remain Draft until the user approves their exact SHA-256 revision; filenames and chat memory never prove approval, and every next phase revalidates the artifact from disk.
+<!-- STARTUP-CONTRACT:END -->
+
+## Artifact Lifecycle
+
+Specs and implementation plans are Draft until the user approves an exact canonical SHA-256 payload revision. Filenames, timestamps, headings, and chat memory never prove approval; only successful validation of the artifact's type, `Status: Approved`, approved revision, and recomputed payload digest does.
+
+`using-superpowers/scripts/spa.mjs` owns the shared lifecycle implementation. Consuming skills and runtime adapters must call its `artifact draft`, `artifact refresh`, `artifact approve`, and `artifact validate` operations rather than reimplement canonicalization. Node.js 20 or newer is required for these correctness-critical transitions. If Node or the sibling operation module is unavailable, fail closed and print the full-package installation command from `references/artifact-lifecycle.md`.
+
+Managed content changes run `artifact draft` before editing and `artifact refresh` afterward. Advisory reviewers can identify issues but cannot approve; only explicit user approval of the reported digest permits `artifact approve`. Every next phase independently validates the Approved artifact from disk at the supplied expected revision before acting.
+
 ## Required Skill Discipline
 
 - If the user asks for new-project-from-scratch setup, repo inception, project contract creation, root `CONTEXT.md`, tech-stack decisions, architecture summary, domain language, or initial high-level roadmap creation, use `project-setup`.

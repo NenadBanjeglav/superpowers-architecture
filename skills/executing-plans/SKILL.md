@@ -7,7 +7,11 @@ description: Use when executing written implementation plans linearly after writ
 
 ## Required Input
 
-Start only from an approved written implementation plan path. Read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
+Start only from an approved written Implementation Plan path and its exact expected `sha256:` revision. Resolve the sibling `using-superpowers` operation module and validate the plan as `Implementation Plan` at that revision before reading it for instructions.
+
+Read the validated plan's `Spec` and `Spec Revision` fields, then validate that source artifact as an Approved `Design Spec` at the recorded revision. Only after both validations pass may you read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
+
+If either artifact is Draft, missing or duplicated lifecycle metadata, the wrong type, edited after approval, or at a different revision, stop and report the expected and actual values. Missing Node.js or a missing operation module also fails closed with the full-package installation guidance.
 
 ## Local Superpowers Docs Guard
 
@@ -43,6 +47,8 @@ For each task:
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+
+If implementation reveals that the approved modules, interfaces, seams, adapters, data flow, or test surface must change, stop before diverging. Run `artifact draft` on the controlling spec (and the dependent plan when applicable), return the artifact to user review, and resume only from newly Approved revisions.
 
 ### Step 3: Complete Development
 

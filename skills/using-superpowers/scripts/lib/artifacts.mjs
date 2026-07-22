@@ -13,6 +13,41 @@ function decodeArtifactBytes(input) {
   return decoded.replace(/\r\n?/g, '\n');
 }
 
+function maskMarkdownFences(normalized) {
+  let insideFence = false;
+  let fenceCharacter = '';
+  let fenceLength = 0;
+
+  return normalized
+    .split(/(?<=\n)/)
+    .map((segment) => {
+      const hasNewline = segment.endsWith('\n');
+      const line = hasNewline ? segment.slice(0, -1) : segment;
+      const opening = insideFence ? null : line.match(/^ {0,3}(`{3,}|~{3,})/);
+      const closing = insideFence
+        ? line.match(new RegExp(`^ {0,3}${fenceCharacter === '`' ? '`' : '~'}{${fenceLength},}[ \\t]*$`))
+        : null;
+      const masked = `${' '.repeat(line.length)}${hasNewline ? '\n' : ''}`;
+
+      if (opening) {
+        insideFence = true;
+        fenceCharacter = opening[1][0];
+        fenceLength = opening[1].length;
+        return masked;
+      }
+      if (insideFence) {
+        if (closing) {
+          insideFence = false;
+          fenceCharacter = '';
+          fenceLength = 0;
+        }
+        return masked;
+      }
+      return segment;
+    })
+    .join('');
+}
+
 export function canonicalizeArtifactBytes(input) {
   const normalized = decodeArtifactBytes(input);
   const payload = normalized.replace(LIFECYCLE_LINE, '').replace(/\n+$/g, '');
@@ -49,10 +84,11 @@ function assertRevisionArgument(path, revision, optionName = 'expected revision'
 }
 
 function parseLifecycleMetadata(path, normalized) {
+  const metadataSource = maskMarkdownFences(normalized);
   const values = {};
   for (const label of LIFECYCLE_LABELS) {
     const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const matches = [...normalized.matchAll(new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'))];
+    const matches = [...metadataSource.matchAll(new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'))];
     if (matches.length !== 1) {
       throw artifactError(
         path,
@@ -83,8 +119,13 @@ function serializeMetadata(metadata) {
 }
 
 function replaceLifecycleMetadata(normalized, metadata) {
-  const firstLifecycleIndex = normalized.search(LIFECYCLE_LINE);
-  const withoutLifecycle = normalized.replace(LIFECYCLE_LINE, '');
+  const metadataSource = maskMarkdownFences(normalized);
+  const matches = [...metadataSource.matchAll(LIFECYCLE_LINE)];
+  const firstLifecycleIndex = matches[0]?.index ?? -1;
+  let withoutLifecycle = normalized;
+  for (const match of matches.reverse()) {
+    withoutLifecycle = `${withoutLifecycle.slice(0, match.index)}${withoutLifecycle.slice(match.index + match[0].length)}`;
+  }
   let insertionIndex = firstLifecycleIndex;
 
   if (insertionIndex < 0) {

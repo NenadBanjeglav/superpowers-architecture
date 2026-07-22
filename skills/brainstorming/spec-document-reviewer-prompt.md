@@ -1,49 +1,50 @@
 # Spec Document Reviewer Prompt Template
 
-Use this template when dispatching a spec document reviewer subagent.
+Use this template to dispatch an isolated advisory document reviewer through the host-neutral dispatch action.
 
-**Purpose:** Verify the spec is complete, consistent, and ready for implementation planning.
+**Purpose:** Verify the Draft spec is complete, consistent, lifecycle-valid, and ready for user review. The reviewer cannot approve it.
 
-**Dispatch after:** Spec document is written to docs/superpowers/specs/
+**Dispatch after:** The spec is written under `docs/superpowers/specs/` and `artifact refresh` has recorded its exact revision.
 
-```
-Subagent (general-purpose):
-  description: "Review spec document"
+```text
+Advisory document reviewer:
+  context policy: isolated
+  capability: balanced
+  workspace policy: read-only
   prompt: |
-    You are a spec document reviewer. Verify this spec is complete and ready for planning.
+    You are an advisory spec document reviewer. Verify this Draft spec is complete and ready for user review. You cannot approve it.
 
-    **Spec to review:** [SPEC_FILE_PATH]
+    Spec to review: [ABSOLUTE_SPEC_FILE_PATH]
 
     ## What to Check
 
     | Category | What to Look For |
     |----------|------------------|
-    | Completeness | TODOs, placeholders, "TBD", incomplete sections |
-    | Consistency | Internal contradictions, conflicting requirements |
-    | Clarity | Requirements ambiguous enough to cause someone to build the wrong thing |
-    | Scope | Focused enough for a single plan — not covering multiple independent subsystems |
-    | YAGNI | Unrequested features, over-engineering |
+    | Completeness | TODOs, placeholders, TBD markers, incomplete sections |
+    | Consistency | Internal contradictions or conflicting requirements |
+    | Clarity | Requirements ambiguous enough to cause the wrong plan |
+    | Scope | One coherent planning unit, not multiple independent subsystems |
+    | YAGNI | Unrequested features or over-engineering |
+    | Lifecycle | Artifact Type is Design Spec; Status is Draft; Revision is a complete sha256 digest; Approved Revision and Approved At are none |
+    | Architecture | Modules, interfaces, seams, adapters, data flow, and test surface are decision-complete |
 
     ## Calibration
 
-    **Only flag issues that would cause real problems during implementation planning.**
-    A missing section, a contradiction, or a requirement so ambiguous it could be
-    interpreted two different ways — those are issues. Minor wording improvements,
-    stylistic preferences, and "sections less detailed than others" are not.
+    Only flag issues that would cause real problems during implementation planning. Minor wording and stylistic preferences are not issues.
 
-    Approve unless there are serious gaps that would lead to a flawed plan.
+    Return Ready for user review unless there are serious gaps. Never write Approved; only the user can approve the exact artifact revision.
 
     ## Output Format
 
     ## Spec Review
 
-    **Status:** Approved | Issues Found
+    **Status:** Ready for user review | Issues found
 
     **Issues (if any):**
     - [Section X]: [specific issue] - [why it matters for planning]
 
-    **Recommendations (advisory, do not block approval):**
+    **Recommendations (advisory):**
     - [suggestions for improvement]
 ```
 
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**Reviewer returns:** `Ready for user review` or `Issues found`, plus issues and advisory recommendations. It never returns `Approved`.

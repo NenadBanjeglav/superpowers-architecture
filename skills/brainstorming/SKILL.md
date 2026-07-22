@@ -8,7 +8,7 @@ metadata:
 # Brainstorming
 
 <HARD-GATE>
-Do not write implementation code, scaffold production files, create implementation plans, or invoke implementation skills until the written local spec has been approved by the user.
+Do not write implementation code, scaffold production files, create implementation plans, or invoke implementation skills until the written local spec has been approved by the user at its exact recorded SHA-256 revision.
 </HARD-GATE>
 
 ## Priority
@@ -102,7 +102,11 @@ Every spec must include:
 
 **Source:** <user prompt, pasted spec, or ticket reference>
 **Date:** <YYYY-MM-DD>
-**Status:** Approved local working spec
+**Artifact Type:** Design Spec
+**Status:** Draft
+**Revision:** none
+**Approved Revision:** none
+**Approved At:** none
 
 ## Problem
 
@@ -148,11 +152,33 @@ _Avoid_: <rejected synonyms>
 
 ## Writing The Spec
 
-Write the approved spec to:
+Write the Draft spec to:
 
 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
 
 These files are local developer working state. Do not commit them. If `docs/superpowers/**` is not ignored, warn the user but do not edit `.gitignore` automatically.
+
+Resolve the sibling `using-superpowers` operation module and run `artifact refresh --path <path> --type "Design Spec"` after writing. If Node.js or the operation module is unavailable, fail closed with its full-package installation guidance; do not calculate a digest independently or rely on conversation memory.
+
+## Advisory Spec Review
+
+After refreshing the Draft, dispatch an isolated advisory document reviewer with:
+
+- the absolute spec path;
+- isolated context with no parent conversation turns;
+- balanced capability;
+- read-only workspace policy.
+
+The reviewer may return only `Ready for user review` or `Issues found`; it cannot approve the artifact. If isolated advisory review is unavailable, perform this deterministic self-review instead:
+
+1. Confirm every required section is complete and contains no TODO, TBD, or placeholder.
+2. Confirm requirements and decisions are internally consistent and unambiguous for planning.
+3. Confirm Language and Architecture define modules, interfaces, seams, adapters, data flow, and test surface.
+4. Confirm scope is one coherent planning unit and contains no unrequested features.
+5. Confirm acceptance criteria cover every stated goal and risk.
+6. Confirm lifecycle metadata still says `Status: Draft` and `Revision` equals the refreshed digest.
+
+Resolve advisory issues before showing the artifact to the user. After any content change, run `artifact draft` before editing and `artifact refresh` afterward, repeat advisory review or the self-review, and report the new exact revision.
 
 ## Written Spec Review Gate
 
@@ -161,25 +187,26 @@ After writing the spec, ask one of these based on the selected Phase Mode.
 Automated fresh-session mode:
 
 ```text
-Spec written to `<path>`. Please review it before planning. After you approve it, I will start planning in a fresh session using the selected automated fresh-session mode.
+Draft spec written to `<path>` at `<sha256 revision>`. Please review that exact revision before planning. After you explicitly approve it, I will record approval in the artifact and start planning in a fresh session using the selected automated fresh-session mode.
 ```
 
 Same-session mode:
 
 ```text
-Spec written to `<path>`. Please review it before planning. After you approve it, I will continue to planning in this same session using the selected same-session mode.
+Draft spec written to `<path>` at `<sha256 revision>`. Please review that exact revision before planning. After you explicitly approve it, I will record approval in the artifact and continue to planning in this same session using the selected same-session mode.
 ```
 
-If the user requests changes, update the spec and repeat the review gate.
+If the user requests changes, run `artifact draft` before editing, update the spec, run `artifact refresh`, repeat advisory review or deterministic self-review, and repeat the review gate with the new digest.
 
 ## Terminal State
 
-After writing the spec, stop. Do not invoke `writing-plans` until the user explicitly approves the written spec.
+After writing and reviewing the Draft spec, stop. Do not invoke `writing-plans` until the user explicitly approves the reported exact revision.
 
 After approval:
 
-- In automated fresh-session mode, build the canonical planning prompt, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
-- In same-session mode, announce that approval is noted, use `writing-plans`, re-read the approved spec and codebase from disk, write the implementation plan, and stop at the written-plan review gate.
+- Run `artifact approve --path <path> --type "Design Spec" --expected-revision <reviewed sha256>` before any handoff. If approval fails, stop and require renewed review of the actual refreshed revision.
+- In automated fresh-session mode, build the canonical planning prompt from the approved artifact, use the runtime adapter when available, report the spawned session identity or fallback prompt, then stop.
+- In same-session mode, use `writing-plans`, revalidate the Approved spec at its exact revision, re-read the spec and codebase from disk, write the implementation plan, and stop at the written-plan review gate.
 
 Canonical planning prompt:
 
@@ -187,7 +214,17 @@ Print:
 
 ```text
 Use the writing-plans skill to create an implementation plan from:
-<absolute-or-repo-relative-spec-path>
+<absolute-spec-path>
 
-Read the spec and codebase fresh. Save the plan under docs/superpowers/plans/. Stop after the written plan is reviewed. Do not stage or commit docs/superpowers/** unless I explicitly ask.
+Approved artifact:
+- Type: Design Spec
+- Revision: <exact approved sha256 digest>
+- Repository remote: <canonical remote>
+- Checkout root: <absolute checkout root>
+- Branch: <branch or detached commit>
+- Workspace policy: same-checkout
+- Plugin source: <installed | local-plugin-dir | skills-install>
+- Phase Mode: <selected mode>
+
+Validate the Approved Design Spec at that exact revision before inspecting the codebase. Read the spec and codebase fresh. Save the Draft plan under docs/superpowers/plans/, refresh and review its exact revision, and stop at the written-plan review gate. Do not stage or commit docs/superpowers/** unless I explicitly ask.
 ```

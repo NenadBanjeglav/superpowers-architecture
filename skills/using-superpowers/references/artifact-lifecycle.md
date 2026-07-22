@@ -14,6 +14,8 @@ Every managed artifact contains exactly one line for each field:
 **Approved At:** none | ISO-8601 timestamp
 ```
 
+Lifecycle discovery and rewriting treat only matching lines outside fenced Markdown blocks as managed metadata, so literal templates remain intact. Canonical hashing still follows the approved byte algorithm exactly and removes every complete lifecycle-form line before hashing.
+
 The revision hashes the canonical payload: decode strict UTF-8 after removing an optional UTF-8 BOM, normalize CRLF and CR to LF, remove complete lifecycle metadata lines, preserve every other character and internal blank line, normalize to one trailing LF, and SHA-256 hash those UTF-8 bytes.
 
 ## Commands
