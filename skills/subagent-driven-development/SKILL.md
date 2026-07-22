@@ -24,7 +24,7 @@ git diff --cached --name-only
 git restore --staged docs/superpowers 2>/dev/null || true
 ```
 
-Execute the plan by requesting an isolated implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end through the host-neutral dispatch contract.
+Execute the plan by requesting an isolated implementer subagent per task, a task review (spec compliance + architecture conformance + code quality) after each, and a broad whole-branch review at the end through the host-neutral dispatch contract.
 
 ## Portable SDD Operations
 
@@ -55,7 +55,7 @@ through a manual fallback.
 
 **Why subagents:** You delegate tasks to specialized agents with a requested isolated context. Precisely craft the bounded prompt and artifact paths so the runtime adapter can verify that parent conversation turns were not inherited. If the host cannot prove isolation, report the reduced guarantee instead of promising it. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Core principle:** Fresh subagent per task + task review (spec + architecture + quality) + broad final review = high quality, fast iteration
 
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
@@ -86,7 +86,7 @@ digraph when_to_use {
 - Mostly tightly coupled tasks or plans that need sequential control
 - Falls back here when subagents are unavailable
 - Fresh subagent per task (no context pollution)
-- Review after each task (spec compliance + code quality), broad review at the end
+- Review after each task (spec compliance + architecture conformance + code quality), broad review at the end
 - Faster iteration (no human-in-loop between tasks)
 
 ## The Process
@@ -102,7 +102,7 @@ digraph process {
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
         "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
-        "Task reviewer reports spec ✅ and quality approved?" [shape=diamond];
+        "Task reviewer reports spec ✅, architecture conformant, and quality approved?" [shape=diamond];
         "Dispatch fix subagent for Critical/Important findings" [shape=box];
         "Mark task complete in todo list and progress ledger" [shape=box];
     }
@@ -118,10 +118,10 @@ digraph process {
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
     "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
-    "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
+    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅, architecture conformant, and quality approved?";
+    "Task reviewer reports spec ✅, architecture conformant, and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
     "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review"];
-    "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
+    "Task reviewer reports spec ✅, architecture conformant, and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
@@ -206,6 +206,13 @@ final whole-branch review. When you fill a reviewer template:
   Y"). The reviewer's template already carries the process rules (YAGNI,
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
+- Give every implementer, task reviewer, and final reviewer the exact Approved
+  spec/plan paths and revisions plus the shared
+  `codebase-design/ARCHITECTURE-CONFORMANCE.md` path. Copy the task-specific
+  Approved modules, interfaces, seams/adapters, data flow,
+  depth/locality/leverage intent, and test surface into the bounded prompt.
+  Any `violation` blocks completion; a design change requires a newly Approved
+  artifact revision before work continues.
 - Hand the reviewer its diff as a file: run this skill's portable
   review-package operation through the active host launcher and pass the
   reviewer the `path` in its JSON result. The output never enters your own
@@ -264,9 +271,10 @@ and is re-read on every later turn. Hand artifacts over as files:
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
+- **Reviewer inputs:** the task reviewer gets the same brief, report, review
+  package, exact Approved spec, exact Approved plan, and shared Architecture
+  Conformance rubric paths — plus the global constraints and task-specific
+  architecture binding.
 - Fix dispatches append their fix report (with test results) to the same
   report file and return a short summary; re-reviews read the updated file.
 
@@ -295,7 +303,7 @@ a ledger file, not only in todos.
 ## Prompt Templates
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
-- [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
+- [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + architecture conformance + code quality)
 - Final whole-branch review: use `requesting-code-review` and [code-reviewer.md](../requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
@@ -356,7 +364,7 @@ Task reviewer: Spec ✅. Task quality: Approved.
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer: All requirements met, ready for finishing verification
 
 Done!
 ```
@@ -382,7 +390,7 @@ Done!
 
 **Quality gates:**
 - Self-review catches issues before handoff
-- Task review carries two verdicts: spec compliance and code quality
+- Task review carries three verdicts: spec compliance, architecture conformance, and code quality
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
@@ -397,7 +405,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
+- Skip task review, or accept a report missing any verdict (spec compliance, architecture conformance, and task quality are all required)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make a subagent read the whole plan file (hand it its task brief —

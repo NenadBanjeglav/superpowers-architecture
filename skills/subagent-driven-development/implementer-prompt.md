@@ -10,7 +10,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
   "contextPolicy": "isolated",
   "capabilityTier": "[CAPABILITY_TIER]",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[BRIEF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "artifactPaths": ["[BRIEF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "shared-checkout"
 }
 ```
@@ -28,6 +28,20 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
+
+    ## Approved Architecture Inputs
+
+    Read the Approved Design Spec at [APPROVED_SPEC_FILE] revision
+    [APPROVED_SPEC_REVISION], the Approved Implementation Plan at
+    [APPROVED_PLAN_FILE] revision [APPROVED_PLAN_REVISION], and the shared
+    rubric at [CONFORMANCE_RUBRIC_FILE].
+
+    This task must preserve:
+    [ARCHITECTURE_BINDING]
+
+    If implementation requires changing an Approved module, interface, seam,
+    adapter, data flow, or test surface, stop. Report BLOCKED so the controller
+    can return the controlling artifact to Draft and user review.
 
     ## Before You Begin
 
@@ -71,12 +85,14 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     ## Code Organization
 
-    You reason best about code you can hold in context at once, and your edits are more
-    reliable when files are focused. Keep this in mind:
     - Follow the file structure defined in the plan
-    - Each file should have one clear responsibility with a well-defined interface
-    - If a file you're creating is growing beyond the plan's intent, stop and report
-      it as DONE_WITH_CONCERNS — don't split files on your own without plan guidance
+    - Follow the plan's module interface; keep cohesive implementation together
+      behind that interface
+    - Preserve depth, locality, and leverage; do not create pass-through modules or
+      split files merely to make each independently testable
+    - Put production and test adapters only at the Approved seams
+    - If implementation is growing beyond the plan's module/interface intent, stop
+      and report it as DONE_WITH_CONCERNS — do not redesign on your own
     - If an existing file you're modifying is already large or tangled, work carefully
       and note it as a concern in your report
     - In existing codebases, follow established patterns. Improve code you're touching
@@ -119,12 +135,17 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     - Did I follow existing patterns in the codebase?
 
     **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
+    - Do tests exercise externally observable behavior through the intended module interface?
+    - Are in-memory or mock adapters limited to justified remote/external seams?
     - Did I follow TDD if required?
     - Are tests comprehensive?
     - Is the test output pristine (no stray warnings or noise)?
 
     If you find issues during self-review, fix them now before reporting.
+
+    **Architecture Conformance:** Complete every line of
+    [CONFORMANCE_RUBRIC_FILE]. Any `violation` is blocking. A changed design is
+    conformant only when the cited newly Approved artifact revision records it.
 
     ## After Review Findings
 
@@ -141,6 +162,8 @@ The runtime adapter must verify the actual context policy and disclose any reduc
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
     - Files changed
+    - **Architecture Conformance** result using the complete shared rubric shape,
+      with the Approved spec/plan paths and revisions
     - Self-review findings (if any)
     - Any issues or concerns
 
@@ -159,3 +182,10 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
 ```
+
+Required architecture placeholders:
+
+- `[APPROVED_SPEC_FILE]` and `[APPROVED_SPEC_REVISION]` — exact Approved Design Spec identity
+- `[APPROVED_PLAN_FILE]` and `[APPROVED_PLAN_REVISION]` — exact Approved Implementation Plan identity
+- `[CONFORMANCE_RUBRIC_FILE]` — absolute path to `codebase-design/ARCHITECTURE-CONFORMANCE.md`
+- `[ARCHITECTURE_BINDING]` — task-specific modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface copied from the Approved artifacts

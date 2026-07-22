@@ -106,9 +106,9 @@ Vague name, tests mock not code
 </Bad>
 
 **Requirements:**
-- One behavior
+- Every new externally observable behavior has a failing test through the intended module interface; internal helpers need direct tests only when they expose an independent behavioral contract.
 - Clear name
-- Real code (no mocks unless unavoidable)
+- Test observable behavior through the module interface. Use real local-substitutable adapters where practical; use in-memory or mock adapters only at justified remote/external seams; never assert that a test double itself was called unless that interaction is the interface contract.
 
 ### Verify RED - Watch It Fail
 
@@ -326,15 +326,15 @@ Extract validation for multiple fields if needed.
 
 ## Verification Checklist
 
-Before marking work complete:
+Before marking work complete, read the Approved architecture inputs and the shared `codebase-design/ARCHITECTURE-CONFORMANCE.md` rubric:
 
-- [ ] Every new function/method has a test
+- [ ] Every new externally observable behavior has a failing test through the intended module interface; internal helpers need direct tests only when they expose an independent behavioral contract.
 - [ ] Watched each test fail before implementing
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
 - [ ] All tests pass
 - [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
+- [ ] Observable behavior is tested through the module interface; in-memory or mock adapters appear only at justified remote/external seams, and test-double interactions are asserted only when they are the interface contract.
 - [ ] Edge cases and errors covered
 
 Can't check all boxes? You skipped TDD. Start over.
@@ -345,7 +345,7 @@ Can't check all boxes? You skipped TDD. Start over.
 |---------|----------|
 | Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
 | Test too complicated | Design too complicated. Simplify interface. |
-| Must mock everything | Code too coupled. Use dependency injection. |
+| Must replace every collaborator | Recheck the approved seams. Use dependency injection and substitute only justified remote/external adapters. |
 | Test setup huge | Extract helpers. Still complex? Simplify design. |
 
 ## Debugging Integration

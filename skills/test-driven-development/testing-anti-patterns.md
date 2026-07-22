@@ -4,18 +4,18 @@
 
 ## Overview
 
-Tests must verify real behavior, not mock behavior. Mocks are a means to isolate, not the thing being tested.
+Tests verify observable behavior through the intended module interface. Test doubles are adapters at justified seams, not an alternate test surface.
 
-**Core principle:** Test what the code does, not what the mocks do.
+**Core principle:** Use real local-substitutable adapters where practical; use in-memory or mock adapters only at justified remote/external seams; never assert that a test double itself was called unless that interaction is the interface contract.
 
 **Following strict TDD prevents these anti-patterns.**
 
 ## The Iron Laws
 
 ```
-1. NEVER test mock behavior
+1. NEVER assert test-double interaction unless that interaction is the interface contract
 2. NEVER add test-only methods to production classes
-3. NEVER mock without understanding dependencies
+3. NEVER introduce a mock outside a justified remote/external seam you understand
 ```
 
 ## Anti-Pattern 1: Testing Mock Behavior
@@ -264,7 +264,7 @@ TDD cycle:
 
 **Why TDD helps:**
 1. **Write test first** → Forces you to think about what you're actually testing
-2. **Watch it fail** → Confirms test tests real behavior, not mocks
+2. **Watch it fail** → Confirms the test exercises observable behavior through the intended interface
 3. **Minimal implementation** → No test-only methods creep in
 4. **Real dependencies** → You see what the test actually needs before mocking
 
@@ -292,7 +292,7 @@ TDD cycle:
 
 ## The Bottom Line
 
-**Mocks are tools to isolate, not things to test.**
+**Mocks are adapters for justified remote/external seams, not things to test.**
 
 If TDD reveals you're testing mock behavior, you've gone wrong.
 

@@ -1,8 +1,8 @@
 # Task Reviewer Prompt Template
 
 Use this template when dispatching a task reviewer subagent. The reviewer
-reads the task's diff once and returns two verdicts: spec compliance and
-code quality.
+reads the task's diff once and returns three verdicts: spec compliance,
+architecture conformance, and code quality.
 
 **Purpose:** Verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
@@ -15,7 +15,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
   "contextPolicy": "isolated",
   "capabilityTier": "[CAPABILITY_TIER]",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[BRIEF_FILE]", "[REPORT_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "artifactPaths": ["[BRIEF_FILE]", "[REPORT_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "read-only-review"
 }
 ```
@@ -34,6 +34,14 @@ The adapter must verify isolation and read-only realization or disclose the redu
 
     Global constraints from the spec/design that bind this task:
     [GLOBAL_CONSTRAINTS]
+
+    ## Approved Architecture Inputs
+
+    Read [APPROVED_SPEC_FILE] at [APPROVED_SPEC_REVISION],
+    [APPROVED_PLAN_FILE] at [APPROVED_PLAN_REVISION], and
+    [CONFORMANCE_RUBRIC_FILE]. The task-specific Approved architecture binding is:
+
+    [ARCHITECTURE_BINDING]
 
     ## What the Implementer Claims They Built
 
@@ -100,7 +108,15 @@ The adapter must verify isolation and read-only realization or disclose the redu
     unchanged code or spans tasks), report it as a ⚠️ item instead of
     broadening your search.
 
-    ## Part 2: Code Quality
+    ## Part 2: Architecture Conformance
+
+    Complete every line of the shared Architecture Conformance rubric against
+    the Approved spec, plan, task binding, and diff. Any `violation` is
+    blocking. A changed design is conformant only when a newly Approved
+    artifact revision records it; an implementation rationale cannot approve a
+    design change.
+
+    ## Part 3: Code Quality
 
     **Code quality:**
     - Clean separation of concerns?
@@ -109,12 +125,17 @@ The adapter must verify isolation and read-only realization or disclose the redu
     - Edge cases handled?
 
     **Tests:**
-    - Do the new and changed tests verify real behavior, not mocks?
+    - Is observable behavior tested through the intended module interface?
+    - Are real local-substitutable adapters used where practical, with in-memory
+      or mock adapters only at justified remote/external seams?
+    - Are test-double interactions asserted only when that interaction is the interface contract?
     - Are the task's edge cases covered?
 
     **Structure:**
-    - Does each file have one clear responsibility with a well-defined interface?
-    - Are units decomposed so they can be understood and tested independently?
+    - Does the implementation preserve the Approved module interface and keep
+      cohesive behavior together behind it?
+    - Does decomposition increase depth, locality, or leverage rather than
+      creating pass-through files for test convenience?
     - Is the implementation following the file structure from the plan?
     - Did this change create new files that are already large, or
       significantly grow existing files? (Don't flag pre-existing file
@@ -159,6 +180,16 @@ The adapter must verify isolation and read-only realization or disclose the redu
     ### Strengths
     [What's well done? Be specific.]
 
+    ### Architecture Conformance
+
+    - **Modules:** preserved | changed with approved revision | violation
+    - **Interfaces:** preserved | changed with approved revision | violation
+    - **Seams and adapters:** justified production/test adapters at approved seams; no leaked host/runtime policy
+    - **Data flow:** matches the approved source-to-sink sequence
+    - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
+    - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
+    - **Design escalation:** implementation-discovered design changes returned the controlling artifact to Draft and user review
+
     ### Issues
 
     #### Critical (Must Fix)
@@ -191,9 +222,14 @@ The adapter must verify isolation and read-only realization or disclose the redu
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package BASE HEAD` prints the unique path it
   wrote; the package never enters the controller's context)
+- `[APPROVED_SPEC_FILE]` and `[APPROVED_SPEC_REVISION]` — REQUIRED: exact Approved Design Spec identity
+- `[APPROVED_PLAN_FILE]` and `[APPROVED_PLAN_REVISION]` — REQUIRED: exact Approved Implementation Plan identity
+- `[CONFORMANCE_RUBRIC_FILE]` — REQUIRED: absolute shared Architecture Conformance rubric path
+- `[ARCHITECTURE_BINDING]` — REQUIRED: task-specific Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Architecture
+Conformance, Strengths, Issues (Critical/Important/Minor), Task quality verdict.
+Any architecture `violation` requires `Needs fixes`.
 
 A fix dispatch can address spec gaps and quality findings together;
-re-review after fixes covers both verdicts.
+re-review after fixes covers all three verdicts.

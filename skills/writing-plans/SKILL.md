@@ -53,6 +53,25 @@ Each step is one concrete action:
 - run a specific test or manual check
 - commit a grouped change
 
+## Architecture Binding Per Task
+
+Read `codebase-design/ARCHITECTURE-CONFORMANCE.md`. Every implementation task
+must name the exact Approved Design Understanding it preserves:
+
+- modules;
+- interfaces;
+- seams and production/test adapters;
+- source-to-sink data flow;
+- depth, locality, and leverage intent; and
+- intended test surface.
+
+Include an explicit architecture-conformance check in each task with the
+Approved spec and plan paths/revisions. The check must use the shared rubric and
+must block on any `violation`. If a task requires a different module,
+interface, seam, adapter, data flow, or test surface, do not encode that change
+as implementation discretion. Return the controlling artifact to Draft and
+user review first.
+
 ## Commit Hygiene
 
 Task commit steps may commit code, tests, migrations, public docs, plugin metadata, and release assets.
@@ -188,5 +207,5 @@ Before handing off the plan:
 2. Check every spec requirement has a task.
 3. Search for placeholder language and remove it.
 4. Verify file paths, function names, command names, and commit messages are consistent across tasks.
-5. Verify architecture decisions and test surface from the source spec are carried into tasks.
+5. Verify every task names the Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface it preserves and includes the shared Architecture Conformance check.
 6. Verify no task commits `docs/superpowers/**`.

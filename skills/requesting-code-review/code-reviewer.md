@@ -12,7 +12,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
   "contextPolicy": "isolated",
   "capabilityTier": "strongest-available",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[REQUIREMENTS_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]"],
+  "artifactPaths": ["[REQUIREMENTS_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "read-only-review"
 }
 ```
@@ -29,6 +29,14 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     ## Requirements / Plan
 
     Read [REQUIREMENTS_FILE].
+
+    ## Approved Architecture Inputs
+
+    Read [APPROVED_SPEC_FILE] at [APPROVED_SPEC_REVISION],
+    [APPROVED_PLAN_FILE] at [APPROVED_PLAN_REVISION], and
+    [CONFORMANCE_RUBRIC_FILE]. The Approved whole-branch architecture binding is:
+
+    [ARCHITECTURE_BINDING]
 
     ## Git Range to Review
 
@@ -57,13 +65,16 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     - Edge cases handled?
 
     **Architecture:**
-    - Sound design decisions?
-    - Reasonable scalability and performance?
-    - Security concerns?
-    - Integrates cleanly with surrounding code?
+    - Complete every line of the shared Architecture Conformance rubric.
+    - Any `violation` blocks the branch from finishing verification.
+    - A design change is conformant only when a newly Approved artifact revision records it.
+    - Check security, scalability, and integration within the Approved module/interface/seam shape.
 
     **Testing:**
-    - Tests verify real behavior, not mocks?
+    - Is observable behavior tested through the intended module interface?
+    - Are real local-substitutable adapters used where practical, with in-memory
+      or mock adapters only at justified remote/external seams?
+    - Are test-double interactions asserted only when that interaction is the interface contract?
     - Edge cases covered?
     - Integration tests where they matter?
     - All tests passing?
@@ -90,6 +101,16 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     ### Strengths
     [What's well done? Be specific.]
 
+    ### Architecture Conformance
+
+    - **Modules:** preserved | changed with approved revision | violation
+    - **Interfaces:** preserved | changed with approved revision | violation
+    - **Seams and adapters:** justified production/test adapters at approved seams; no leaked host/runtime policy
+    - **Data flow:** matches the approved source-to-sink sequence
+    - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
+    - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
+    - **Design escalation:** implementation-discovered design changes returned the controlling artifact to Draft and user review
+
     ### Issues
 
     #### Critical (Must Fix)
@@ -112,7 +133,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 
     ### Assessment
 
-    **Ready to merge?** [Yes | No | With fixes]
+    **Ready for finishing verification?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -140,10 +161,14 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 - `[DIFF_FILE]` — absolute path to the review package
 - `[APPROVED_SPEC_FILE]` — absolute path to the Approved Design Spec
 - `[APPROVED_PLAN_FILE]` — absolute path to the Approved Implementation Plan
+- `[APPROVED_SPEC_REVISION]` — exact Approved Design Spec revision
+- `[APPROVED_PLAN_REVISION]` — exact Approved Implementation Plan revision
+- `[CONFORMANCE_RUBRIC_FILE]` — absolute path to the shared Architecture Conformance rubric
+- `[ARCHITECTURE_BINDING]` — Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**Reviewer returns:** Strengths, Architecture Conformance, Issues (Critical / Important / Minor), Recommendations, Assessment. Any architecture `violation` requires `No` or `With fixes`.
 
 ## Example Output
 
@@ -152,6 +177,15 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 - Clean database schema with proper migrations (db.ts:15-42)
 - Comprehensive test coverage (18 tests, all edge cases)
 - Good error handling with fallbacks (summarizer.ts:85-92)
+
+### Architecture Conformance
+- **Modules:** preserved
+- **Interfaces:** preserved
+- **Seams and adapters:** production database adapter remains at the Approved persistence seam
+- **Data flow:** matches the Approved request-to-persistence sequence
+- **Depth, locality, leverage:** persistence complexity remains behind the repository interface
+- **Test surface:** repository behavior is exercised through its interface
+- **Design escalation:** no implementation-discovered design change
 
 ### Issues
 
@@ -178,7 +212,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready for finishing verification: With fixes**
 
 **Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
 ```

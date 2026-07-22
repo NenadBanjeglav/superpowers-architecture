@@ -123,4 +123,10 @@ Use this skill during:
 - implementation review to detect shallow modules, leaky seams, weak adapters, poor locality, and tests that cross the wrong interface.
 - architecture review to produce markdown-only local reviews under `docs/superpowers/architecture-reviews/`.
 
+For plan, implementation, TDD, task-review, and final-review gates, use the
+shared [Architecture Conformance rubric](ARCHITECTURE-CONFORMANCE.md). Any
+reported violation blocks completion. An implementation-discovered design
+change is conformant only after the controlling artifact returns to Draft and a
+new exact revision is Approved.
+
 Do not create `context.md` or ADRs from this skill in this plugin. Put feature-specific architecture decisions into the local spec or architecture review.

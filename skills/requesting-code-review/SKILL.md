@@ -14,7 +14,7 @@ Dispatch a code reviewer through the host-neutral dispatch contract to catch iss
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before finishing verification, and before merge only when merge was explicitly requested
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -37,12 +37,17 @@ Render [code-reviewer.md](code-reviewer.md) to a bounded prompt file, then dispa
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{REQUIREMENTS_FILE}` - Absolute path to the approved plan or bounded requirements file
 - `{DIFF_FILE}` - Absolute path to the review package
+- `{APPROVED_SPEC_FILE}` / `{APPROVED_SPEC_REVISION}` - Exact Approved Design Spec identity
+- `{APPROVED_PLAN_FILE}` / `{APPROVED_PLAN_REVISION}` - Exact Approved Implementation Plan identity
+- `{CONFORMANCE_RUBRIC_FILE}` - Absolute shared Architecture Conformance rubric path
+- `{ARCHITECTURE_BINDING}` - Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
+- Treat any Architecture Conformance `violation` as blocking; unapproved design changes return the controlling artifact to Draft and user review
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
@@ -63,11 +68,12 @@ HEAD_SHA=$(git rev-parse HEAD)
   HEAD_SHA: 3df7661
 
 [Subagent returns]:
-  Strengths: Clean architecture, real tests
+  Strengths: Clean architecture, interface-level behavior tests
+  Architecture Conformance: Modules/interfaces preserved; no violations
   Issues:
     Important: Missing progress indicators
     Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
+  Assessment: Ready for finishing verification
 
 You: [Fix progress indicators]
 [Continue to Task 3]

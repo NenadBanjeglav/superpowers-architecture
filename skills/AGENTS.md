@@ -30,6 +30,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Do not include Matt issue, PRD, or triage flows.
 - Remove visual companion behavior from active brainstorming behavior.
 - Preserve Matt's `codebase-design` vocabulary: module, interface, seam, adapter, depth, leverage, locality, test surface.
+- `skills/codebase-design/ARCHITECTURE-CONFORMANCE.md` is the shared plan/implementation/TDD/review rubric. Every consumer receives exact Approved spec/plan identities and their binding modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface; any violation blocks completion and design changes require a newly Approved artifact revision.
 
 ## Work Guidance
 
