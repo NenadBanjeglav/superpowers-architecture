@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- Adds a canonical Draft/Approved artifact lifecycle whose SHA-256 revisions bind spec approval, plan approval, and every downstream phase validation.
+- Adds host-neutral isolated dispatch and a separate thirteen-field fresh-session handoff contract with exact checkout, artifact, and plugin affinity.
+- Moves lifecycle, SDD workspace/progress, startup rendering, and project-bootstrap decisions into shared Node.js 20+ operations with thin Windows and Unix launchers.
+- Threads one Architecture Conformance rubric through plans, TDD, implementation, task review, and final review.
+- Replaces duplicated startup payloads with a compact marked contract and visible missing-Node degradation.
+- Aligns public examples and advisory document review with lifecycle metadata, Phase Mode, exact revisions, and user-only approval.
+- Removes inherited product-specific fixtures, dates, metrics, runtime names, and default merge wording from active guidance.
+- Defines GitHub/skills.sh, the Codex plugin package, and the Claude marketplace plugin as the supported distribution channels; npm is unsupported and `package.json` is private tooling metadata.
+- Replaces the Claude roadmap with current runtime-support and evidence-bearing release documentation, and removes unrelated GitHub policy URLs from Codex metadata.
+- Prepares, but does not publish, the 0.5.0 release contract. Installed Claude evidence and accepted Codex compaction-reinjection evidence remain hard release blockers; source inspection does not close them.
+
 ## 0.4.0
 
 - Adds selected Phase Mode during first `brainstorming`: automated fresh-session mode or same-session mode.

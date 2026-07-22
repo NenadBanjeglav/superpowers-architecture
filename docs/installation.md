@@ -1,5 +1,13 @@
 # Installation
 
+Superpowers Architecture supports three distribution channels: GitHub/skills.sh,
+the Codex plugin package, and the Claude marketplace plugin. npm is not a
+supported channel; the repository `package.json` is private tooling metadata.
+
+Node.js 20 or newer is required for artifact lifecycle, portable SDD workspace,
+and compact startup-context operations. Missing Node is visible at startup and
+causes correctness-critical operations to fail closed.
+
 ## Skills CLI
 
 Superpowers Architecture is installable as a skills.sh package:
@@ -22,6 +30,15 @@ To install every skill globally for Codex without prompts:
 npx skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -a codex -g -y
 ```
 
+Complete artifact-lifecycle and SDD workflows must install
+`using-superpowers` alongside every consuming phase skill. It owns the single
+portable operation module. A partial install that omits it fails closed and
+prints this full-package recovery command:
+
+```powershell
+npx.cmd skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -y
+```
+
 Omit `-g` to install into the current project instead of the user-level skills directory.
 
 On Windows PowerShell, use `npx.cmd` if the `npx.ps1` shim is blocked by execution policy:
@@ -41,7 +58,10 @@ This repository also includes Codex plugin packaging:
 - `hooks/session-start-codex`
 - `hooks/run-hook.cmd`
 
-Use Codex's plugin install or marketplace flow when you specifically need the Codex session-start hook. If you maintain a personal Codex marketplace, add this plugin to that marketplace and install it from the Codex app.
+Use Codex's plugin install or marketplace flow when you need the complete Codex
+adapter. A release claim requires evidence from the installed plugin: load,
+startup/resume/compaction behavior, isolated dispatch, fresh-task handoff,
+same-checkout acknowledgement, and safe fallback.
 
 ## Local Development
 
@@ -57,12 +77,16 @@ git clone https://github.com/NenadBanjeglav/superpowers-architecture.git
 - Package name: `superpowers-architecture`
 - Repository: `https://github.com/NenadBanjeglav/superpowers-architecture`
 
-## Runtime Handoff Prerequisites
+## Automated Handoff Prerequisites
 
 Automated fresh-session mode depends on runtime support.
 
-- Codex App: use a project-scoped fresh thread when thread creation tools are available.
-- Claude Code: use background agents with `claude --bg --name "<name>" "<prompt>"`.
+- Codex App uses only a genuinely new project task that can target the exact
+  saved checkout; it never uses a conversation fork.
+- Claude Code uses a named background session only after the installed
+  `claude --help` advertises the required flags.
+- Both targets must echo and independently revalidate the complete
+  thirteen-field handoff record before planning or implementation.
 
 If the runtime cannot launch a fresh session automatically, Superpowers Architecture prints the exact next-phase prompt or command and stops.
 
@@ -87,14 +111,24 @@ Invoke skills with the plugin namespace:
 /superpowers-architecture:finishing-a-development-branch
 ```
 
-For local development from the repository root:
+For local development, pass the verified absolute plugin root:
 
 ```bash
-claude --plugin-dir .
+claude --plugin-dir "/absolute/path/to/superpowers-architecture"
 ```
+
+Fresh local-plugin sessions must receive that same absolute `--plugin-dir`
+path. A cached install or a different checkout is not equivalent.
 
 After editing plugin manifests or hooks in an active Claude session, run:
 
 ```text
 /reload-plugins
 ```
+
+Claude support is release-verified only after both marketplace and local-plugin
+loads run in an installed CLI, including hooks, isolated Agent dispatch, named
+background handoff, checkout/plugin affinity, and fallback behavior.
+
+See [Runtime Support](runtime-support.md) for host behavior and
+[Release](release.md) for the evidence and publication gates.

@@ -23,7 +23,8 @@ Capture:
 - seams
 - adapters
 - data flow
-- test surface
+- intended depth, locality, and leverage
+- test surface through public module behavior and justified external seams
 
 ## Test Surface
 
@@ -31,4 +32,14 @@ Tests should verify behavior through the correct interface. If a test must reach
 
 ## Planning Impact
 
-Implementation plans should preserve the Design Understanding decisions from the approved spec. This is true whether later phases run in automated fresh-session mode or same-session mode: the approved artifact is the source of truth, and the next phase must re-read it from disk. If implementation reveals the design is wrong, stop and revise the spec or plan rather than silently changing architecture.
+Implementation plans bind each task to the modules, interfaces, seams/adapters,
+data flow, depth/locality/leverage intent, and test surface in the exact Approved
+spec revision. TDD, implementer, task-reviewer, and final-reviewer prompts use
+the same Architecture Conformance rubric, so a generic passing test suite does
+not excuse a violated seam or shallow module boundary.
+
+This is true whether later phases run in automated fresh-session mode or
+same-session mode: the Approved artifact is the source of truth, and the next phase
+must validate and re-read it from disk. If implementation reveals that the
+design is wrong, return the controlling artifact to Draft, refresh its revision,
+and obtain new user approval rather than silently changing architecture.

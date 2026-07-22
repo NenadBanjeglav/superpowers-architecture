@@ -38,6 +38,17 @@ Then pick the skills you want and the agent you want to install them into. For a
 npx skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -a codex -g -y
 ```
 
+Complete lifecycle and SDD workflows must include `using-superpowers`, which
+owns the single portable operation module. If a partial skills.sh install omits
+it, consuming skills fail closed and print the full-package install command:
+
+```powershell
+npx.cmd skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -y
+```
+
+Node.js 20 or newer is required for artifact lifecycle, SDD workspace, and
+compact startup-context operations.
+
 On Windows PowerShell, use `npx.cmd` if the `npx.ps1` shim is blocked by execution policy:
 
 ```powershell
@@ -48,7 +59,9 @@ Start a fresh Codex session and say: `I want to design a feature before implemen
 
 ### Codex Plugin Package
 
-The `npx skills` flow installs the shared skills. The Codex plugin manifest and session-start hook are also included in this repo for Codex plugin packaging, but those require Codex's plugin install or marketplace flow.
+The `npx skills` flow installs the shared skills. The Codex plugin package is a
+separate supported channel that also installs the Codex startup hook; use a
+Codex plugin or marketplace flow that supports this repository's manifest.
 
 ### Claude Code Plugin
 
@@ -69,10 +82,11 @@ Then invoke skills with the plugin namespace:
 /superpowers-architecture:finishing-a-development-branch
 ```
 
-For local plugin development from a clone of this repository:
+For local plugin development from a clone of this repository, pass the verified
+absolute checkout path so fresh sessions can preserve plugin affinity:
 
 ```bash
-claude --plugin-dir .
+claude --plugin-dir "/absolute/path/to/superpowers-architecture"
 ```
 
 ## Workflow
@@ -80,9 +94,9 @@ claude --plugin-dir .
 1. Optional for new projects: `project-setup` writes and reviews root `AGENTS.md`, root `CONTEXT.md`, justified child `AGENTS.md` files, and a high-level roadmap.
 2. First `brainstorming` for a roadmap task or feature asks whether later approvals should use automated fresh-session mode or same-session mode when no durable preference already exists.
 3. `brainstorming` writes and reviews a local architecture-aware spec under `docs/superpowers/specs/`.
-4. After written spec approval, automated fresh-session mode starts planning in a fresh Codex or Claude session; same-session mode continues to planning in the current conversation after re-reading the spec and codebase from disk.
+4. The user approves the exact canonical spec revision; automated fresh-session mode starts planning in a fresh Codex or Claude session only after same-checkout acknowledgement, while same-session mode continues after re-reading the Approved spec and codebase from disk.
 5. `writing-plans` writes and reviews an exact implementation plan under `docs/superpowers/plans/`.
-6. After written plan approval, automated fresh-session mode starts implementation in a fresh Codex or Claude session; same-session mode continues to implementation in the current conversation after re-reading the plan, referenced spec, and codebase from disk.
+6. The user approves the exact canonical plan revision; automated fresh-session mode starts implementation only after target-side acknowledgement and revalidation, while same-session mode continues after re-reading the Approved plan, referenced spec, and codebase from disk.
 7. `subagent-driven-development` or `executing-plans` implements the plan with TDD, reviews, and code commits.
 8. `finishing-a-development-branch` verifies and summarizes the work.
 
@@ -116,7 +130,12 @@ Do not commit them unless you explicitly choose to.
 - [Workflow](docs/workflow.md)
 - [Design Understanding](docs/design-understanding.md)
 - [Architecture Review](docs/architecture-review.md)
-- [Claude Roadmap](docs/claude-roadmap.md)
+- [Runtime Support](docs/runtime-support.md)
+- [Release Contract](docs/release.md)
+
+The supported distribution channels are GitHub/skills.sh, the Codex plugin
+package, and the Claude marketplace plugin. npm is not supported;
+`package.json` is private repository/tooling metadata.
 
 ## Examples
 

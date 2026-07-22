@@ -8,6 +8,9 @@ docs/superpowers/architecture-reviews/
 
 These reviews are local working state and should not be committed unless explicitly requested.
 
+An architecture review is advisory. It identifies candidates but does not
+approve a design, implementation plan, or release.
+
 ## Candidate Shape
 
 Each candidate includes:
@@ -29,4 +32,8 @@ Each candidate includes:
 
 ## After Review
 
-If a candidate should become work, use `brainstorming` to create an approved local spec before planning or implementation.
+If a candidate should become work, use `brainstorming` to create a Draft local
+spec, refresh its canonical revision, and obtain explicit user approval of that
+exact revision before planning or implementation. The resulting plan and every
+implementation/review phase must preserve its Design Understanding through the
+shared Architecture Conformance rubric.

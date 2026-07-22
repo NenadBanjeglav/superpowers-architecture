@@ -18,6 +18,8 @@ Claude Code plugin and marketplace metadata for Superpowers Architecture.
 - Do not duplicate skills, add Claude agents, MCP servers, LSP servers, monitors, or output styles unless the user explicitly expands the release scope.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
 - Marketplace metadata must not imply official affiliation with Anthropic, Claude, `obra/superpowers`, or `mattpocock/skills`.
+- Claude support and release claims require installed-host evidence for marketplace and local `--plugin-dir` loading, hooks, isolated Agent dispatch, named background handoff, checkout/plugin affinity, and safe fallback.
+- Missing installed Claude evidence blocks release; source inspection is not a substitute.
 
 ## Work Guidance
 
