@@ -26,6 +26,33 @@ git restore --staged docs/superpowers 2>/dev/null || true
 
 Execute the plan by requesting an isolated implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end through the host-neutral dispatch contract.
 
+## Portable SDD Operations
+
+The shared Node module under `../using-superpowers/scripts/` owns SDD workspace,
+task extraction, review packaging, and durable progress behavior. Use the thin
+launcher for the active host; never reconstruct these operations with AWK,
+shell redirection, `cat`, or ad hoc Git command strings.
+
+| Operation | Bash/Git Bash/WSL/Unix | Windows cmd/PowerShell |
+| --- | --- | --- |
+| Resolve workspace | `scripts/sdd-workspace` | `scripts/sdd-workspace.cmd` |
+| Extract task | `scripts/task-brief PLAN_FILE N [OUTFILE]` | `scripts/task-brief.cmd PLAN_FILE N [OUTFILE]` |
+| Build review package | `scripts/review-package BASE HEAD [OUTFILE]` | `scripts/review-package.cmd BASE HEAD [OUTFILE]` |
+| Read progress | `scripts/progress read` | `scripts/progress.cmd read` |
+| Mark complete | `scripts/progress complete --task N --base BASE --head HEAD --review clean` | `scripts/progress.cmd complete --task N --base BASE --head HEAD --review clean` |
+
+Task, review, and progress operations return JSON containing their artifact path
+and result. The workspace operation prints the absolute workspace path for use
+by launchers and prompts. All correctness-critical launchers require Node.js 20
+or newer. If Node is unavailable, they exit nonzero and print exactly:
+
+```text
+Superpowers Architecture requires Node.js 20 or newer. Install Node.js, then retry this correctness-critical operation.
+```
+
+Stop when this happens. Do not create a brief, review package, or progress file
+through a manual fallback.
+
 **Why subagents:** You delegate tasks to specialized agents with a requested isolated context. Precisely craft the bounded prompt and artifact paths so the runtime adapter can verify that parent conversation turns were not inherited. If the host cannot prove isolation, report the reduced guarantee instead of promising it. This also preserves your own context for coordination work.
 
 **Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
@@ -134,7 +161,7 @@ Do not name or invent a model in this shared skill. If the adapter cannot map a 
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package through the active host launcher (`scripts/review-package BASE HEAD` or `scripts/review-package.cmd BASE HEAD`, from this skill's directory). Read the unique `path` in its JSON result. BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task. Then dispatch the task reviewer with that path.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -179,11 +206,10 @@ final whole-branch review. When you fill a reviewer template:
   Y"). The reviewer's template already carries the process rules (YAGNI,
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
-- Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
+- Hand the reviewer its diff as a file: run this skill's portable
+  review-package operation through the active host launcher and pass the
+  reviewer the `path` in its JSON result. The output never enters your own
+  context, and the reviewer sees
   the commit list, stat summary, and full diff with context in one Read
   call. Use the BASE you recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks.
@@ -223,9 +249,9 @@ Everything you paste into a dispatch prompt — and everything a subagent
 prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files:
 
-- **Task brief:** before dispatching an implementer, run this skill's
-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
-  uniquely named file and prints the path. Compose the dispatch so the
+- **Task brief:** before dispatching an implementer, run this skill's portable
+  task-brief operation through the active host launcher. It extracts the task's
+  full text to a uniquely named file and returns the path in JSON. Compose the dispatch so the
   brief stays the single source of requirements. Your dispatch should
   contain: (1) one line on where this task fits in the project; (2) the
   brief path, introduced as "read this first — it is your requirements,
@@ -251,13 +277,15 @@ controllers that lost their place have re-dispatched entire completed task
 sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
-- At skill start, check for a ledger:
-  `cat "$(git rev-parse --show-toplevel)/.superpowers/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
-  not marked complete.
-- When a task's review comes back clean, append one line to the ledger in
-  the same message as your other bookkeeping:
-  `Task N: complete (commits <base7>..<head7>, review clean)`.
+- At skill start, run the active host's `progress read` operation. Tasks in its
+  `entries` result are DONE — do not re-dispatch them; resume at the first task
+  not marked complete. If `unparsedLines` is nonempty, stop and reconcile the
+  legacy recovery state before dispatching or marking anything; the operation
+  will not overwrite an unrecognized ledger.
+- When a task's review comes back clean, run `progress complete --task N --base
+  BASE --head HEAD --review clean` through the active host launcher in the same
+  message as your other bookkeeping. The operation validates the revisions,
+  replaces any prior entry for that task, and atomically replaces the ledger.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
   trust the ledger and `git log` over your own recollection.

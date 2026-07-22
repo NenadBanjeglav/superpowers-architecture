@@ -1,0 +1,4 @@
+*.mjs text eol=lf
+hooks/run-hook.cmd text eol=lf
+hooks/session-start-* text eol=lf
+skills/**/scripts/* text eol=lf

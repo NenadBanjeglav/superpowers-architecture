@@ -5,10 +5,10 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 script_path="$script_dir/../../using-superpowers/scripts/spa.mjs"
 
 if command -v node >/dev/null 2>&1; then
-  exec node "$script_path" sdd workspace "$@"
+  exec node "$script_path" sdd progress "$@"
 fi
 if command -v node.exe >/dev/null 2>&1 && command -v wslpath >/dev/null 2>&1; then
-  exec node.exe "$(wslpath -w "$script_path")" sdd workspace "$@"
+  exec node.exe "$(wslpath -w "$script_path")" sdd progress "$@"
 fi
 
 echo "Superpowers Architecture requires Node.js 20 or newer. Install Node.js, then retry this correctness-critical operation." >&2
