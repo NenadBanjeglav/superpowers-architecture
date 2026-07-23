@@ -75,5 +75,5 @@ remote refs and release artifacts; it must not force-push, rewrite history,
 merge, open a pull request, or discard local work unless separately requested.
 
 The current 0.5.0 preparation remains blocked until the installed Claude matrix,
-Codex compaction reinjection, and every other required environment row are
-recorded as passing evidence.
+the refreshed installed Codex package passes its compaction canary, and every
+other required environment row is recorded as passing evidence.

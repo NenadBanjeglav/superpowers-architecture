@@ -19,7 +19,7 @@ Plugin hook manifests and hook runner scripts.
 - `skills/using-superpowers/SKILL.md` owns the single marked startup contract. Hook adapters inject only that marked text inside a host envelope; they must not duplicate policy or inject the full skill body.
 - Codex and Claude output uses `hookSpecificOutput.hookEventName: SessionStart`, includes all six marked invariants, and stays at or below 4,000 characters.
 - Missing Node.js emits valid host JSON with the exact degraded-mode context and exits zero only for startup rendering; correctness-critical helpers still fail closed.
-- Keep Claude's `startup|resume|clear|compact` matcher. Codex remains `startup|resume|clear` until installed schema evidence proves `compact`; missing compact reinjection is release-blocking evidence, not an implied capability.
+- Keep both Codex and Claude on the `startup|resume|clear|compact` matcher. Current Codex hook documentation lists `compact` as a supported `SessionStart` source; installed-host evidence must still prove the six-invariant payload is reinjected after compaction.
 
 ## Work Guidance
 
@@ -30,6 +30,7 @@ Plugin hook manifests and hook runner scripts.
 ## Verification
 
 - Parse hook JSON after edits.
+- Assert both host manifests match startup, resume, clear, and compact session starts.
 - Check script references and shell syntax for changed hook scripts.
 - Measure both normal and degraded payloads and assert the 4,000-character gate.
 

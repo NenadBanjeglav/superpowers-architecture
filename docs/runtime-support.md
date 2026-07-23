@@ -90,7 +90,8 @@ The following conditions block a runtime or release claim:
 - required shell/operating-system evidence is unavailable; or
 - an installed Codex or Claude matrix remains incomplete.
 
-For the 0.5.0 preparation, installed Claude CLI evidence and an accepted Codex
-compaction reinjection mechanism are still mandatory. Until the release
-evidence closes both, 0.5.0 must not be described as fully verified or
-published.
+The Codex adapter uses the documented `SessionStart` `compact` source to
+reinject the same marked startup contract after compaction. For the 0.5.0
+preparation, installed Claude CLI evidence and a passing installed Codex
+compaction canary are still mandatory. Until the release evidence closes both,
+0.5.0 must not be described as fully verified or published.
