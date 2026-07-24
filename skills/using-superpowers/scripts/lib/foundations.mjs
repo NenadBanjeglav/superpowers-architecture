@@ -29,6 +29,8 @@ const LIFECYCLE_LABELS = ['Artifact Type', 'Status', 'Revision', 'Approved Revis
 const LIFECYCLE_LINE_SOURCE =
   '^\\*\\*(Artifact Type|Status|Revision|Approved Revision|Approved At):\\*\\*[^\\n]*(?:\\n|$)';
 const COMPLETE_REVISION = /^sha256:[0-9a-f]{64}$/;
+const ISO_8601_TIMESTAMP =
+  /^(?<year>\d{4})-(?<month>0[1-9]|1[0-2])-(?<day>0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
 const UTF8_BOM = Buffer.from([0xef, 0xbb, 0xbf]);
 
 function recoveryAction() {
@@ -37,6 +39,31 @@ function recoveryAction() {
 
 function foundationError(subject, expected, actual, recovery = recoveryAction()) {
   return new Error(`Agentic Foundation ${subject}: expected ${expected}; actual ${actual}. ${recovery}`);
+}
+
+function assertSupportedNode() {
+  const version = process.versions?.node ?? 'unknown';
+  const major = Number.parseInt(version.split('.')[0], 10);
+  if (!Number.isInteger(major) || major < 20) {
+    throw foundationError(
+      'runtime',
+      'Node.js 20 or newer',
+      `Node.js ${version}`,
+      'Recovery: install Node.js 20 or newer, then rerun the Foundation operation.',
+    );
+  }
+}
+
+function isIso8601Timestamp(value) {
+  if (typeof value !== 'string') return false;
+  const match = value.match(ISO_8601_TIMESTAMP);
+  if (!match) return false;
+  const year = Number(match.groups.year);
+  const month = Number(match.groups.month);
+  const day = Number(match.groups.day);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1] && !Number.isNaN(Date.parse(value));
 }
 
 function decodeStrictUtf8(input, subject) {
@@ -59,7 +86,9 @@ function decodeStrictUtf8(input, subject) {
 
   const withoutBom = bytes.subarray(0, 3).equals(UTF8_BOM) ? bytes.subarray(3) : bytes;
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(withoutBom).replace(/\r\n?/g, '\n');
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
+      .decode(withoutBom)
+      .replace(/\r\n?/g, '\n');
   } catch (error) {
     throw foundationError(
       subject,
@@ -164,6 +193,7 @@ function encodeUnsigned64(value) {
 }
 
 export function canonicalizeFoundationRecords(records) {
+  assertSupportedNode();
   if (!Array.isArray(records)) {
     throw foundationError(
       'records',
@@ -585,6 +615,7 @@ async function writeFoundationMetadata(context, metadata) {
 }
 
 export async function draftFoundation({ root, manifestPath }) {
+  assertSupportedNode();
   const loaded = await loadFoundation({ root, manifestPath });
   return writeFoundationMetadata(
     { root, manifestPath, ...loaded },
@@ -599,6 +630,7 @@ export async function draftFoundation({ root, manifestPath }) {
 }
 
 export async function refreshFoundationRevision({ root, manifestPath }) {
+  assertSupportedNode();
   const loaded = await loadFoundation({ root, manifestPath });
   assertArtifactType(manifestPath, loaded.current.artifactType);
   if (!['Draft', 'Approved'].includes(loaded.current.status)) {
@@ -614,7 +646,7 @@ export async function refreshFoundationRevision({ root, manifestPath }) {
     loaded.current.revision === loaded.revision &&
     loaded.current.approvedRevision === loaded.revision &&
     loaded.current.approvedAt !== 'none' &&
-    !Number.isNaN(Date.parse(loaded.current.approvedAt));
+    isIso8601Timestamp(loaded.current.approvedAt);
   return writeFoundationMetadata(
     { root, manifestPath, ...loaded },
     {
@@ -633,6 +665,7 @@ export async function approveFoundation({
   expectedRevision,
   approvedAt = new Date().toISOString(),
 }) {
+  assertSupportedNode();
   assertCompleteRevision(`manifest ${manifestPath}`, expectedRevision);
   const loaded = await loadFoundation({ root, manifestPath });
   assertArtifactType(manifestPath, loaded.current.artifactType);
@@ -657,7 +690,7 @@ export async function approveFoundation({
       loaded.revision,
     );
   }
-  if (approvedAt === 'none' || Number.isNaN(Date.parse(approvedAt))) {
+  if (!isIso8601Timestamp(approvedAt)) {
     throw foundationError(
       `manifest ${manifestPath}`,
       'Approved At as an ISO-8601 timestamp',
@@ -679,6 +712,7 @@ export async function approveFoundation({
 }
 
 export async function validateApprovedFoundation({ root, manifestPath, expectedRevision }) {
+  assertSupportedNode();
   assertCompleteRevision(`manifest ${manifestPath}`, expectedRevision);
   const loaded = await loadFoundation({ root, manifestPath });
   assertArtifactType(manifestPath, loaded.current.artifactType);
@@ -703,10 +737,10 @@ export async function validateApprovedFoundation({ root, manifestPath, expectedR
       loaded.current.revision || 'missing Revision',
     );
   }
-  if (loaded.current.approvedAt === 'none' || Number.isNaN(Date.parse(loaded.current.approvedAt))) {
+  if (!isIso8601Timestamp(loaded.current.approvedAt)) {
     throw foundationError(
       `manifest ${manifestPath}`,
-      'a valid Approved At timestamp',
+      'Approved At as an ISO-8601 timestamp',
       loaded.current.approvedAt || 'missing Approved At',
     );
   }

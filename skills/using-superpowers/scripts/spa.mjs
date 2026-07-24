@@ -9,12 +9,6 @@ import {
   validateApprovedArtifact,
 } from './lib/artifacts.mjs';
 import {
-  approveFoundation,
-  draftFoundation,
-  refreshFoundationRevision,
-  validateApprovedFoundation,
-} from './lib/foundations.mjs';
-import {
   createReviewPackage,
   extractTaskBrief,
   markProgressComplete,
@@ -94,6 +88,22 @@ async function runArtifact(command, args) {
 }
 
 async function runFoundation(command, args) {
+  let operations;
+  try {
+    operations = await import('./lib/foundations.mjs');
+  } catch (error) {
+    const detail = error?.code ? `${error.code}: ${error.message}` : error?.message ?? String(error);
+    fail(
+      `Foundation operation module unavailable (${detail}). Recovery: restore or reinstall the complete Superpowers Architecture plugin package, including skills/using-superpowers/scripts/lib/foundations.mjs, then retry.`,
+    );
+  }
+
+  const {
+    approveFoundation,
+    draftFoundation,
+    refreshFoundationRevision,
+    validateApprovedFoundation,
+  } = operations;
   const options = parseOptions(args);
   if (command === 'draft') {
     requireOnly(options, ['--root', '--manifest']);
