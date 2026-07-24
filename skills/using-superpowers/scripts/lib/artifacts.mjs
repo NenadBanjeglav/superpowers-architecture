@@ -252,6 +252,33 @@ export async function approveArtifact({ path, artifactType, expectedRevision, ap
   });
 }
 
+export async function validateDraftArtifact({ path, artifactType, expectedRevision }) {
+  assertRevisionArgument(path, expectedRevision);
+  const { bytes, normalized } = await readArtifact(path);
+  const current = parseLifecycleMetadata(path, normalized);
+  assertArtifactType(path, artifactType, current.artifactType);
+
+  if (current.status !== 'Draft') {
+    throw artifactError(path, 'status Draft', current.status || 'missing status');
+  }
+  if (current.revision !== expectedRevision) {
+    throw artifactError(path, `Revision ${expectedRevision}`, current.revision || 'missing revision');
+  }
+  if (current.approvedRevision !== 'none') {
+    throw artifactError(path, 'Approved Revision none', current.approvedRevision || 'missing approved revision');
+  }
+  if (current.approvedAt !== 'none') {
+    throw artifactError(path, 'Approved At none', current.approvedAt || 'missing Approved At');
+  }
+
+  const actualRevision = computeArtifactRevision(bytes);
+  if (actualRevision !== expectedRevision) {
+    throw artifactError(path, `Draft payload digest ${expectedRevision}`, actualRevision);
+  }
+
+  return { path, ...current };
+}
+
 export async function validateApprovedArtifact({ path, artifactType, expectedRevision }) {
   assertRevisionArgument(path, expectedRevision);
   const { bytes, normalized } = await readArtifact(path);

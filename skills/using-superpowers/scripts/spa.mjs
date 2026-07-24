@@ -9,6 +9,12 @@ import {
   validateApprovedArtifact,
 } from './lib/artifacts.mjs';
 import {
+  approveFoundation,
+  draftFoundation,
+  refreshFoundationRevision,
+  validateApprovedFoundation,
+} from './lib/foundations.mjs';
+import {
   createReviewPackage,
   extractTaskBrief,
   markProgressComplete,
@@ -87,6 +93,43 @@ async function runArtifact(command, args) {
   fail(`Unknown artifact command ${command ?? '(missing)'}.`);
 }
 
+async function runFoundation(command, args) {
+  const options = parseOptions(args);
+  if (command === 'draft') {
+    requireOnly(options, ['--root', '--manifest']);
+    return draftFoundation({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+    });
+  }
+  if (command === 'refresh') {
+    requireOnly(options, ['--root', '--manifest']);
+    return refreshFoundationRevision({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+    });
+  }
+  if (command === 'approve') {
+    requireOnly(options, ['--root', '--manifest', '--expected-revision']);
+    requireCompleteRevision(options['--expected-revision']);
+    return approveFoundation({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+      expectedRevision: options['--expected-revision'],
+    });
+  }
+  if (command === 'validate') {
+    requireOnly(options, ['--root', '--manifest', '--expected-revision']);
+    requireCompleteRevision(options['--expected-revision']);
+    return validateApprovedFoundation({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+      expectedRevision: options['--expected-revision'],
+    });
+  }
+  fail(`Unknown foundation command ${command ?? '(missing)'}.`);
+}
+
 function requireArgumentCount(command, args, minimum, maximum = minimum) {
   if (args.length < minimum || args.length > maximum) {
     const expected = minimum === maximum ? `${minimum}` : `${minimum} or ${maximum}`;
@@ -149,6 +192,7 @@ async function runWorkspace(command, args) {
 export async function runSpa(argv) {
   const [group, command, ...args] = argv;
   if (group === 'artifact') return runArtifact(command, args);
+  if (group === 'foundation') return runFoundation(command, args);
   if (group === 'sdd') return runSdd(command, args);
   if (group === 'startup') return runStartup(command, args);
   if (group === 'workspace') return runWorkspace(command, args);

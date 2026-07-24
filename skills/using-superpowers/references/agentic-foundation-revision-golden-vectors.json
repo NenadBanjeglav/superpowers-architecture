@@ -1,0 +1,91 @@
+{
+  "schema": "superpowers-architecture-agentic-foundation-v1",
+  "vectors": [
+    {
+      "name": "canonical-core-records",
+      "records": [
+        {
+          "path": "AGENTS.md",
+          "content": "# AGENTS.md\n\nRouter café.\n"
+        },
+        {
+          "path": "CONTEXT.md",
+          "content": "# Context\n\nCurrent λ.\n"
+        },
+        {
+          "path": "docs/agentic/AGENTS.md",
+          "content": "# AGENTS.md\n\nOwns agentic docs.\n"
+        },
+        {
+          "path": "docs/agentic/WAYFINDING.md",
+          "content": "# Wayfinding\n\n**Artifact Type:** Agentic Foundation\n**Status:** Draft\n**Revision:** sha256:stale\n**Approved Revision:** none\n**Approved At:** none\n\n## Foundation Files\n\n- `AGENTS.md`\n- `CONTEXT.md`\n- `docs/agentic/AGENTS.md`\n- `docs/agentic/WAYFINDING.md`\n\n## Destination\n\nReady.\n"
+        }
+      ],
+      "expected": "sha256:dc9ee47a3af012d6f8c615a0e01adf56559e20319860d47c777d9050e4305366"
+    },
+    {
+      "name": "reordered-record-enumeration",
+      "records": [
+        {
+          "path": "docs/agentic/WAYFINDING.md",
+          "content": "# Wayfinding\n\n**Artifact Type:** Agentic Foundation\n**Status:** Draft\n**Revision:** sha256:stale\n**Approved Revision:** none\n**Approved At:** none\n\n## Foundation Files\n\n- `AGENTS.md`\n- `CONTEXT.md`\n- `docs/agentic/AGENTS.md`\n- `docs/agentic/WAYFINDING.md`\n\n## Destination\n\nReady.\n"
+        },
+        {
+          "path": "docs/agentic/AGENTS.md",
+          "content": "# AGENTS.md\n\nOwns agentic docs.\n"
+        },
+        {
+          "path": "CONTEXT.md",
+          "content": "# Context\n\nCurrent λ.\n"
+        },
+        {
+          "path": "AGENTS.md",
+          "content": "# AGENTS.md\n\nRouter café.\n"
+        }
+      ],
+      "expected": "sha256:dc9ee47a3af012d6f8c615a0e01adf56559e20319860d47c777d9050e4305366"
+    },
+    {
+      "name": "lifecycle-looking-line-inside-fence",
+      "records": [
+        {
+          "path": "AGENTS.md",
+          "content": "# AGENTS.md\n\nRouter café.\n"
+        },
+        {
+          "path": "CONTEXT.md",
+          "content": "# Context\n\nCurrent λ.\n"
+        },
+        {
+          "path": "docs/agentic/AGENTS.md",
+          "content": "# AGENTS.md\n\nOwns agentic docs.\n"
+        },
+        {
+          "path": "docs/agentic/WAYFINDING.md",
+          "content": "# Wayfinding\n\n**Artifact Type:** Agentic Foundation\n**Status:** Draft\n**Revision:** sha256:stale\n**Approved Revision:** none\n**Approved At:** none\n\n## Foundation Files\n\n- `AGENTS.md`\n- `CONTEXT.md`\n- `docs/agentic/AGENTS.md`\n- `docs/agentic/WAYFINDING.md`\n\n## Destination\n\nReady.\n\n```markdown\n**Status:** Approved\n```\n"
+        }
+      ],
+      "expected": "sha256:17680b94c11a27c539b547845212f4aaaa67dc1d16b1709008cae9acddf05616"
+    },
+    {
+      "name": "length-prefix-left",
+      "records": [
+        {
+          "path": "a",
+          "content": "bc"
+        }
+      ],
+      "expected": "sha256:edd0154190d62a20ff9c2dbc1f22d2eebd02c3fc0c78d5c3fd32c486fb52d06a"
+    },
+    {
+      "name": "length-prefix-right",
+      "records": [
+        {
+          "path": "ab",
+          "content": "c"
+        }
+      ],
+      "expected": "sha256:434e62ca632b45166a6d4706ad10e95232790d8aea9d6bb1184da28573ac0aa6"
+    }
+  ]
+}
