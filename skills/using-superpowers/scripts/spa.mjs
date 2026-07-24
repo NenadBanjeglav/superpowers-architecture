@@ -50,9 +50,9 @@ function requireOnly(options, required, optional = []) {
   }
 }
 
-function requireCompleteRevision(revision) {
+function requireCompleteRevision(revision, optionName = '--expected-revision') {
   if (!COMPLETE_REVISION.test(revision ?? '')) {
-    fail('Expected --expected-revision sha256:<64 lowercase hex characters>; abbreviated or missing revisions are not accepted.');
+    fail(`Expected ${optionName} sha256:<64 lowercase hex characters>; abbreviated or missing revisions are not accepted.`);
   }
 }
 
@@ -99,8 +99,10 @@ async function runFoundation(command, args) {
   }
 
   const {
+    applyFoundationChangeSet,
     approveFoundation,
     draftFoundation,
+    previewFoundationChangeSet,
     refreshFoundationRevision,
     validateApprovedFoundation,
   } = operations;
@@ -135,6 +137,64 @@ async function runFoundation(command, args) {
       root: options['--root'],
       manifestPath: options['--manifest'],
       expectedRevision: options['--expected-revision'],
+    });
+  }
+  if (command === 'preview') {
+    requireOnly(options, [
+      '--root',
+      '--manifest',
+      '--candidate-root',
+      '--spec-path',
+      '--expected-spec-revision',
+      '--expected-base-revision',
+    ]);
+    requireCompleteRevision(
+      options['--expected-spec-revision'],
+      '--expected-spec-revision',
+    );
+    requireCompleteRevision(
+      options['--expected-base-revision'],
+      '--expected-base-revision',
+    );
+    return previewFoundationChangeSet({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+      candidateRoot: options['--candidate-root'],
+      specPath: options['--spec-path'],
+      expectedSpecRevision: options['--expected-spec-revision'],
+      expectedBaseRevision: options['--expected-base-revision'],
+    });
+  }
+  if (command === 'apply') {
+    requireOnly(options, [
+      '--root',
+      '--manifest',
+      '--candidate-root',
+      '--spec-path',
+      '--expected-spec-revision',
+      '--expected-base-revision',
+      '--expected-result-revision',
+    ]);
+    requireCompleteRevision(
+      options['--expected-spec-revision'],
+      '--expected-spec-revision',
+    );
+    requireCompleteRevision(
+      options['--expected-base-revision'],
+      '--expected-base-revision',
+    );
+    requireCompleteRevision(
+      options['--expected-result-revision'],
+      '--expected-result-revision',
+    );
+    return applyFoundationChangeSet({
+      root: options['--root'],
+      manifestPath: options['--manifest'],
+      candidateRoot: options['--candidate-root'],
+      specPath: options['--spec-path'],
+      expectedSpecRevision: options['--expected-spec-revision'],
+      expectedBaseRevision: options['--expected-base-revision'],
+      expectedResultRevision: options['--expected-result-revision'],
     });
   }
   fail(`Unknown foundation command ${command ?? '(missing)'}.`);
