@@ -927,6 +927,77 @@ async function pathState(path) {
   }
 }
 
+async function validatePhysicalTargetPath(root, targetPath, subject) {
+  if (
+    typeof root !== 'string' ||
+    !isAbsolute(root) ||
+    typeof targetPath !== 'string' ||
+    !isAbsolute(targetPath) ||
+    !isContained(root, targetPath) ||
+    targetPath === root
+  ) {
+    throw foundationError(
+      subject,
+      `an absolute target contained by ${root}`,
+      targetPath ?? 'missing',
+      'Recovery: restore the exact operation target inside its physical root and retry.',
+    );
+  }
+  const rootStat = await pathState(root);
+  if (!rootStat || rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw foundationError(
+      subject,
+      'a physical non-symbolic-link root directory',
+      !rootStat
+        ? 'missing root'
+        : rootStat.isSymbolicLink()
+          ? 'symbolic-link root'
+          : 'non-directory root',
+      'Recovery: restore the operation root as a physical directory and retry.',
+    );
+  }
+  const rootRealPath = await realpath(root);
+  const relativeTarget = relative(root, targetPath);
+  const ancestorParts = relativeTarget.split(sep).slice(0, -1);
+  let ancestorPath = root;
+  for (const part of ancestorParts) {
+    ancestorPath = join(ancestorPath, part);
+    const ancestorStat = await pathState(ancestorPath);
+    if (!ancestorStat) break;
+    if (ancestorStat.isSymbolicLink() || !ancestorStat.isDirectory()) {
+      throw foundationError(
+        subject,
+        'an existing physical directory ancestor chain',
+        `${ancestorStat.isSymbolicLink() ? 'symbolic link or junction' : 'non-directory'} at ${ancestorPath}`,
+        'Recovery: remove the escaping ancestor and restore physical directories inside the exact root.',
+      );
+    }
+    const ancestorRealPath = await realpath(ancestorPath);
+    if (!isContained(rootRealPath, ancestorRealPath)) {
+      throw foundationError(
+        subject,
+        'an existing ancestor chain physically contained by the exact root',
+        `outside root at ${ancestorRealPath}`,
+        'Recovery: remove the junction escape and restore physical directories inside the exact root.',
+      );
+    }
+  }
+  return rootRealPath;
+}
+
+async function validateRegularTargetIfPresent(targetPath, subject) {
+  const targetStat = await pathState(targetPath);
+  if (targetStat && (targetStat.isSymbolicLink() || !targetStat.isFile())) {
+    throw foundationError(
+      subject,
+      'a missing path or non-symbolic-link regular file',
+      targetStat.isSymbolicLink() ? 'symbolic link' : 'non-regular file',
+      'Recovery: restore the exact target as a physical regular file or remove the unsafe entry.',
+    );
+  }
+  return targetStat;
+}
+
 async function rejectAppliedCandidate(candidateRoot) {
   const appliedPath = join(candidateRoot, APPLIED_FILE);
   if (await pathState(appliedPath)) {
@@ -1421,8 +1492,94 @@ async function writeDesignChangeSet({
     }
   }
   const reviewPath = join(candidateRoot, REVIEW_FILE);
-  await writeFile(reviewPath, `${sections.join('\n').replace(/\n+$/g, '')}\n`, 'utf8');
+  await validatePhysicalTargetPath(
+    candidateRoot,
+    reviewPath,
+    'Design Change Set report target',
+  );
+  const reviewStat = await pathState(reviewPath);
+  if (reviewStat && !reviewStat.isFile() && !reviewStat.isSymbolicLink()) {
+    throw foundationError(
+      'Design Change Set report target',
+      'a missing path, regular file, or safely replaceable symbolic link',
+      'non-regular filesystem entry',
+      `Recovery: remove the unsafe ${reviewPath} entry and rerun foundation preview.`,
+    );
+  }
+  if (reviewStat?.isSymbolicLink()) {
+    throw foundationError(
+      'Design Change Set report target',
+      'a missing path or non-symbolic-link regular file',
+      'symbolic link',
+      `Recovery: remove the symbolic ${reviewPath} entry and rerun foundation preview.`,
+    );
+  }
+  const stagedReviewPath = await stageSiblingFile(
+    reviewPath,
+    `${sections.join('\n').replace(/\n+$/g, '')}\n`,
+    reviewStat?.mode ?? 0o600,
+    candidateRoot,
+  );
+  try {
+    await validatePhysicalTargetPath(
+      candidateRoot,
+      reviewPath,
+      'Design Change Set report replacement',
+    );
+    await realReplacePath({
+      targetPath: reviewPath,
+      stagedPath: stagedReviewPath,
+      action: 'upsert',
+    });
+  } finally {
+    await validatePhysicalTargetPath(
+      candidateRoot,
+      stagedReviewPath,
+      'Design Change Set staged cleanup',
+    );
+    await rm(stagedReviewPath, { force: true });
+  }
   return reviewPath;
+}
+
+async function readBoundCandidateOperation(
+  {
+    root,
+    manifestPath,
+    candidateRoot,
+    specPath,
+    expectedSpecRevision,
+    expectedBaseRevision,
+  },
+  location,
+) {
+  const candidate = await readStrictJsonFile(
+    join(candidateRoot, 'candidate.json'),
+    'candidate.json',
+    location.candidateRealPath,
+  );
+  const changes = validateCandidateRecord(candidate, {
+    designSpecPath: location.designSpecPath,
+    expectedBaseRevision,
+    expectedSpecRevision,
+  });
+  const candidateFiles = await readCandidateFiles(
+    candidateRoot,
+    location.candidateRealPath,
+  );
+  assertCandidateFileEquality(changes, candidateFiles);
+  const changedFiles = sortChangedFiles(changes);
+  const targetPaths = [
+    specPath,
+    ...changedFiles.map(({ path }) => join(root, ...path.split('/'))),
+    manifestPath,
+  ];
+  return {
+    changes,
+    candidateFiles,
+    changedFiles,
+    targetPaths: [...new Set(targetPaths)],
+  };
 }
 
 async function prepareFoundationChangeSet({
@@ -1456,29 +1613,27 @@ async function prepareFoundationChangeSet({
     expectedRevision: expectedSpecRevision,
   });
   const baseLoaded = await loadFoundation({ root, manifestPath });
-  const candidatePath = join(candidateRoot, 'candidate.json');
-  const candidate = await readStrictJsonFile(
-    candidatePath,
-    'candidate.json',
-    location.candidateRealPath,
+  const {
+    changes,
+    candidateFiles,
+    changedFiles,
+  } = await readBoundCandidateOperation(
+    {
+      root,
+      manifestPath,
+      candidateRoot,
+      specPath,
+      expectedSpecRevision,
+      expectedBaseRevision,
+    },
+    location,
   );
-  const changes = validateCandidateRecord(candidate, {
-    designSpecPath: location.designSpecPath,
-    expectedBaseRevision,
-    expectedSpecRevision,
-  });
-  const candidateFiles = await readCandidateFiles(
-    candidateRoot,
-    location.candidateRealPath,
-  );
-  assertCandidateFileEquality(changes, candidateFiles);
   const prospective = materializeProspectiveFoundation(
     baseLoaded,
     changes,
     candidateFiles,
     manifestPath,
   );
-  const changedFiles = sortChangedFiles(changes);
   const reviewPath = await writeDesignChangeSet({
     candidateRoot,
     specPath,
@@ -1540,8 +1695,18 @@ export async function previewFoundationChangeSet({
 
 let temporaryFileSequence = 0;
 
-async function stageSiblingFile(targetPath, content, mode) {
+async function stageSiblingFile(targetPath, content, mode, physicalRoot) {
+  await validatePhysicalTargetPath(
+    physicalRoot,
+    targetPath,
+    `staging target ${targetPath}`,
+  );
   await mkdir(dirname(targetPath), { recursive: true });
+  await validatePhysicalTargetPath(
+    physicalRoot,
+    targetPath,
+    `staging target ${targetPath}`,
+  );
   for (let attempt = 0; attempt < 20; attempt += 1) {
     temporaryFileSequence += 1;
     const stagedPath = join(
@@ -1581,6 +1746,7 @@ async function writeTransactionJournal(transactionRoot, journal) {
     journalPath,
     `${JSON.stringify(journal, null, 2)}\n`,
     journalStat?.mode ?? 0o600,
+    transactionRoot,
   );
   try {
     await realReplacePath({
@@ -1589,6 +1755,11 @@ async function writeTransactionJournal(transactionRoot, journal) {
       action: 'upsert',
     });
   } finally {
+    await validatePhysicalTargetPath(
+      transactionRoot,
+      stagedPath,
+      'candidate transaction journal staged cleanup',
+    );
     await rm(stagedPath, { force: true });
   }
 }
@@ -1606,7 +1777,12 @@ async function removeEmptyParents(path, stopAt) {
   }
 }
 
-function validateTransactionJournal(journal, args, transactionRoot) {
+function validateTransactionJournal(
+  journal,
+  args,
+  transactionRoot,
+  expectedTargetPaths,
+) {
   assertExactKeys(
     journal,
     [
@@ -1750,6 +1926,18 @@ function validateTransactionJournal(journal, args, transactionRoot) {
       );
     }
   }
+  const expectedTargets = new Set(expectedTargetPaths);
+  if (
+    journal.entries.length !== expectedTargets.size ||
+    [...expectedTargets].some((targetPath) => !seenTargets.has(targetPath))
+  ) {
+    throw foundationError(
+      'candidate transaction target set',
+      `the exact candidate-derived targets ${[...expectedTargets].join(', ')}`,
+      `journal targets ${journal.entries.map(({ targetPath }) => targetPath).join(', ')}`,
+      'Recovery: reject the altered journal and retry only with the exact candidate and reviewed operation bindings.',
+    );
+  }
   for (const stagedPath of journal.stagedPaths) {
     if (typeof stagedPath !== 'string' || !isAbsolute(stagedPath)) {
       throw foundationError(
@@ -1778,14 +1966,54 @@ function validateTransactionJournal(journal, args, transactionRoot) {
 }
 
 async function cleanupJournalStagedPaths(journal) {
-  for (const stagedPath of journal.stagedPaths) {
+  const stagedPaths = new Set(journal.stagedPaths);
+  for (const entry of journal.entries) {
+    await validatePhysicalTargetPath(
+      journal.root,
+      entry.targetPath,
+      `transaction staged cleanup for ${entry.targetPath}`,
+    );
+    let siblingNames;
+    try {
+      siblingNames = await readdir(dirname(entry.targetPath));
+    } catch (error) {
+      if (error.code === 'ENOENT') continue;
+      throw error;
+    }
+    const prefix = `.${basename(entry.targetPath)}.spa-foundation-`;
+    for (const siblingName of siblingNames) {
+      if (siblingName.startsWith(prefix) && siblingName.endsWith('.tmp')) {
+        stagedPaths.add(join(dirname(entry.targetPath), siblingName));
+      }
+    }
+  }
+  for (const stagedPath of stagedPaths) {
+    await validatePhysicalTargetPath(
+      journal.root,
+      stagedPath,
+      `transaction staged cleanup ${stagedPath}`,
+    );
     await rm(stagedPath, { force: true });
+  }
+  for (const entry of journal.entries) {
+    if (!entry.existed) {
+      await removeEmptyParents(dirname(entry.targetPath), journal.root);
+    }
   }
 }
 
 async function restoreTransaction(journal, transactionRoot) {
   const transactionRealPath = await realpath(transactionRoot);
   for (const entry of [...journal.entries].reverse()) {
+    await validatePhysicalTargetPath(
+      journal.root,
+      entry.targetPath,
+      `transaction restore target ${entry.targetPath}`,
+    );
+    await validateRegularTargetIfPresent(
+      entry.targetPath,
+      `transaction restore target ${entry.targetPath}`,
+    );
     if (!entry.existed) {
       await rm(entry.targetPath, { force: true });
       await removeEmptyParents(dirname(entry.targetPath), journal.root);
@@ -1814,8 +2042,18 @@ async function restoreTransaction(journal, transactionRoot) {
       entry.targetPath,
       await readFile(backupPath),
       entry.mode,
+      journal.root,
     );
     try {
+      await validatePhysicalTargetPath(
+        journal.root,
+        entry.targetPath,
+        `transaction restore replacement ${entry.targetPath}`,
+      );
+      await validateRegularTargetIfPresent(
+        entry.targetPath,
+        `transaction restore replacement ${entry.targetPath}`,
+      );
       await realReplacePath({
         targetPath: entry.targetPath,
         stagedPath,
@@ -1823,6 +2061,11 @@ async function restoreTransaction(journal, transactionRoot) {
       });
       await chmod(entry.targetPath, entry.mode & 0o777);
     } finally {
+      await validatePhysicalTargetPath(
+        journal.root,
+        stagedPath,
+        `transaction restore staged cleanup ${stagedPath}`,
+      );
       await rm(stagedPath, { force: true });
     }
   }
@@ -1841,7 +2084,111 @@ async function validateRestoredState(args) {
   });
 }
 
-async function recoverExistingTransaction(args) {
+async function validateTerminalAppliedState(
+  args,
+  operation,
+  journal,
+  candidateRealPath,
+) {
+  const appliedPath = join(args.candidateRoot, APPLIED_FILE);
+  const appliedStat = await pathState(appliedPath);
+  if (!appliedStat) return false;
+  if (journal.state !== 'recording-applied') {
+    throw foundationError(
+      'candidate terminal transaction state',
+      'recording-applied when APPLIED.json exists',
+      journal.state,
+      'Recovery: preserve the transaction and marker for exact inspection; do not roll back an uncertain applied result.',
+    );
+  }
+  const applied = await readStrictJsonFile(
+    appliedPath,
+    'candidate applied marker',
+    candidateRealPath,
+  );
+  assertExactKeys(
+    applied,
+    [
+      'schema',
+      'specPath',
+      'specRevision',
+      'manifestPath',
+      'baseRevision',
+      'resultRevision',
+      'approvedAt',
+      'actions',
+    ],
+    'candidate applied marker',
+  );
+  if (applied.schema !== APPLIED_SCHEMA) {
+    throw foundationError(
+      'candidate applied marker schema',
+      APPLIED_SCHEMA,
+      applied.schema ?? 'missing',
+      'Recovery: preserve the terminal transaction and restore the exact applied marker.',
+    );
+  }
+  const bindings = [
+    ['Design Spec path', operation.location.designSpecPath, applied.specPath],
+    ['Design Spec revision', args.expectedSpecRevision, applied.specRevision],
+    ['manifest path', MANIFEST_RELATIVE_PATH, applied.manifestPath],
+    ['base revision', args.expectedBaseRevision, applied.baseRevision],
+    ['result revision', args.expectedResultRevision, applied.resultRevision],
+  ];
+  for (const [subject, expected, actual] of bindings) {
+    if (actual !== expected) {
+      throw foundationError(
+        `candidate applied marker ${subject} binding`,
+        expected,
+        actual ?? 'missing',
+        'Recovery: preserve the terminal state and retry only from the exact candidate operation that created it.',
+      );
+    }
+  }
+  if (
+    !Array.isArray(applied.actions) ||
+    JSON.stringify(applied.actions) !== JSON.stringify(operation.changedFiles)
+  ) {
+    throw foundationError(
+      'candidate applied marker actions binding',
+      JSON.stringify(operation.changedFiles),
+      JSON.stringify(applied.actions),
+      'Recovery: preserve the terminal state and restore the exact applied marker actions.',
+    );
+  }
+  if (!isIso8601Timestamp(applied.approvedAt)) {
+    throw foundationError(
+      'candidate applied marker timestamp',
+      'an ISO-8601 timestamp',
+      applied.approvedAt ?? 'missing',
+      'Recovery: preserve the terminal state and restore the exact applied marker timestamp.',
+    );
+  }
+  const foundation = await validateApprovedFoundation({
+    root: args.root,
+    manifestPath: args.manifestPath,
+    expectedRevision: args.expectedResultRevision,
+  });
+  const spec = await validateApprovedArtifact({
+    path: args.specPath,
+    artifactType: 'Design Spec',
+    expectedRevision: args.expectedSpecRevision,
+  });
+  if (
+    foundation.approvedAt !== applied.approvedAt ||
+    spec.approvedAt !== applied.approvedAt
+  ) {
+    throw foundationError(
+      'candidate terminal approval timestamp',
+      `the same ${applied.approvedAt} timestamp in marker, Design Spec, and Foundation`,
+      `Design Spec ${spec.approvedAt}; Foundation ${foundation.approvedAt}`,
+      'Recovery: preserve the terminal state; the applied result does not match its marker.',
+    );
+  }
+  return true;
+}
+
+async function recoverExistingTransaction(args, operation) {
   const transactionRoot = join(args.candidateRoot, TRANSACTION_DIRECTORY);
   const transactionStat = await pathState(transactionRoot);
   if (!transactionStat) return false;
@@ -1871,8 +2218,32 @@ async function recoverExistingTransaction(args) {
     ),
     args,
     transactionRoot,
+    operation.targetPaths,
   );
+  for (const entry of journal.entries) {
+    await validatePhysicalTargetPath(
+      args.root,
+      entry.targetPath,
+      `candidate transaction target ${entry.targetPath}`,
+    );
+    await validateRegularTargetIfPresent(
+      entry.targetPath,
+      `candidate transaction target ${entry.targetPath}`,
+    );
+  }
   try {
+    if (
+      await validateTerminalAppliedState(
+        args,
+        operation,
+        journal,
+        candidateRealPath,
+      )
+    ) {
+      await cleanupJournalStagedPaths(journal);
+      await rm(transactionRoot, { recursive: true, force: true });
+      return 'applied';
+    }
     await restoreTransaction(journal, transactionRoot);
     await cleanupJournalStagedPaths(journal);
     await validateRestoredState(args);
@@ -1890,17 +2261,34 @@ async function recoverExistingTransaction(args) {
 
 async function createTransaction(context, expectedResultRevision) {
   const transactionRoot = join(context.candidateRoot, TRANSACTION_DIRECTORY);
+  await validatePhysicalTargetPath(
+    context.candidateRoot,
+    transactionRoot,
+    'candidate transaction directory',
+  );
+  const targetPaths = [
+    context.specPath,
+    ...context.changedFiles.map(({ path }) =>
+      join(context.root, ...path.split('/'))),
+    context.manifestPath,
+  ];
+  const uniqueTargets = [...new Set(targetPaths)];
+  for (const targetPath of uniqueTargets) {
+    await validatePhysicalTargetPath(
+      context.root,
+      targetPath,
+      `transaction target ${targetPath}`,
+    );
+  }
   await mkdir(transactionRoot);
   try {
     const backupsRoot = join(transactionRoot, 'backups');
+    await validatePhysicalTargetPath(
+      transactionRoot,
+      backupsRoot,
+      'candidate transaction backup directory',
+    );
     await mkdir(backupsRoot);
-    const targetPaths = [
-      context.specPath,
-      ...context.changedFiles.map(({ path }) =>
-        join(context.root, ...path.split('/'))),
-      context.manifestPath,
-    ];
-    const uniqueTargets = [...new Set(targetPaths)];
     const entries = [];
     for (let index = 0; index < uniqueTargets.length; index += 1) {
       const targetPath = uniqueTargets[index];
@@ -1955,11 +2343,36 @@ async function createTransaction(context, expectedResultRevision) {
   }
 }
 
-async function buildMutations(context, approvedAt, transactionRoot) {
+function transactionEntry(transaction, targetPath) {
+  const entry = transaction.journal.entries.find(
+    (candidate) => candidate.targetPath === targetPath,
+  );
+  if (!entry) {
+    throw foundationError(
+      'candidate transaction target binding',
+      `an entry for ${targetPath}`,
+      'missing',
+      'Recovery: preserve the transaction and retry only from the exact reviewed candidate.',
+    );
+  }
+  return entry;
+}
+
+async function recordMutation(transaction, mutations, mutation) {
+  mutations.push(mutation);
+  if (!mutation.stagedPath) return;
+  transaction.journal.stagedPaths.push(mutation.stagedPath);
+  await writeTransactionJournal(
+    transaction.transactionRoot,
+    transaction.journal,
+  );
+}
+
+async function buildMutations(context, approvedAt, transaction) {
   const mutations = [];
   try {
-    const specStat = await lstat(context.specPath);
-    const transactionSpecPath = join(transactionRoot, 'approved-spec.md');
+    const specEntry = transactionEntry(transaction, context.specPath);
+    const transactionSpecPath = join(transaction.transactionRoot, 'approved-spec.md');
     await writeFile(transactionSpecPath, await readFile(context.specPath));
     await approveArtifact({
       path: transactionSpecPath,
@@ -1967,40 +2380,48 @@ async function buildMutations(context, approvedAt, transactionRoot) {
       expectedRevision: context.expectedSpecRevision,
       approvedAt,
     });
-    mutations.push({
+    await recordMutation(transaction, mutations, {
       path: context.designSpecPath,
       action: 'upsert',
       targetPath: context.specPath,
       stagedPath: await stageSiblingFile(
         context.specPath,
         await readFile(transactionSpecPath),
-        specStat.mode,
+        specEntry.mode,
+        context.root,
       ),
-      mode: specStat.mode,
+      mode: specEntry.mode,
     });
 
     for (const change of context.changedFiles) {
       if (change.path === MANIFEST_RELATIVE_PATH) continue;
       const targetPath = join(context.root, ...change.path.split('/'));
       if (change.action === 'delete') {
-        mutations.push({ ...change, targetPath, stagedPath: null, mode: null });
+        await recordMutation(transaction, mutations, {
+          ...change,
+          targetPath,
+          stagedPath: null,
+          mode: null,
+        });
         continue;
       }
       const candidate = context.candidateFiles.get(change.path);
-      mutations.push({
+      const targetEntry = transactionEntry(transaction, targetPath);
+      const mode = targetEntry.existed ? targetEntry.mode : 0o644;
+      await recordMutation(transaction, mutations, {
         ...change,
         targetPath,
         stagedPath: await stageSiblingFile(
           targetPath,
           candidate.content,
-          candidate.mode,
+          mode,
+          context.root,
         ),
-        mode: candidate.mode,
+        mode,
       });
     }
 
-    const manifestInfo = context.candidateFiles.get(MANIFEST_RELATIVE_PATH);
-    const manifestStat = await lstat(context.manifestPath);
+    const manifestEntry = transactionEntry(transaction, context.manifestPath);
     const approvedManifest = replaceLifecycleMetadata(
       context.normalizedManifest,
       {
@@ -2011,27 +2432,35 @@ async function buildMutations(context, approvedAt, transactionRoot) {
         approvedAt,
       },
     );
-    mutations.push({
+    await recordMutation(transaction, mutations, {
       path: MANIFEST_RELATIVE_PATH,
       action: 'upsert',
       targetPath: context.manifestPath,
       stagedPath: await stageSiblingFile(
         context.manifestPath,
         approvedManifest,
-        manifestInfo?.mode ?? manifestStat.mode,
+        manifestEntry.mode,
+        context.root,
       ),
-      mode: manifestInfo?.mode ?? manifestStat.mode,
+      mode: manifestEntry.mode,
     });
     return mutations;
   } catch (error) {
-    await cleanupStagedMutations(mutations).catch(() => {});
+    await cleanupStagedMutations(mutations, context.root).catch(() => {});
     throw error;
   }
 }
 
-async function cleanupStagedMutations(mutations) {
+async function cleanupStagedMutations(mutations, physicalRoot) {
   for (const mutation of mutations) {
-    if (mutation.stagedPath) await rm(mutation.stagedPath, { force: true });
+    if (mutation.stagedPath) {
+      await validatePhysicalTargetPath(
+        physicalRoot,
+        mutation.stagedPath,
+        `candidate staged cleanup ${mutation.stagedPath}`,
+      );
+      await rm(mutation.stagedPath, { force: true });
+    }
   }
 }
 
@@ -2055,9 +2484,10 @@ export async function applyFoundationChangeSet({
     expectedBaseRevision,
     expectedResultRevision,
   };
-  await validateCandidateLocation(args);
+  const location = await validateCandidateLocation(args);
+  const operation = await readBoundCandidateOperation(args, location);
+  await recoverExistingTransaction(args, { ...operation, location });
   await rejectAppliedCandidate(candidateRoot);
-  await recoverExistingTransaction(args);
 
   const context = await prepareFoundationChangeSet(args);
   if (context.prospectiveRevision !== expectedResultRevision) {
@@ -2096,12 +2526,8 @@ export async function applyFoundationChangeSet({
     mutations = await buildMutations(
       context,
       approvedAt,
-      transaction.transactionRoot,
+      transaction,
     );
-    transaction.journal.stagedPaths = mutations
-      .map(({ stagedPath }) => stagedPath)
-      .filter(Boolean);
-    await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
     await validateApprovedFoundation({
       root,
       manifestPath,
@@ -2117,6 +2543,15 @@ export async function applyFoundationChangeSet({
       const mutation = mutations[index];
       transaction.journal.state = `replacing:${index}:${mutation.path}`;
       await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
+      await validatePhysicalTargetPath(
+        root,
+        mutation.targetPath,
+        `candidate mutation target ${mutation.targetPath}`,
+      );
+      await validateRegularTargetIfPresent(
+        mutation.targetPath,
+        `candidate mutation target ${mutation.targetPath}`,
+      );
       await replacePath(mutation);
       if (mutation.action === 'upsert') {
         await chmod(mutation.targetPath, mutation.mode & 0o777);
@@ -2152,17 +2587,32 @@ export async function applyFoundationChangeSet({
       appliedPath,
       `${JSON.stringify(applied, null, 2)}\n`,
       0o600,
+      candidateRoot,
     );
     try {
+      await validatePhysicalTargetPath(
+        candidateRoot,
+        appliedPath,
+        'candidate applied marker replacement',
+      );
+      await validateRegularTargetIfPresent(
+        appliedPath,
+        'candidate applied marker replacement',
+      );
       await realReplacePath({
         targetPath: appliedPath,
         stagedPath: stagedAppliedPath,
         action: 'upsert',
       });
     } finally {
+      await validatePhysicalTargetPath(
+        candidateRoot,
+        stagedAppliedPath,
+        'candidate applied marker staged cleanup',
+      );
       await rm(stagedAppliedPath, { force: true });
     }
-    await cleanupStagedMutations(mutations);
+    await cleanupStagedMutations(mutations, context.root);
     await rm(transaction.transactionRoot, { recursive: true, force: true });
 
     return {
@@ -2171,8 +2621,14 @@ export async function applyFoundationChangeSet({
       appliedPath,
     };
   } catch (operationError) {
-    await rm(appliedPath, { force: true }).catch(() => {});
-    await cleanupStagedMutations(mutations).catch(() => {});
+    await validatePhysicalTargetPath(
+      candidateRoot,
+      appliedPath,
+      'candidate applied marker cleanup',
+    )
+      .then(() => rm(appliedPath, { force: true }))
+      .catch(() => {});
+    await cleanupStagedMutations(mutations, context.root).catch(() => {});
     if (!transaction) throw operationError;
     try {
       await restoreTransaction(transaction.journal, transaction.transactionRoot);

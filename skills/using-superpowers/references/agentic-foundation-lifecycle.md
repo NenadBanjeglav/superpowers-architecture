@@ -213,7 +213,9 @@ Preview writes `DESIGN-CHANGE-SET.md` and returns JSON containing:
 The report names both reviewed revisions, renders the sorted action table, and
 contains normalized per-file Git-style text diffs. The operation runs
 `git diff --no-index`; exit `1` means a readable difference, while an exit above
-`1` is an operation error.
+`1` is an operation error. The operation stages and atomically replaces the
+report; an existing symbolic report entry is rejected, so report generation
+never follows a link into user-owned bytes.
 
 An empty `changes` array is valid only with an empty `files/` tree. Preview then
 reports no durable Foundation file changes and the prospective revision equals
@@ -236,7 +238,9 @@ Apply is one recoverable local-filesystem transaction:
    affected authoritative path. Record originally missing paths explicitly.
 3. Prepare Approved Design Spec bytes through the shared artifact lifecycle and
    stage every replacement in a sibling temporary file on the destination
-   volume.
+   volume. Each staged path is journaled before the next replacement is staged;
+   recovery also removes operation-named sibling files left by an interruption
+   between staging and the journal update.
 4. Record journal state before each replacement or deletion. States advance
    from `prepared` through `replacing:<index>:<path>`, `validating`, and
    `recording-applied`.
@@ -250,12 +254,25 @@ Apply is one recoverable local-filesystem transaction:
 8. Remove `.transaction/` only after both validations and the applied marker
    succeed.
 
+The journal target set must exactly equal the Design Spec, manifest, and
+candidate-derived action targets for the validated operation binding. Before
+staging, replacement, deletion, or rollback, every existing target ancestor
+must be a physical directory inside the exact checkout; a symlink or junction
+ancestor fails before mutation. Candidate file modes are proposal metadata, not
+reviewed authority: replacements preserve the pre-transaction authoritative
+mode and additions use the deterministic implementation default.
+
 Any failure restores original bytes, modes, and present/missing state, removes
 new files and empty directories created by the operation, revalidates the
 restored Approved base and Draft Design Spec, and reports whether recovery
 succeeded. A later apply may recover a stale journal only when every recorded
-checkout/path/revision binding matches the retry exactly. Preview rejects stale
-transaction state so it cannot silently review a partially recovered checkout.
+checkout/path/revision binding and the exact candidate-derived target set match
+the retry. If an interruption occurs after `APPLIED.json` is installed but
+before transaction cleanup, apply validates the marker bindings, sorted
+actions, result artifacts, and common approval timestamp, removes the terminal
+transaction without rollback, and then rejects the already-applied candidate.
+Preview rejects stale transaction state so it cannot silently review a
+partially recovered checkout.
 
 `APPLIED.json` visibly invalidates the candidate. Preview and apply both reject
 an applied candidate, so the same Design Change Set cannot be applied twice.
