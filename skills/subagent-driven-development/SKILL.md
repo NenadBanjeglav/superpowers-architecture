@@ -15,30 +15,44 @@ reading it for instructions.
 After plan validation, parse only these header bindings:
 
 - `Spec` and `Spec Revision`;
-- `Foundation Manifest` and `Foundation Revision`.
+- `Foundation Manifest`;
+- `Foundation Base Revision`;
+- `Foundation Result Revision`; and
+- `Foundation Application Receipt`.
 
 Validate the source artifact as an Approved `Design Spec` at the recorded exact
-revision. Parse its `Foundation Manifest` and `Agentic Foundation` traceability
-fields and require them to equal the plan's Foundation pair exactly. Both pairs
-must be literal `none` for a generic workflow or must contain the same absolute
-physical `WAYFINDING.md` path and complete lowercase `sha256:` revision.
-Reject an inconsistent Foundation pair before further inspection.
+revision. Parse its `Foundation Manifest` and `Base Agentic Foundation`
+traceability fields. Compare the source-spec base to the plan base, then bind
+the plan's distinct result revision and receipt supplied by the phase handoff.
+All four Foundation fields must be literal `none` for a generic workflow.
+Otherwise require the same absolute physical `WAYFINDING.md`, complete
+lowercase base and result `sha256:` identities, and the absolute physical
+candidate-root `APPLIED.json`. Reject a half-none or otherwise inconsistent
+Foundation binding before further inspection.
 
-For a non-none Foundation, run the sibling shared operation:
+Never require base and result revisions to be equal. A non-empty candidate
+normally changes the revision; an empty candidate may preserve it when the
+receipt proves that exact result.
+
+For a non-none Foundation, verify the receipt is ignored and run the sibling
+shared operation:
 
 ```text
-foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-approved-foundation-sha256>
+git check-ignore --quiet <absolute-candidate-root-APPLIED.json>
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-result-sha256> --receipt <absolute-candidate-root-APPLIED.json> --spec-path <absolute-approved-spec-path> --expected-spec-revision <exact-approved-spec-sha256> --expected-base-revision <exact-base-sha256>
 ```
 
-Only after plan, source-spec, and non-none Foundation validation pass may you
-read the plan, referenced spec, Foundation, and codebase from disk. Do not rely
-on prior conversation context, even in same-session mode after plan approval.
+Only after plan, source-spec, and non-none receipt-backed Foundation validation
+pass may you read the plan, referenced spec, Foundation, and codebase from disk.
+Do not rely on prior conversation context, even in same-session mode after plan
+approval.
 
 If either artifact is Draft, has missing or duplicated lifecycle metadata, has
 the wrong type, was edited after approval, or is at a different revision, stop
-and report expected and actual values. Also stop on a missing, inconsistent, or
-drifted Foundation. Missing Node.js or a missing operation module fails closed
-with the full-package installation guidance.
+and report expected and actual values. Also stop on a missing, non-ignored,
+inconsistent, or drifted Foundation base/result/receipt binding. Missing Node.js
+or a missing operation module fails closed with the full-package installation
+guidance.
 
 ## Local Superpowers Docs Guard
 
@@ -234,8 +248,9 @@ final whole-branch review. When you fill a reviewer template:
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
 - Give every implementer, task reviewer, and final reviewer the exact Approved
-  spec/plan paths and revisions, the plan's exact Foundation Manifest and
-  Foundation Revision pair, plus the shared
+  spec/plan paths and revisions, the plan's exact Foundation Manifest,
+  Foundation Base Revision, Foundation Result Revision, and Foundation
+  Application Receipt, plus the shared
   `codebase-design/ARCHITECTURE-CONFORMANCE.md` path. Copy the task-specific
   Approved modules, interfaces, seams/adapters, data flow,
   depth/locality/leverage intent, and test surface into the bounded prompt.
@@ -301,9 +316,10 @@ and is re-read on every later turn. Hand artifacts over as files:
   returns only status, commits, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets the same brief, report, review
   package, exact Approved spec, exact Approved plan, shared Architecture
-  Conformance rubric, and exact Foundation Manifest and Foundation Revision
-  pair — plus the global constraints and task-specific architecture binding.
-  Literal `none` remains explicit for a generic workflow.
+  Conformance rubric, and exact Foundation Manifest, Foundation Base Revision,
+  Foundation Result Revision, and Foundation Application Receipt — plus the
+  global constraints and task-specific architecture binding. All four use
+  literal `none` for a generic workflow.
 - Fix dispatches append their fix report (with test results) to the same
   report file and return a short summary; re-reviews read the updated file.
 

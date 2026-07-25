@@ -4,8 +4,8 @@ Use this template to dispatch an isolated advisory document reviewer through
 the host-neutral dispatch action.
 
 **Purpose:** Verify the Draft plan is complete, binds the exact Approved source
-spec and exact Approved Foundation, and has actionable task decomposition. The
-reviewer cannot approve it.
+spec and exact Foundation base/result/application-receipt evidence, and has
+actionable task decomposition. The reviewer cannot approve it.
 
 **Dispatch after:** The complete plan is written and `artifact refresh` has
 recorded its exact Draft revision.
@@ -40,6 +40,7 @@ For a Foundation-backed plan, issue:
     "[ABSOLUTE_PLAN_FILE_PATH]",
     "[ABSOLUTE_SPEC_FILE_PATH]",
     "[ABSOLUTE_FOUNDATION_MANIFEST]",
+    "[ABSOLUTE_FOUNDATION_APPLICATION_RECEIPT]",
     "[CONFORMANCE_RUBRIC_FILE]"
   ],
   "workspacePolicy": "read-only-review"
@@ -57,7 +58,9 @@ and ready for user review. You cannot approve or mutate it.
 Plan to review: [ABSOLUTE_PLAN_FILE_PATH]
 Spec for reference: [ABSOLUTE_SPEC_FILE_PATH]
 Foundation manifest: [ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]
-Exact Approved Foundation revision: [FOUNDATION_REVISION_OR_NONE]
+Foundation Base Revision: [FOUNDATION_BASE_REVISION_OR_NONE]
+Foundation Result Revision: [FOUNDATION_RESULT_REVISION_OR_NONE]
+Foundation Application Receipt: [ABSOLUTE_FOUNDATION_APPLICATION_RECEIPT_OR_NONE]
 Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 
 ## What to Check
@@ -70,10 +73,11 @@ Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 | Buildability | An engineer can follow the plan without relying on conversation memory or prior tasks |
 | Lifecycle | Artifact Type is Implementation Plan; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
 | Source Binding | Spec path and exact Approved Spec Revision match the supplied source artifact |
-| Foundation Binding | Plan path/revision fields are both none or exactly match the source spec Foundation binding; a non-none manifest validates as the exact Approved Foundation |
-| Foundation Context | Planning evidence, every task, Architecture Conformance input, and implementation handoff carry the same exact Foundation identity |
+| Foundation Binding | All four fields are literal none or the manifest/base/result/receipt binding exactly matches the source spec and supplied physical application receipt |
+| Receipt-backed Result Evidence | Planning validation evidence records successful receipt-backed Foundation validation of the exact spec base, receipt, and result before codebase inspection |
+| Foundation Context | Planning evidence, every task, and Architecture Conformance input carry the same exact Foundation base, result, and receipt identity |
 | Architecture Conformance | Every task names and checks the Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface through the shared rubric |
-| Handoff | The canonical implementation prompt contains exactly the shared fifteen-field record including foundationManifestPath and foundationRevision |
+| Future Handoff | Static Draft review does not require a rendered implementation handoff or future Approved plan digest; it only verifies the documented post-approval rendering contract preserves the fifteen-field record and external receipt binding |
 | Git Hygiene | No task stages docs/superpowers unless the user explicitly requested it |
 
 Only flag issues that could cause an incorrect or blocked implementation.

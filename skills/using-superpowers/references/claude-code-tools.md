@@ -57,7 +57,9 @@ When automated fresh-session mode is selected and an artifact has been
 explicitly approved, Claude Code may start the next phase in a named background
 session. First run `prepare handoff` from
 [phase-handoff.md](phase-handoff.md) and build the canonical prompt from the
-complete verified record.
+complete verified record. For Foundation-backed Planning and implementation,
+that prompt carries `Foundation Application Receipt` as an external binding
+outside the unchanged record.
 
 Do not use `/bg` to background the current conversation. The fresh session must
 start from the canonical prompt without current conversation history.
@@ -81,12 +83,16 @@ Before launch:
    plugin affinity proof; inventory by name alone does not prove a local root.
 5. Re-run `foundation validate` for a recorded `foundationManifestPath` and
    `foundationRevision`. For `phase: brainstorming`, require those values to
-   equal the phase artifact path and revision.
+   equal the phase artifact path and revision. For Planning or implementation,
+   require the external Foundation Application Receipt path, prove it is
+   readable and ignored in the exact checkout, and use receipt-backed
+   `foundation validate` to revalidate the source-spec base, receipt, and
+   resulting `foundationRevision`.
 6. Require the new session's first output to acknowledge all fifteen handoff
-   fields and show the exact `checkoutRoot`, `branch`, `artifactPath`,
-   `approvedRevision`, `foundationManifestPath`, and `foundationRevision`
-   before invoking `/superpowers-architecture:brainstorming` or another next
-   phase skill.
+   fields and separately acknowledge the external receipt binding. It shows the
+   exact `checkoutRoot`, `branch`, `artifactPath`, `approvedRevision`,
+   `foundationManifestPath`, `foundationRevision`, and receipt before invoking
+   `/superpowers-architecture:brainstorming` or another next phase skill.
 
 Only after every check passes, launch from the verified checkout. For an
 installed plugin:
@@ -138,9 +144,10 @@ contains all fifteen handoff fields from
 
 If `claude` is unavailable, authentication or background agents are disabled,
 the installed help lacks `--bg`, `--name`, or a required `--plugin-dir`, plugin
-inventory does not match, the exact checkout cannot be entered, or any affinity
-check is ambiguous, do not launch. Print the applicable quoting-safe command,
-the complete canonical prompt, and the failed preflight field. Missing
+inventory does not match, the exact checkout cannot be entered, receipt
+affinity is uncertain, or any affinity check is ambiguous, use the safe fallback:
+do not launch. Print the applicable quoting-safe command, the
+complete canonical prompt, and the failed preflight field. Missing
 installed-host evidence remains a release blocker; a printed fallback is not
 successful phase-handoff evidence.
 

@@ -45,20 +45,25 @@ the attempt and prepare a new record.
   `sourceSpecRevision` are `none` because no Design Spec exists yet.
 - **Planning:** `artifactPath` is the absolute Approved Design Spec,
   `artifactType` is `Design Spec`, and `approvedRevision` is its exact revision.
-  A Foundation-backed workflow also carries the exact Approved
-  `foundationManifestPath` and `foundationRevision`. The Design Spec itself is
-  the source input, so the separate source-spec pair is `none`.
+  A Foundation-backed workflow carries the exact physical
+  `foundationManifestPath`, the resulting Approved Foundation in
+  `foundationRevision`, and the physical Foundation Application Receipt as an
+  external prompt binding. The Design Spec itself supplies the base Foundation
+  and is the source input, so the separate source-spec pair is `none`.
 - **Implementation:** `artifactPath` is the absolute Approved Implementation
   Plan, `artifactType` is `Implementation Plan`, and `approvedRevision` is its
   exact revision. `sourceSpecPath` and `sourceSpecRevision` identify the exact
-  Approved Design Spec. A Foundation-backed workflow also identifies the exact
-  Approved Foundation.
+  Approved Design Spec. A Foundation-backed workflow also carries the resulting
+  Approved Foundation in `foundationRevision` and the same physical Foundation
+  Application Receipt as an external prompt binding.
 
 Literal `none` is allowed only for a generic workflow with no Foundation in the
 Foundation pair. `foundationManifestPath` and `foundationRevision` must be both
 `none` or both exact values. The source-spec pair uses `none` only when the
 phase has no separate source Design Spec, as defined above. Never use `none` to
-hide missing affinity or a failed validation.
+hide missing affinity or a failed validation. Foundation-backed Planning and
+implementation also require a non-none external receipt binding; generic
+Planning and implementation use literal `none`.
 
 ## Prepare Handoff
 
@@ -87,11 +92,17 @@ Run these checks from the checkout that owns every recorded artifact:
 6. When the source-spec pair is present, require both values and run `artifact
    validate` for `Design Spec` at that exact path and revision. When the phase
    requires a source spec, reject `none`.
-7. When the Foundation pair is present, require both values, require the
-   manifest to be the physical absolute
-   `docs/agentic/WAYFINDING.md` in this checkout, and run `foundation validate`
-   with `foundationRevision`. When a Foundation-backed phase requires the pair,
-   reject `none`.
+7. When the Foundation pair is present, require both values and require the
+   manifest to be the physical absolute `docs/agentic/WAYFINDING.md` in this
+   checkout. For Brainstorming, run result-only `foundation validate` with
+   `foundationRevision`. For Planning or implementation, require the external
+   receipt to be the physical absolute candidate-root `APPLIED.json`; derive
+   the source spec and its base revision from the validated Design Spec; require
+   `git check-ignore --quiet -- <receipt>` to succeed; then run receipt-backed
+   `foundation validate` with `foundationRevision` as the expected result plus
+   the receipt, source-spec path/revision, and base revision. When a
+   Foundation-backed phase requires these values, reject `none`, half-none, or
+   inconsistent bindings.
 8. For Brainstorming, additionally require `artifactPath` and
    `foundationManifestPath` equality and `approvedRevision` and
    `foundationRevision` equality. Re-read the Approved Foundation and `ROADMAP.md` from disk.
@@ -123,8 +134,18 @@ instead.
 ## Canonical Prompt Envelope
 
 The Brainstorming, Planning, or implementation prompt contains the full handoff
-record as JSON. For `phase: brainstorming`, immediately after the unchanged
-fifteen-field record include these prompt bindings:
+record as JSON. The immutable JSON record remains exactly fifteen fields. For
+Foundation-backed `phase: planning` or `phase: implementation`, immediately
+after that unchanged record include:
+
+```text
+Foundation Application Receipt: <absolute candidate-root APPLIED.json path>
+```
+
+This is an external receipt binding outside the unchanged fifteen-field record,
+not a sixteenth field. A generic Planning or implementation prompt uses
+`Foundation Application Receipt: none`. For `phase: brainstorming`, immediately
+after the unchanged record include these prompt bindings:
 
 ```text
 Selected Roadmap Outcome: OUT-NNN
@@ -137,20 +158,24 @@ instructions:
 
 ```text
 Before invoking the phase skill, acknowledge all fifteen handoff fields with
-the exact received values. Then independently re-run repository, checkout,
-branch, worktree, phase-artifact lifecycle/revision, source-spec,
-Foundation-manifest/revision, ignored-file, and plugin-source checks from disk.
-Use foundation validate for a recorded Agentic Foundation. For Brainstorming,
+the exact received values. For Planning and implementation, separately
+acknowledge the Foundation Application Receipt external binding. Then
+independently re-run repository, checkout, branch, worktree, phase-artifact
+lifecycle/revision, source-spec, Foundation-manifest/revision/receipt,
+ignored-file, and plugin-source checks from disk. Use foundation validate for a
+recorded Agentic Foundation; Planning and implementation use receipt-backed
+validation of the exact spec base, receipt, and result. For Brainstorming,
 re-read the Approved Foundation and ROADMAP.md from disk; verify the selected
 identity exists, its readiness is Ready for Brainstorming, and its prompt text
 matches exactly. Do not begin next-phase work if any target-side value is
 missing, differs, or cannot be proven. Report the mismatch and stop.
 ```
 
-The target's first output includes the complete acknowledged record. At a
-minimum, operators visibly verify `checkoutRoot`, `branch`, `artifactPath`,
-`approvedRevision`, `foundationManifestPath`, and `foundationRevision` before
-allowing phase work.
+The target's first output includes the complete acknowledged record and, when
+present, the separately acknowledged receipt. At a minimum, operators visibly
+verify `checkoutRoot`, `branch`, `artifactPath`, `approvedRevision`,
+`foundationManifestPath`, `foundationRevision`, and the receipt before allowing
+Planning or implementation work.
 
 ## Workspace Cases
 
@@ -167,8 +192,9 @@ allowing phase work.
 - **Submodule:** treat the submodule root, remote, Git state, and applicable
   instruction chain as the repository boundary. Do not classify a submodule as
   a linked worktree merely because its Git directory is elsewhere.
-- **Ignored artifact or candidate:** require the exact checkout path and
-  confirm the file is still ignored and readable on both sides of the handoff.
+- **Ignored artifact, candidate, or receipt:** require the exact checkout path
+  and confirm the file is still ignored and readable on both sides of the
+  handoff.
 - **Dirty tree:** disclose and preserve it in the exact checkout. Never stage,
   stash, discard, or copy changes merely to enable handoff.
 - **Installed plugin:** require host inventory evidence before launch and again
@@ -187,16 +213,18 @@ allowing phase work.
 The receiving session performs no Brainstorming, Planning, or implementation
 before it:
 
-1. prints an exact acknowledgement of all fifteen handoff fields;
+1. prints an exact acknowledgement of all fifteen handoff fields and separately
+   acknowledges any Foundation Application Receipt binding;
 2. validates repository, checkout, branch or commit, and worktree identity;
 3. validates the phase artifact and source Design Spec when applicable;
-4. runs `foundation validate` for every recorded Foundation and confirms all
-   cross-field phase bindings;
+4. runs `foundation validate` for every recorded Foundation, using receipt-backed
+   validation for Planning and implementation, and confirms all cross-field
+   phase bindings;
 5. for Brainstorming, re-reads the Approved Foundation and `ROADMAP.md`, then
    verifies the selected outcome identity, readiness, and exact prompt;
 6. verifies ignored local files and plugin affinity in that session; and
 7. confirms `workspacePolicy: same-checkout` is actually satisfied.
 
 Mismatch is a terminal handoff result, not permission to choose a nearby
-checkout, branch, artifact revision, Foundation revision, or plugin
+checkout, branch, artifact revision, Foundation revision or receipt, or plugin
 installation.

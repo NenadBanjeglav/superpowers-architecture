@@ -216,7 +216,7 @@ _Avoid_: <rejected synonyms>
 ## Foundation Traceability
 
 **Foundation Manifest:** <absolute WAYFINDING.md path or none>
-**Agentic Foundation:** <exact Approved sha256 revision or none>
+**Base Agentic Foundation:** <exact Approved sha256 revision or none>
 **Roadmap Outcome:** <stable identity and title or none>
 **Blueprint Requirements:** <stable identities or none>
 **Prior Decisions:** <stable identities or none>
@@ -225,6 +225,22 @@ _Avoid_: <rejected synonyms>
 
 | Decision | Classification | Owning document | Candidate action |
 |---|---|---|---|
+
+## Foundation Candidate Declaration
+
+```json
+{
+  "schema": "superpowers-architecture-foundation-declaration-v1",
+  "actions": [
+    {
+      "id": "FCA-001",
+      "action": "upsert",
+      "path": "docs/agentic/ARCHITECTURE.md",
+      "decisionRefs": ["DDI-001"]
+    }
+  ]
+}
+```
 
 ## User-Facing Behavior
 
@@ -252,36 +268,46 @@ Every design decision must be classified exactly once:
 
 The table must cover actual decisions rather than repeat section headings. In
 every row, including all four classifications, the Decision cell uses the exact
-grammar `<decision statement> — Classification reason: <concrete reason>`.
-Every concrete classification reason must explain why that classification is
-correct.
+grammar
+`DDI-NNN: <decision>; Classification reason: <concrete reason>`.
+Every DDI identity is unique and every concrete classification reason explains
+why that classification is correct.
 
-Candidate action has one deterministic grammar:
+Candidate action cells use only stable action identities:
 
 - For `Task-local` and `No impact`, Candidate action is exact `none`.
 - For `Project-durable` and `Operating-contract`, Candidate action contains one
-  or more exact action tokens: `upsert <normalized repository-relative path>`
-  or `delete <normalized repository-relative path>`.
-- Join multiple action tokens with the exact separator `; ` and sort them by
-  unsigned UTF-8 path bytes.
-- A normalized repository-relative path uses forward slashes and strict UTF-8.
-  Reject absolute paths, backslashes, empty components, `.` or `..`
-  dot-segments, and traversal outside the repository.
-- Every Project-durable or Operating-contract row must declare at least one
-  action token.
+  or more unique `FCA-NNN` identities joined by comma and one space.
+- Candidate action cells never contain a path. The fenced JSON declaration is
+  the only path-bearing declaration interface.
+- Every Project-durable or Operating-contract row references every action
+  required by its owning-document, Decision Ledger, parent Child DOX Index,
+  router, and managed-file manifest consequences.
 
-The normalized union of all non-`none` Candidate action tokens must have exact
-set equality with the `{ path, action }` changes in `candidate.json`. Require
-no duplicates, omissions, extras, or no-ops.
+The Foundation Candidate Declaration has exact top-level keys `schema` and
+`actions`. Every action has exact keys `id`, `action`, `path`, and
+`decisionRefs`. Require the exact schema, unique FCA identities, exact `upsert`
+or `delete`, normalized forward-slash repository-relative JSON paths, and
+sorted unique non-empty DDI references. Sort actions by unsigned UTF-8 path bytes
+and then action. JSON escaping makes spaces, semicolons, and Markdown delimiters
+unambiguous.
+
+The declaration's sorted `(path, action)` projection must have exact equality
+with `candidate.json`. Require no duplicate or conflicting paths, omissions,
+extras, unreferenced actions, or no-ops. Several decisions may share one owner
+or ledger action.
 
 Owning-document locality matters: current truth changes in one owner, ledger
 history is append-only, and navigation documents receive pointers rather than
 copied detail.
 
 When a Foundation-backed spec has no project-durable or operating-contract
-changes, write the literal sentence `No durable documentation changes`, explain
-why each decision remains task-local or has no impact, and prepare an empty
-candidate. Its prospective Foundation revision must equal the Approved base Foundation revision.
+changes, the declaration has an empty `actions` array and Durable Documentation
+Impact contains exactly one unfenced literal sentence
+`No durable documentation changes`. Explain why each decision remains
+task-local or has no impact and use exact Candidate action `none`. A non-empty
+declaration requires the sentence to be absent. The empty candidate's
+prospective Foundation revision must equal the Approved base Foundation revision.
 
 ## Writing the Draft
 
@@ -308,19 +334,22 @@ For a Foundation-backed spec, prepare the candidate only after the complete
 Draft spec has been refreshed:
 
 1. Re-run `foundation validate` for the exact Approved base revision.
-2. Create the ignored, non-authoritative candidate root at
+2. Require the isolated reviewer to report the structured declaration clean,
+   including every class-specific owner, ledger, DOX-index, router, and
+   manifest obligation.
+3. Create the ignored, non-authoritative candidate root at
    `docs/superpowers/foundation-candidates/<design-spec-stem>/`.
-3. Write `candidate.json` with the exact schema from
+4. Write `candidate.json` with the exact schema from
    `using-superpowers/references/agentic-foundation-lifecycle.md`. Its sorted
-   change list must have exact set equality with the spec's normalized union of
-   declared complete candidate actions.
-4. Write complete candidate versions of every declared `upsert` under
+   change list must have exact equality with the structured declaration's
+   sorted `(path, action)` projection.
+5. Write complete candidate versions of every declared `upsert` under
    `files/<repository-relative-path>`. A deletion has no candidate file.
    Reject an undeclared candidate, a missing candidate, an extra file, a
    duplicate action, or a declared no-op.
-5. For `No durable documentation changes`, write an empty `changes` array and
+6. For `No durable documentation changes`, write an empty `changes` array and
    an empty `files/` tree.
-6. Run the public operation:
+7. Run the public operation:
 
 ```text
 foundation preview --root <checkout-root> --manifest <absolute-WAYFINDING.md> --candidate-root <absolute-candidate-root> --spec-path <absolute-spec-path> --expected-spec-revision <exact-draft-spec-sha256> --expected-base-revision <exact-approved-foundation-sha256>
@@ -332,9 +361,12 @@ the operation-owned readable affected-file review in
 `DESIGN-CHANGE-SET.md`. For an empty candidate, require the prospective
 Foundation revision to equal the base.
 
-Lifecycle canonicalization, candidate validation, readable diff generation,
-application, rollback, recovery, and approval remain behind the shared
-Foundation operation seam. Do not reproduce that policy in Brainstorming.
+The public preview and apply operations enforce declaration/candidate equality
+again, including under the operation lock. Lifecycle canonicalization,
+declaration parsing, semantic binding, candidate validation, readable diff
+generation, application, rollback, recovery, receipt installation, and
+approval remain behind the shared Foundation operation seam. Do not reproduce
+that policy in Brainstorming.
 
 ## Advisory Design Change Set Review
 
@@ -406,17 +438,19 @@ Then validate both exact Approved artifacts from disk:
 
 ```text
 artifact validate --path <absolute-spec-path> --type "Design Spec" --expected-revision <exact-reviewed-spec-sha256>
-foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-reviewed-prospective-sha256>
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-reviewed-prospective-sha256> --receipt <absolute-candidate-root/APPLIED.json> --spec-path <absolute-spec-path> --expected-spec-revision <exact-reviewed-spec-sha256> --expected-base-revision <exact-approved-base-sha256>
 ```
 
 Any failure or drift stops planning and returns to the same combined review
 gate. Successful apply is the single authority for approving the spec and
 resulting Foundation; do not add a second `artifact approve` or Foundation
-approval gate.
+approval gate. Preserve the exact Approved base in the Design Spec. Treat the
+returned `applicationReceiptPath` as the sole Foundation Application Receipt
+for Planning; never derive a second record from conversation state.
 
 ## Generic Written Spec Review Gate
 
-When Foundation Manifest and Agentic Foundation are both literal `none`,
+When Foundation Manifest and Base Agentic Foundation are both literal `none`,
 preserve the single-artifact lifecycle:
 
 1. Refresh the Draft spec.
@@ -440,8 +474,10 @@ preflight from `using-superpowers/references/phase-handoff.md`. Use the runtime
 adapter only when it preserves all fifteen handoff fields and report the new
 session identity or complete safe fallback prompt before stopping.
 
-In same-session mode, invoke `writing-plans`, revalidate both artifacts, re-read
-them and the codebase from disk, and stop at the written-plan review gate.
+In same-session mode, invoke `writing-plans`, revalidate the Approved spec plus
+its exact base and the receipt-backed resulting Foundation, re-read the spec,
+receipt, result, and codebase from disk, and stop at the written-plan review
+gate.
 
 Canonical planning prompt:
 
@@ -453,7 +489,9 @@ Approved artifact:
 - Type: Design Spec
 - Revision: <exact approved spec sha256 digest>
 - Foundation Manifest: <absolute WAYFINDING.md path or none>
-- Foundation Revision: <exact resulting approved Foundation sha256 digest or none>
+- Foundation Base Revision: <exact Approved base Foundation sha256 digest or none>
+- Foundation Result Revision: <exact resulting Approved Foundation sha256 digest or none>
+- Foundation Application Receipt: <absolute candidate-root APPLIED.json path or none>
 - Repository remote: <canonical remote>
 - Checkout root: <absolute checkout root>
 - Branch: <branch or detached commit>
@@ -482,15 +520,18 @@ Handoff record:
   "workspacePolicy": "same-checkout"
 }
 
-Before invoking writing-plans, acknowledge all fifteen handoff fields with the
-exact received values. Independently re-run repository, checkout, branch,
-worktree, artifact, Foundation, ignored-file, and plugin-source checks from
-disk. Validate the Approved Design Spec and every non-none Agentic Foundation
-at the recorded exact revisions before inspecting the codebase. Stop on any
-missing, inconsistent, unproven, or drifted value.
+Foundation Application Receipt: <absolute candidate-root APPLIED.json path or none>
 
-Read the Approved spec, resulting Approved Foundation, and codebase fresh. Save
-the Draft plan under docs/superpowers/plans/, refresh and review its exact
-revision, and stop at the written-plan review gate. Do not stage or commit
-docs/superpowers/** unless explicitly asked.
+Before invoking writing-plans, acknowledge all fifteen handoff fields with the
+exact received values and acknowledge the external Foundation Application
+Receipt binding separately. Independently re-run repository, checkout, branch,
+worktree, artifact, Foundation, receipt ignored-file, and plugin-source checks
+from disk. Re-read the Approved spec's exact base and run receipt-backed
+`foundation validate` for the recorded result before inspecting the codebase.
+Stop on any missing, inconsistent, unproven, or drifted value.
+
+Read the Approved spec, resulting Approved Foundation, Application Receipt, and
+codebase fresh. Save the Draft plan under docs/superpowers/plans/, refresh and
+review its exact revision, and stop at the written-plan review gate. Do not
+stage or commit docs/superpowers/** unless explicitly asked.
 ```

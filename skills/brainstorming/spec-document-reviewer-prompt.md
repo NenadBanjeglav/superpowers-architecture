@@ -75,11 +75,14 @@ Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
 | Lifecycle | Artifact Type is Design Spec; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
 | Source and Phase Mode | Source, one supported Phase Mode, reason, and durability are concrete |
 | Architecture Conformance | Modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface are decision-complete under the shared rubric |
-| Foundation Traceability | Manifest/revision are a consistent absolute-path/exact-revision pair or both none; a Foundation-backed spec has one ready outcome, complete Blueprint traceability, and relevant prior decisions |
-| Decision Classification | Every decision is exactly Task-local, Project-durable, Operating-contract, or No impact and has a concrete classification reason |
-| Owning-document Locality | Every durable or operating-contract decision names the one authoritative owner and preserves immutable ledger history and pointer-based navigation |
-| Declared/Candidate Equality | Every Candidate action follows the normalized action grammar; the normalized union has exact set equality with candidate.json; complete upsert files exist; there are no missing, extra, undeclared, duplicate, or no-op candidates |
+| Foundation Traceability | Foundation Manifest and Base Agentic Foundation are a consistent absolute-path/exact-revision pair or both none; a Foundation-backed spec has one ready outcome, complete Blueprint traceability, and relevant prior decisions |
+| Decision Classification | Every decision has one unique stable DDI-NNN identity, exactly one Task-local, Project-durable, Operating-contract, or No impact classification, and a concrete classification reason |
+| Structured Declaration | The fenced JSON uses the exact declaration schema and keys, FCA-NNN identities and paths are unique, action order is unsigned UTF-8 path then action, paths are normalized escape-safe JSON strings, and decision references are sorted, unique, non-empty, and reciprocal |
+| Owning-document Locality | Every Project-durable decision references its exact current-truth owner and a Decision Ledger upsert, and every Operating-contract decision references its exact AGENTS.md owner and every affected parent Child DOX Index |
+| Navigation Consequences | Managed-file additions/deletions include the manifest action, reading-order changes include the applicable router action, and no Task-local or No impact decision references an action |
+| Declared/Candidate Equality | Candidate action cells contain FCA-NNN identities and never paths, the declaration's path/action projection has exact candidate equality with candidate.json, complete upsert files exist, and there are no missing, extra, undeclared, duplicate, conflicting, unreferenced, or no-op candidates |
 | Candidate Coherence | The prospective manifest and complete candidate files remain a coherent Agentic Foundation and an empty candidate preserves the base revision |
+| Empty Declaration | An empty actions array has exactly one unfenced `No durable documentation changes` sentence; a non-empty declaration requires that sentence to be absent |
 | Readable Review | The operation-owned readable report covers every affected-file action and exposes review paths or normalized diffs |
 | Prospective Identity | The report, candidate, exact Draft spec, exact Approved base, and prospective Foundation revision have consistent bindings |
 | Single Gate | The package requires one approval naming the exact spec and prospective Foundation revisions, with no second review gate |

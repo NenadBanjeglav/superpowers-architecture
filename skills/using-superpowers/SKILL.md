@@ -58,10 +58,12 @@ The selected phase flow is:
    architecture-aware Design Spec and stops at the written-spec review gate.
 4. After written spec approval, the selected Phase Mode controls planning:
    - Automated fresh-session mode starts `writing-plans` in a fresh session
-     from the Approved spec path when a runtime adapter is available.
+     from the Approved spec path, resulting Foundation, and physical application
+     receipt when a runtime adapter is available.
    - Same-session mode invokes `writing-plans` in the current conversation
-     after re-reading the Approved spec, applicable Foundation, and codebase
-     from disk.
+     after receipt-backed validation of the Approved spec base and resulting
+     Foundation, then re-reading the Approved spec, applicable Foundation, and
+     codebase from disk.
 5. `writing-plans` writes and reviews an exact implementation plan from the
    Approved spec, then stops at the written-plan review gate.
 6. After written plan approval, the selected Phase Mode controls implementation:
@@ -69,8 +71,9 @@ The selected phase flow is:
      `executing-plans` in a fresh session from the Approved plan path when a
      runtime adapter is available.
    - Same-session mode invokes the selected implementation controller after
-     re-reading the Approved plan, referenced spec, applicable Foundation, and
-     codebase from disk.
+     receipt-backed validation of the Approved plan, referenced spec base, and
+     resulting Foundation, then re-reading those artifacts and the codebase from
+     disk.
 7. `finishing-a-development-branch` verifies and summarizes the completed
    branch without pushing, merging, opening PRs, discarding work, or publishing
    unless the user explicitly asks.
@@ -104,9 +107,12 @@ Before an automated fresh-session launch, run `prepare handoff` and bind the
 prompt to all fifteen immutable fields: exact repository remote, checkout root,
 branch or detached commit, worktree identity, phase artifact, source spec when
 applicable, Agentic Foundation when applicable, plugin source/root, and
-`same-checkout` policy. The receiving session must acknowledge every field and
-independently revalidate it before the next skill begins. If the runtime cannot
-address the exact checkout or prove plugin and ignored-artifact affinity, print
+`same-checkout` policy. For Foundation-backed Planning and implementation, bind
+the absolute Foundation Application Receipt outside the unchanged record and
+carry the result revision in `foundationRevision`. The receiving session must
+acknowledge all fifteen fields and the receipt separately, then independently
+revalidate them before the next skill begins. If the runtime cannot address the
+exact checkout or prove plugin, ignored-artifact, and receipt affinity, print
 the complete canonical fallback and do not launch.
 
 <!-- STARTUP-CONTRACT:START -->
@@ -136,6 +142,11 @@ approve`, `foundation validate`, `foundation preview`, and `foundation apply`.
 `WAYFINDING.md` is the only lifecycle manifest. Wayfinder and later phase
 consumers call the operations; they never calculate or rewrite Foundation
 revisions themselves.
+
+Result-only `foundation validate` remains the Foundation lifecycle check.
+Planning and implementation use its receipt-backed form to bind the Approved
+Design Spec base, operation-owned `APPLIED.json`, and resulting Approved
+Foundation. They do not require base and result revisions to be equal.
 
 Node.js 20 or newer is required for correctness-critical transitions. If Node
 or the sibling operation module is unavailable, fail closed and print the
