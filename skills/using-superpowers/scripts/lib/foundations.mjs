@@ -1,10 +1,11 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { execFile as execFileCallback } from 'node:child_process';
 import {
   chmod,
   lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
@@ -57,12 +58,17 @@ const ISO_8601_TIMESTAMP =
 const UTF8_BOM = Buffer.from([0xef, 0xbb, 0xbf]);
 const CANDIDATE_SCHEMA = 'superpowers-architecture-foundation-candidate-v1';
 const APPLIED_SCHEMA = 'superpowers-architecture-foundation-applied-v1';
+const OPERATION_LOCK_SCHEMA =
+  'superpowers-architecture-foundation-operation-lock-v1';
 const TRANSACTION_SCHEMA = 'superpowers-architecture-foundation-transaction-v1';
+const OPERATION_LOCK_FILE = '.foundation-operation.lock.json';
 const CANDIDATE_PARENT_RELATIVE_PATH = 'docs/superpowers/foundation-candidates';
 const DESIGN_SPEC_PARENT_RELATIVE_PATH = 'docs/superpowers/specs';
 const REVIEW_FILE = 'DESIGN-CHANGE-SET.md';
 const APPLIED_FILE = 'APPLIED.json';
 const TRANSACTION_DIRECTORY = '.transaction';
+const ADDITION_MODE = 0o644;
+const OPERATION_NONCE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const execFile = promisify(execFileCallback);
 
 function recoveryAction() {
@@ -915,7 +921,33 @@ async function validateCandidateLocation({
     );
   }
 
-  return { candidateRealPath, designSpecPath, rootRealPath };
+  const candidateParent = dirname(candidateRoot);
+  const candidateParentStat = await lstat(candidateParent);
+  if (candidateParentStat.isSymbolicLink() || !candidateParentStat.isDirectory()) {
+    throw foundationError(
+      'candidate parent',
+      'a physical non-symbolic-link directory',
+      candidateParentStat.isSymbolicLink() ? 'symbolic link or junction' : 'non-directory',
+      'Recovery: restore the physical Foundation candidate parent inside this checkout.',
+    );
+  }
+  const candidateParentRealPath = await realpath(candidateParent);
+  if (!isContained(rootRealPath, candidateParentRealPath)) {
+    throw foundationError(
+      'candidate parent',
+      'a real path contained by the checkout root',
+      `outside root at ${candidateParentRealPath}`,
+      'Recovery: remove the junction escape and restore the candidate parent inside this checkout.',
+    );
+  }
+
+  return {
+    candidateRealPath,
+    candidateParentRealPath,
+    designSpecPath,
+    lockPath: join(candidateParentRealPath, OPERATION_LOCK_FILE),
+    rootRealPath,
+  };
 }
 
 async function pathState(path) {
@@ -1018,6 +1050,17 @@ async function rejectTransaction(candidateRoot) {
       'no incomplete transaction during preview',
       `transaction state exists at ${transactionRoot}`,
       'Recovery: run foundation apply with the exact reviewed bindings so it can recover the interrupted transaction.',
+    );
+  }
+}
+
+async function rejectOperationLock(lockPath) {
+  if (await pathState(lockPath)) {
+    throw foundationError(
+      'candidate operation lock',
+      'no apply or recovery window during preview',
+      `operation lock exists at ${lockPath}`,
+      'Recovery: let the live foundation apply finish, or rerun the exact foundation apply binding to recover a dead owner.',
     );
   }
 }
@@ -1514,7 +1557,7 @@ async function writeDesignChangeSet({
       `Recovery: remove the symbolic ${reviewPath} entry and rerun foundation preview.`,
     );
   }
-  const stagedReviewPath = await stageSiblingFile(
+  const stagedReviewPath = await stagePreviewReviewFile(
     reviewPath,
     `${sections.join('\n').replace(/\n+$/g, '')}\n`,
     reviewStat?.mode ?? 0o600,
@@ -1589,18 +1632,25 @@ async function prepareFoundationChangeSet({
   specPath,
   expectedSpecRevision,
   expectedBaseRevision,
-}) {
+}, {
+  allowOperationState = false,
+  location: providedLocation,
+  writeReview = true,
+} = {}) {
   assertSupportedNode();
   assertCompleteRevision('candidate expected Design Spec revision', expectedSpecRevision);
   assertCompleteRevision('candidate expected base revision', expectedBaseRevision);
-  const location = await validateCandidateLocation({
+  const location = providedLocation ?? await validateCandidateLocation({
     root,
     manifestPath,
     candidateRoot,
     specPath,
   });
-  await rejectAppliedCandidate(candidateRoot);
-  await rejectTransaction(candidateRoot);
+  if (!allowOperationState) {
+    await rejectAppliedCandidate(candidateRoot);
+    await rejectOperationLock(location.lockPath);
+    await rejectTransaction(candidateRoot);
+  }
 
   await validateApprovedFoundation({
     root,
@@ -1634,17 +1684,19 @@ async function prepareFoundationChangeSet({
     candidateFiles,
     manifestPath,
   );
-  const reviewPath = await writeDesignChangeSet({
-    candidateRoot,
-    specPath,
-    specRevision: expectedSpecRevision,
-    manifestPath,
-    baseRevision: expectedBaseRevision,
-    prospectiveRevision: prospective.prospectiveRevision,
-    changedFiles,
-    baseFiles: prospective.baseFiles,
-    prospectiveFiles: prospective.prospectiveFiles,
-  });
+  const reviewPath = writeReview
+    ? await writeDesignChangeSet({
+        candidateRoot,
+        specPath,
+        specRevision: expectedSpecRevision,
+        manifestPath,
+        baseRevision: expectedBaseRevision,
+        prospectiveRevision: prospective.prospectiveRevision,
+        changedFiles,
+        baseFiles: prospective.baseFiles,
+        prospectiveFiles: prospective.prospectiveFiles,
+      })
+    : join(candidateRoot, REVIEW_FILE);
 
   return {
     root,
@@ -1693,31 +1745,25 @@ export async function previewFoundationChangeSet({
   }));
 }
 
-let temporaryFileSequence = 0;
-
-async function stageSiblingFile(targetPath, content, mode, physicalRoot) {
-  await validatePhysicalTargetPath(
-    physicalRoot,
-    targetPath,
-    `staging target ${targetPath}`,
-  );
-  await mkdir(dirname(targetPath), { recursive: true });
+async function stagePreviewReviewFile(targetPath, content, mode, physicalRoot) {
   await validatePhysicalTargetPath(
     physicalRoot,
     targetPath,
     `staging target ${targetPath}`,
   );
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    temporaryFileSequence += 1;
     const stagedPath = join(
       dirname(targetPath),
-      `.${basename(targetPath)}.spa-foundation-${process.pid}-${temporaryFileSequence}.tmp`,
+      `.${basename(targetPath)}.spa-foundation-preview-${randomUUID()}.tmp`,
     );
     try {
-      await writeFile(stagedPath, content, {
-        flag: 'wx',
-        mode: (mode ?? 0o644) & 0o777,
-      });
+      const handle = await open(stagedPath, 'wx', (mode ?? ADDITION_MODE) & 0o777);
+      try {
+        await handle.writeFile(content);
+        await handle.sync();
+      } finally {
+        await handle.close();
+      }
       return stagedPath;
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
@@ -1727,7 +1773,7 @@ async function stageSiblingFile(targetPath, content, mode, physicalRoot) {
     `staging ${targetPath}`,
     'an available sibling temporary filename',
     'twenty collisions',
-    'Recovery: remove stale .spa-foundation-*.tmp files from the destination directory and retry.',
+    'Recovery: remove the exact reported preview staging collision and retry.',
   );
 }
 
@@ -1739,19 +1785,57 @@ async function realReplacePath({ targetPath, stagedPath, action }) {
   await rename(stagedPath, targetPath);
 }
 
+function sha256Digest(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+function assertOperationNonce(value, subject = 'operation nonce') {
+  if (!OPERATION_NONCE.test(value ?? '')) {
+    throw foundationError(
+      subject,
+      'a lowercase RFC 4122 version-4 operation nonce',
+      value ?? 'missing',
+      'Recovery: preserve the operation evidence and retry only with its exact generated nonce.',
+    );
+  }
+}
+
+async function writeExclusiveSynced(path, content, mode) {
+  const handle = await open(path, 'wx', mode & 0o777);
+  try {
+    await handle.writeFile(content);
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+}
+
+function journalTemporaryPath(transactionRoot, operationNonce) {
+  return join(transactionRoot, `.journal.${operationNonce}.tmp`);
+}
+
 async function writeTransactionJournal(transactionRoot, journal) {
   const journalPath = join(transactionRoot, 'journal.json');
-  const journalStat = await pathState(journalPath);
-  const stagedPath = await stageSiblingFile(
-    journalPath,
-    `${JSON.stringify(journal, null, 2)}\n`,
-    journalStat?.mode ?? 0o600,
+  const stagedPath = journalTemporaryPath(transactionRoot, journal.operationNonce);
+  await validatePhysicalTargetPath(
     transactionRoot,
+    journalPath,
+    'candidate transaction journal target',
+  );
+  await validatePhysicalTargetPath(
+    transactionRoot,
+    stagedPath,
+    'candidate transaction journal temporary path',
   );
   try {
+    await writeExclusiveSynced(
+      stagedPath,
+      `${JSON.stringify(journal, null, 2)}\n`,
+      0o600,
+    );
     await realReplacePath({
       targetPath: journalPath,
-      stagedPath,
+      stagedPath: stagedPath,
       action: 'upsert',
     });
   } finally {
@@ -1764,29 +1848,35 @@ async function writeTransactionJournal(transactionRoot, journal) {
   }
 }
 
-async function removeEmptyParents(path, stopAt) {
-  let current = path;
-  while (current !== stopAt && isContained(stopAt, current)) {
-    try {
-      await rmdir(current);
-    } catch (error) {
-      if (['ENOENT', 'ENOTEMPTY', 'EEXIST', 'EPERM'].includes(error.code)) return;
-      throw error;
-    }
-    current = dirname(current);
-  }
+function lockBindings(args, location, operationNonce, ownerPid, acquiredAt) {
+  return {
+    schema: OPERATION_LOCK_SCHEMA,
+    operationNonce,
+    ownerPid,
+    root: args.root,
+    manifestPath: args.manifestPath,
+    specPath: args.specPath,
+    candidateRoot: args.candidateRoot,
+    expectedBaseRevision: args.expectedBaseRevision,
+    expectedSpecRevision: args.expectedSpecRevision,
+    expectedResultRevision: args.expectedResultRevision,
+    acquiredAt,
+  };
 }
 
-function validateTransactionJournal(
-  journal,
+function validateOperationLock(
+  lock,
   args,
-  transactionRoot,
-  expectedTargetPaths,
+  location,
+  expectedNonce,
+  { validateBindings = true } = {},
 ) {
   assertExactKeys(
-    journal,
+    lock,
     [
       'schema',
+      'operationNonce',
+      'ownerPid',
       'root',
       'manifestPath',
       'specPath',
@@ -1794,9 +1884,324 @@ function validateTransactionJournal(
       'expectedBaseRevision',
       'expectedSpecRevision',
       'expectedResultRevision',
+      'acquiredAt',
+    ],
+    'candidate operation lock',
+  );
+  if (lock.schema !== OPERATION_LOCK_SCHEMA) {
+    throw foundationError(
+      'candidate operation lock schema',
+      OPERATION_LOCK_SCHEMA,
+      lock.schema ?? 'missing',
+      'Recovery: preserve the lock and retry only with the operation core that created it.',
+    );
+  }
+  assertOperationNonce(lock.operationNonce, 'candidate operation lock nonce');
+  if (expectedNonce && lock.operationNonce !== expectedNonce) {
+    throw foundationError(
+      'candidate operation lock nonce binding',
+      expectedNonce,
+      lock.operationNonce,
+      'Recovery: preserve both lock and transaction evidence; their ownership is cross-wired.',
+    );
+  }
+  if (!Number.isInteger(lock.ownerPid) || lock.ownerPid <= 0) {
+    throw foundationError(
+      'candidate operation lock owner',
+      'a positive integer process identifier',
+      lock.ownerPid ?? 'missing',
+      'Recovery: preserve the invalid lock for inspection rather than guessing its liveness.',
+    );
+  }
+  if (!isIso8601Timestamp(lock.acquiredAt)) {
+    throw foundationError(
+      'candidate operation lock acquiredAt',
+      'an ISO-8601 timestamp',
+      lock.acquiredAt ?? 'missing',
+      'Recovery: preserve the invalid lock for inspection.',
+    );
+  }
+  if (validateBindings) {
+    const bindings = [
+      ['root', args.root, lock.root],
+      ['manifest', args.manifestPath, lock.manifestPath],
+      ['Design Spec', args.specPath, lock.specPath],
+      ['candidate root', args.candidateRoot, lock.candidateRoot],
+      ['base revision', args.expectedBaseRevision, lock.expectedBaseRevision],
+      ['Design Spec revision', args.expectedSpecRevision, lock.expectedSpecRevision],
+      ['result revision', args.expectedResultRevision, lock.expectedResultRevision],
+    ];
+    for (const [subject, expected, actual] of bindings) {
+      if (actual !== expected) {
+        throw foundationError(
+          `candidate operation lock ${subject} binding`,
+          expected,
+          actual ?? 'missing',
+          'Recovery: retry only from the exact checkout, candidate, and reviewed revisions that own this lock.',
+        );
+      }
+    }
+  }
+  if (location.lockPath !== join(location.candidateParentRealPath, OPERATION_LOCK_FILE)) {
+    throw foundationError(
+      'candidate operation lock path',
+      `the physical candidate-parent lock ${join(location.candidateParentRealPath, OPERATION_LOCK_FILE)}`,
+      location.lockPath,
+      'Recovery: resolve the lock only from the validated physical candidate parent.',
+    );
+  }
+  return lock;
+}
+
+function operationOwnerIsLive(ownerPid) {
+  try {
+    process.kill(ownerPid, 0);
+    return true;
+  } catch (error) {
+    if (error.code === 'EPERM') return true;
+    if (error.code === 'ESRCH') return false;
+    throw foundationError(
+      'candidate operation lock liveness',
+      'a process probe resolving to live, EPERM, or ESRCH',
+      error.code ?? error.message,
+      'Recovery: preserve the lock until owner liveness can be established exactly.',
+    );
+  }
+}
+
+async function readOperationLock(
+  args,
+  location,
+  expectedNonce,
+  options,
+) {
+  return validateOperationLock(
+    await readStrictJsonFile(
+      location.lockPath,
+      'candidate operation lock',
+      location.candidateParentRealPath,
+    ),
+    args,
+    location,
+    expectedNonce,
+    options,
+  );
+}
+
+async function acquireOperationLock(args, location) {
+  const operationNonce = randomUUID();
+  const lock = lockBindings(
+    args,
+    location,
+    operationNonce,
+    process.pid,
+    new Date().toISOString(),
+  );
+  try {
+    await writeExclusiveSynced(
+      location.lockPath,
+      `${JSON.stringify(lock, null, 2)}\n`,
+      0o600,
+    );
+  } catch (error) {
+    if (error.code !== 'EEXIST') {
+      throw error;
+    }
+    const present = await readOperationLock(
+      args,
+      location,
+      undefined,
+      { validateBindings: false },
+    );
+    if (operationOwnerIsLive(present.ownerPid)) {
+      throw foundationError(
+        'candidate operation lock',
+        'no live Foundation writer in this checkout',
+        `live owner pid ${present.ownerPid}`,
+        'Recovery: wait for the cooperating Foundation writer to finish, then rerun the exact apply.',
+      );
+    }
+    validateOperationLock(present, args, location);
+    throw foundationError(
+      'candidate operation lock',
+      'a recovered matching dead operation before new acquisition',
+      `dead owner pid ${present.ownerPid}`,
+      'Recovery: rerun the exact apply so validated stale-operation recovery can finish before a new transaction starts.',
+    );
+  }
+  return lock;
+}
+
+async function assertCurrentOperationLock(args, location, expectedLock) {
+  const current = await readOperationLock(
+    args,
+    location,
+    expectedLock.operationNonce,
+  );
+  if (
+    current.ownerPid !== expectedLock.ownerPid ||
+    current.acquiredAt !== expectedLock.acquiredAt
+  ) {
+    throw foundationError(
+      'candidate operation lock ownership',
+      `owner ${expectedLock.ownerPid} acquired at ${expectedLock.acquiredAt}`,
+      `owner ${current.ownerPid} acquired at ${current.acquiredAt}`,
+      'Recovery: preserve the replaced lock and transaction; this operation no longer owns cleanup.',
+    );
+  }
+  return current;
+}
+
+async function releaseOperationLock(args, location, expectedLock) {
+  await assertCurrentOperationLock(args, location, expectedLock);
+  await validatePhysicalTargetPath(
+    location.candidateParentRealPath,
+    location.lockPath,
+    'candidate operation lock release',
+  );
+  await rm(location.lockPath);
+}
+
+function sortedOperationTargetPaths(args, operation) {
+  const unique = new Set([
+    args.specPath,
+    ...operation.changedFiles.map(({ path }) =>
+      join(args.root, ...path.split('/'))),
+    args.manifestPath,
+  ]);
+  return [...unique].sort((left, right) =>
+    Buffer.compare(
+      Buffer.from(portableRelativePath(args.root, left, 'transaction target identity'), 'utf8'),
+      Buffer.from(portableRelativePath(args.root, right, 'transaction target identity'), 'utf8'),
+    ));
+}
+
+function deterministicBackupPath(root, targetPath, index) {
+  const identity = createHash('sha256')
+    .update(Buffer.from(portableRelativePath(root, targetPath, 'transaction backup target'), 'utf8'))
+    .digest('hex');
+  return `backups/${String(index).padStart(4, '0')}-${identity}.bin`;
+}
+
+function deterministicStagedPath(targetPath, operationNonce, ordinal, purpose) {
+  return join(
+    dirname(targetPath),
+    `.${basename(targetPath)}.spa-foundation-${operationNonce}-${String(ordinal).padStart(4, '0')}-${purpose}.tmp`,
+  );
+}
+
+function expectedMutationPaths(args, operation) {
+  return [
+    operation.location.designSpecPath,
+    ...operation.changedFiles
+      .filter(({ path }) => path !== MANIFEST_RELATIVE_PATH)
+      .map(({ path }) => path),
+    MANIFEST_RELATIVE_PATH,
+  ];
+}
+
+function stagedPurposeTargets(args, operation) {
+  const result = new Map([
+    ['approved-spec', new Set([args.specPath])],
+    ['approved-manifest', new Set([args.manifestPath])],
+    ['applied-marker', new Set([join(args.candidateRoot, APPLIED_FILE)])],
+    ['restore', new Set(sortedOperationTargetPaths(args, operation))],
+  ]);
+  result.set(
+    'candidate-upsert',
+    new Set(
+      operation.changedFiles
+        .filter(({ path, action }) =>
+          path !== MANIFEST_RELATIVE_PATH && action === 'upsert')
+        .map(({ path }) => join(args.root, ...path.split('/'))),
+    ),
+  );
+  return result;
+}
+
+function validateCreatedDirectories(createdDirectories, args, entries) {
+  if (!Array.isArray(createdDirectories)) {
+    throw foundationError(
+      'candidate transaction created directories',
+      'an array of exact directory ownership records',
+      typeof createdDirectories,
+      'Recovery: restore the original operation-owned directory ledger.',
+    );
+  }
+  const allowed = new Set();
+  for (const entry of entries.filter(({ existed }) => !existed)) {
+    let current = dirname(entry.targetPath);
+    while (current !== args.root && isContained(args.root, current)) {
+      allowed.add(current);
+      current = dirname(current);
+    }
+  }
+  const seen = new Set();
+  for (const record of createdDirectories) {
+    assertExactKeys(
+      record,
+      ['path', 'state'],
+      'candidate transaction created-directory record',
+    );
+    if (
+      typeof record.path !== 'string' ||
+      !isAbsolute(record.path) ||
+      !allowed.has(record.path)
+    ) {
+      throw foundationError(
+        'candidate transaction created directory',
+        'an exact missing-target ancestor inside the checkout',
+        record.path ?? 'missing',
+        'Recovery: restore the original exact directory ledger.',
+      );
+    }
+    if (!['planned', 'created'].includes(record.state)) {
+      throw foundationError(
+        `candidate transaction created directory ${record.path}`,
+        'state planned or created',
+        record.state ?? 'missing',
+        'Recovery: restore the original directory state.',
+      );
+    }
+    if (seen.has(record.path)) {
+      throw foundationError(
+        'candidate transaction created directory',
+        'unique exact paths',
+        `duplicate ${record.path}`,
+        'Recovery: restore the original directory ledger.',
+      );
+    }
+    seen.add(record.path);
+  }
+}
+
+async function validateTransactionJournalOwned(
+  journal,
+  args,
+  operation,
+  location,
+  transactionRoot,
+  lock,
+  { allowIncompleteBackups = false } = {},
+) {
+  assertExactKeys(
+    journal,
+    [
+      'schema',
+      'operationNonce',
+      'lockPath',
+      'root',
+      'manifestPath',
+      'specPath',
+      'candidateRoot',
+      'expectedBaseRevision',
+      'expectedSpecRevision',
+      'expectedResultRevision',
+      'additionMode',
       'state',
       'entries',
       'stagedPaths',
+      'createdDirectories',
     ],
     'candidate transaction journal',
   );
@@ -1805,7 +2210,24 @@ function validateTransactionJournal(
       'candidate transaction schema',
       TRANSACTION_SCHEMA,
       journal.schema ?? 'missing',
-      'Recovery: do not edit transaction state; restore the matching operation core or recover from exact backups.',
+      'Recovery: preserve the transaction and restore the operation core that created it.',
+    );
+  }
+  assertOperationNonce(journal.operationNonce, 'candidate transaction nonce');
+  if (journal.operationNonce !== lock.operationNonce) {
+    throw foundationError(
+      'candidate transaction nonce binding',
+      lock.operationNonce,
+      journal.operationNonce,
+      'Recovery: preserve the cross-wired lock and transaction without mutation.',
+    );
+  }
+  if (journal.lockPath !== location.lockPath) {
+    throw foundationError(
+      'candidate transaction lock path binding',
+      location.lockPath,
+      journal.lockPath ?? 'missing',
+      'Recovery: preserve the transaction; its lock ownership is uncertain.',
     );
   }
   const bindings = [
@@ -1823,252 +2245,400 @@ function validateTransactionJournal(
         `candidate transaction ${subject} binding`,
         expected,
         actual ?? 'missing',
-        'Recovery: retry only from the exact checkout, candidate, and reviewed revisions that created this transaction.',
+        'Recovery: retry only with the exact operation bindings that own this transaction.',
+      );
+    }
+  }
+  if (!Number.isInteger(journal.additionMode) || journal.additionMode !== ADDITION_MODE) {
+    throw foundationError(
+      'candidate transaction additionMode',
+      `the implementation-owned integer ${ADDITION_MODE}`,
+      journal.additionMode ?? 'missing',
+      'Recovery: restore the immutable additionMode before staging, apply, or recovery.',
+    );
+  }
+  if (
+    !['preparing', 'prepared', 'staged', 'validating', 'recording-applied'].includes(journal.state) &&
+    !/^replacing:\d+:.+$/.test(journal.state ?? '')
+  ) {
+    throw foundationError(
+      'candidate transaction state',
+      'preparing, prepared, staged, replacing:<index>:<path>, validating, or recording-applied',
+      journal.state ?? 'missing',
+      'Recovery: restore the exact durable transaction state.',
+    );
+  }
+  if (/^replacing:/.test(journal.state)) {
+    const match = journal.state.match(/^replacing:(\d+):(.+)$/);
+    const index = Number(match[1]);
+    const paths = expectedMutationPaths(args, operation);
+    if (!Number.isInteger(index) || paths[index] !== match[2]) {
+      throw foundationError(
+        'candidate transaction replacement state',
+        `one exact mutation index/path from ${JSON.stringify(paths)}`,
+        journal.state,
+        'Recovery: restore the exact replacement state before retrying.',
       );
     }
   }
   if (!Array.isArray(journal.entries)) {
     throw foundationError(
       'candidate transaction entries',
-      'an array of exact backup entries',
+      'an array of exact deterministic backup entries',
       typeof journal.entries,
-      'Recovery: restore the transaction journal and backups before retrying.',
+      'Recovery: restore the original transaction entries.',
     );
   }
-  if (!Array.isArray(journal.stagedPaths)) {
-    throw foundationError(
-      'candidate transaction staged paths',
-      'an array of sibling temporary paths',
-      typeof journal.stagedPaths,
-      'Recovery: restore the original transaction journal before retrying.',
-    );
-  }
-
-  const seenTargets = new Set();
-  for (const entry of journal.entries) {
-    assertExactKeys(
-      entry,
-      ['targetPath', 'backupPath', 'existed', 'mode'],
-      'candidate transaction entry',
-    );
-    const authoritativeRelativePath =
-      entry.targetPath === args.specPath
-        ? null
-        : entry.targetPath === args.manifestPath
-          ? MANIFEST_RELATIVE_PATH
-          : typeof entry.targetPath === 'string' &&
-              isAbsolute(entry.targetPath) &&
-              isContained(args.root, entry.targetPath)
-            ? relative(args.root, entry.targetPath).split(sep).join('/')
-            : null;
-    const allowedAuthoritativeTarget =
-      entry.targetPath === args.specPath ||
-      authoritativeRelativePath === MANIFEST_RELATIVE_PATH ||
-      REQUIRED_FOUNDATION_FILES.includes(authoritativeRelativePath) ||
-      authoritativeRelativePath?.startsWith('docs/agentic/');
-    if (
-      typeof entry.targetPath !== 'string' ||
-      !isAbsolute(entry.targetPath) ||
-      !allowedAuthoritativeTarget
-    ) {
-      throw foundationError(
-        'candidate transaction target',
-        'the exact Design Spec or an allowed authoritative Foundation path',
-        entry.targetPath ?? 'missing',
-        'Recovery: reject the altered journal and restore it from the interrupted operation.',
-      );
-    }
-    if (seenTargets.has(entry.targetPath)) {
-      throw foundationError(
-        'candidate transaction target',
-        'unique backup targets',
-        `duplicate ${entry.targetPath}`,
-        'Recovery: restore the original journal before retrying.',
-      );
-    }
-    seenTargets.add(entry.targetPath);
-    if (typeof entry.existed !== 'boolean') {
-      throw foundationError(
-        `candidate transaction entry ${entry.targetPath}`,
-        'existed as a boolean',
-        typeof entry.existed,
-        'Recovery: restore the original transaction journal before retrying.',
-      );
-    }
-    if (entry.existed) {
-      assertNormalizedRecordPath(entry.backupPath, 'candidate transaction backup path');
-      const backupAbsolutePath = resolve(
-        transactionRoot,
-        ...entry.backupPath.split('/'),
-      );
-      if (!isContained(transactionRoot, backupAbsolutePath)) {
-        throw foundationError(
-          'candidate transaction backup',
-          'a normalized path inside the transaction directory',
-          entry.backupPath,
-          'Recovery: restore the original backup path before retrying.',
-        );
-      }
-      if (!Number.isInteger(entry.mode)) {
-        throw foundationError(
-          `candidate transaction entry ${entry.targetPath}`,
-          'an integer original file mode',
-          entry.mode ?? 'missing',
-          'Recovery: restore the original transaction journal before retrying.',
-        );
-      }
-    } else if (entry.backupPath !== null || entry.mode !== null) {
-      throw foundationError(
-        `candidate transaction entry ${entry.targetPath}`,
-        'null backupPath and mode for an originally missing file',
-        JSON.stringify({ backupPath: entry.backupPath, mode: entry.mode }),
-        'Recovery: restore the original transaction journal before retrying.',
-      );
-    }
-  }
-  const expectedTargets = new Set(expectedTargetPaths);
-  if (
-    journal.entries.length !== expectedTargets.size ||
-    [...expectedTargets].some((targetPath) => !seenTargets.has(targetPath))
-  ) {
+  const expectedTargets = sortedOperationTargetPaths(args, operation);
+  if (journal.entries.length !== expectedTargets.length) {
     throw foundationError(
       'candidate transaction target set',
-      `the exact candidate-derived targets ${[...expectedTargets].join(', ')}`,
-      `journal targets ${journal.entries.map(({ targetPath }) => targetPath).join(', ')}`,
-      'Recovery: reject the altered journal and retry only with the exact candidate and reviewed operation bindings.',
+      `the exact ${expectedTargets.length} candidate-derived targets`,
+      `${journal.entries.length} entries`,
+      'Recovery: preserve the altered transaction without rollback.',
     );
   }
-  for (const stagedPath of journal.stagedPaths) {
-    if (typeof stagedPath !== 'string' || !isAbsolute(stagedPath)) {
-      throw foundationError(
-        'candidate transaction staged path',
-        'an absolute sibling temporary path',
-        stagedPath ?? 'missing',
-        'Recovery: restore the original transaction journal before retrying.',
-      );
-    }
-    const target = journal.entries.find(
-      (entry) =>
-        dirname(entry.targetPath) === dirname(stagedPath) &&
-        basename(stagedPath).startsWith(`.${basename(entry.targetPath)}.spa-foundation-`) &&
-        basename(stagedPath).endsWith('.tmp'),
-    );
-    if (!target) {
-      throw foundationError(
-        'candidate transaction staged path',
-        'a recorded sibling temporary path for one transaction target',
-        stagedPath,
-        'Recovery: restore the original transaction journal before retrying.',
-      );
-    }
-  }
-  return journal;
-}
-
-async function cleanupJournalStagedPaths(journal) {
-  const stagedPaths = new Set(journal.stagedPaths);
-  for (const entry of journal.entries) {
-    await validatePhysicalTargetPath(
-      journal.root,
-      entry.targetPath,
-      `transaction staged cleanup for ${entry.targetPath}`,
-    );
-    let siblingNames;
-    try {
-      siblingNames = await readdir(dirname(entry.targetPath));
-    } catch (error) {
-      if (error.code === 'ENOENT') continue;
-      throw error;
-    }
-    const prefix = `.${basename(entry.targetPath)}.spa-foundation-`;
-    for (const siblingName of siblingNames) {
-      if (siblingName.startsWith(prefix) && siblingName.endsWith('.tmp')) {
-        stagedPaths.add(join(dirname(entry.targetPath), siblingName));
-      }
-    }
-  }
-  for (const stagedPath of stagedPaths) {
-    await validatePhysicalTargetPath(
-      journal.root,
-      stagedPath,
-      `transaction staged cleanup ${stagedPath}`,
-    );
-    await rm(stagedPath, { force: true });
-  }
-  for (const entry of journal.entries) {
-    if (!entry.existed) {
-      await removeEmptyParents(dirname(entry.targetPath), journal.root);
-    }
-  }
-}
-
-async function restoreTransaction(journal, transactionRoot) {
+  const seenBackupPaths = new Set();
   const transactionRealPath = await realpath(transactionRoot);
-  for (const entry of [...journal.entries].reverse()) {
-    await validatePhysicalTargetPath(
-      journal.root,
-      entry.targetPath,
-      `transaction restore target ${entry.targetPath}`,
+  for (let index = 0; index < journal.entries.length; index += 1) {
+    const entry = journal.entries[index];
+    assertExactKeys(
+      entry,
+      [
+        'index',
+        'targetPath',
+        'backupPath',
+        'backupDigest',
+        'existed',
+        'mode',
+      ],
+      `candidate transaction entry ${index}`,
     );
-    await validateRegularTargetIfPresent(
-      entry.targetPath,
-      `transaction restore target ${entry.targetPath}`,
-    );
+    if (entry.index !== index || entry.targetPath !== expectedTargets[index]) {
+      throw foundationError(
+        `candidate transaction entry ${index}`,
+        `index ${index} and target ${expectedTargets[index]}`,
+        `index ${entry.index}; target ${entry.targetPath}`,
+        'Recovery: preserve the reordered or cross-wired transaction.',
+      );
+    }
+    if (typeof entry.existed !== 'boolean') {
+      throw foundationError(
+        `candidate transaction entry ${index} existed`,
+        'a boolean',
+        typeof entry.existed,
+        'Recovery: restore the exact transaction entry.',
+      );
+    }
     if (!entry.existed) {
-      await rm(entry.targetPath, { force: true });
-      await removeEmptyParents(dirname(entry.targetPath), journal.root);
+      if (
+        entry.backupPath !== null ||
+        entry.backupDigest !== null ||
+        entry.mode !== null
+      ) {
+        throw foundationError(
+          `candidate transaction entry ${index}`,
+          'null backupPath, backupDigest, and mode for an originally missing target',
+          JSON.stringify(entry),
+          'Recovery: restore the missing-target entry exactly.',
+        );
+      }
       continue;
     }
-    const backupPath = resolve(transactionRoot, ...entry.backupPath.split('/'));
-    const backupStat = await lstat(backupPath);
+    const expectedBackupPath = deterministicBackupPath(
+      args.root,
+      entry.targetPath,
+      index,
+    );
+    if (entry.backupPath !== expectedBackupPath) {
+      throw foundationError(
+        `candidate transaction entry ${index} backup path`,
+        expectedBackupPath,
+        entry.backupPath ?? 'missing',
+        'Recovery: preserve the cross-wired backup set.',
+      );
+    }
+    if (seenBackupPaths.has(entry.backupPath)) {
+      throw foundationError(
+        'candidate transaction backup paths',
+        'unique deterministic paths',
+        `duplicate ${entry.backupPath}`,
+        'Recovery: preserve the duplicate backup evidence.',
+      );
+    }
+    seenBackupPaths.add(entry.backupPath);
+    assertCompleteRevision(
+      `candidate transaction entry ${index} backup digest`,
+      entry.backupDigest,
+    );
+    if (!Number.isInteger(entry.mode)) {
+      throw foundationError(
+        `candidate transaction entry ${index} mode`,
+        'an integer authoritative pre-apply mode',
+        entry.mode ?? 'missing',
+        'Recovery: restore the authoritative mode record.',
+      );
+    }
+    const backupPath = join(transactionRoot, ...entry.backupPath.split('/'));
+    const backupStat = await pathState(backupPath);
+    if (!backupStat) {
+      if (allowIncompleteBackups) continue;
+      throw foundationError(
+        `candidate transaction backup ${entry.backupPath}`,
+        'an existing regular file',
+        'missing',
+        'Recovery: restore the exact content-identified backup before rollback.',
+      );
+    }
     if (backupStat.isSymbolicLink() || !backupStat.isFile()) {
       throw foundationError(
-        `transaction backup ${entry.backupPath}`,
-        'a non-symbolic-link regular backup file',
+        `candidate transaction backup ${entry.backupPath}`,
+        'a non-symbolic-link regular file',
         backupStat.isSymbolicLink() ? 'symbolic link' : 'non-regular file',
-        'Recovery: restore the exact transaction backup before retrying.',
+        'Recovery: restore the exact backup file.',
       );
     }
     const backupRealPath = await realpath(backupPath);
     if (!isContained(transactionRealPath, backupRealPath)) {
       throw foundationError(
-        `transaction backup ${entry.backupPath}`,
-        'a real path contained by the transaction directory',
+        `candidate transaction backup ${entry.backupPath}`,
+        'a physical file inside the transaction',
         `outside at ${backupRealPath}`,
-        'Recovery: restore the exact transaction backup inside the transaction directory.',
+        'Recovery: restore the contained backup file.',
       );
     }
-    const stagedPath = await stageSiblingFile(
-      entry.targetPath,
-      await readFile(backupPath),
-      entry.mode,
-      journal.root,
-    );
-    try {
-      await validatePhysicalTargetPath(
-        journal.root,
-        entry.targetPath,
-        `transaction restore replacement ${entry.targetPath}`,
+    const actualDigest = sha256Digest(await readFile(backupPath));
+    if (actualDigest !== entry.backupDigest) {
+      throw foundationError(
+        `candidate transaction backup ${entry.backupPath} digest`,
+        entry.backupDigest,
+        actualDigest,
+        'Recovery: preserve the corrupt backup and do not mutate authoritative files.',
       );
-      await validateRegularTargetIfPresent(
-        entry.targetPath,
-        `transaction restore replacement ${entry.targetPath}`,
-      );
-      await realReplacePath({
-        targetPath: entry.targetPath,
-        stagedPath,
-        action: 'upsert',
-      });
-      await chmod(entry.targetPath, entry.mode & 0o777);
-    } finally {
-      await validatePhysicalTargetPath(
-        journal.root,
-        stagedPath,
-        `transaction restore staged cleanup ${stagedPath}`,
-      );
-      await rm(stagedPath, { force: true });
     }
   }
+
+  if (!Array.isArray(journal.stagedPaths)) {
+    throw foundationError(
+      'candidate transaction staged paths',
+      'an array of exact staged ownership records',
+      typeof journal.stagedPaths,
+      'Recovery: restore the original staged-path ledger.',
+    );
+  }
+  const purposeTargets = stagedPurposeTargets(args, operation);
+  const seenStaged = new Set();
+  for (let ordinal = 0; ordinal < journal.stagedPaths.length; ordinal += 1) {
+    const record = journal.stagedPaths[ordinal];
+    assertExactKeys(
+      record,
+      ['path', 'targetPath', 'purpose', 'ordinal'],
+      `candidate transaction staged path ${ordinal}`,
+    );
+    if (record.ordinal !== ordinal) {
+      throw foundationError(
+        `candidate transaction staged path ${ordinal}`,
+        `deterministic ordinal ${ordinal}`,
+        record.ordinal ?? 'missing',
+        'Recovery: restore the original staged-path order.',
+      );
+    }
+    const allowedTargets = purposeTargets.get(record.purpose);
+    if (!allowedTargets?.has(record.targetPath)) {
+      throw foundationError(
+        `candidate transaction staged path ${ordinal} purpose/target binding`,
+        'an exact approved-spec, candidate-upsert, approved-manifest, applied-marker, or restore binding',
+        `${record.purpose ?? 'missing'} -> ${record.targetPath ?? 'missing'}`,
+        'Recovery: preserve the forged staged record.',
+      );
+    }
+    const expectedPath = deterministicStagedPath(
+      record.targetPath,
+      journal.operationNonce,
+      ordinal,
+      record.purpose,
+    );
+    if (record.path !== expectedPath) {
+      throw foundationError(
+        `candidate transaction staged path ${ordinal} nonce binding`,
+        expectedPath,
+        record.path ?? 'missing',
+        'Recovery: preserve the forged staged sibling.',
+      );
+    }
+    if (seenStaged.has(record.path)) {
+      throw foundationError(
+        'candidate transaction staged paths',
+        'unique exact paths',
+        `duplicate ${record.path}`,
+        'Recovery: restore the unique staged-path ledger.',
+      );
+    }
+    seenStaged.add(record.path);
+  }
+  validateCreatedDirectories(journal.createdDirectories, args, journal.entries);
+  return journal;
+}
+
+async function cleanupExactStagedPaths(journal, args) {
+  for (const record of journal.stagedPaths) {
+    await validatePhysicalTargetPath(
+      args.root,
+      record.path,
+      `transaction staged cleanup ${record.path}`,
+    );
+    const stagedStat = await pathState(record.path);
+    if (!stagedStat) continue;
+    if (stagedStat.isSymbolicLink() || !stagedStat.isFile()) {
+      throw foundationError(
+        `transaction staged cleanup ${record.path}`,
+        'a missing path or exact regular staged file',
+        stagedStat.isSymbolicLink() ? 'symbolic link' : 'non-regular file',
+        'Recovery: preserve the unexpected staged entry for inspection.',
+      );
+    }
+    await rm(record.path);
+  }
+}
+
+async function cleanupCreatedDirectories(journal, args) {
+  for (const record of [...journal.createdDirectories].reverse()) {
+    await validatePhysicalTargetPath(
+      args.root,
+      join(record.path, '.ownership-probe'),
+      `transaction created-directory cleanup ${record.path}`,
+    );
+    const directoryStat = await pathState(record.path);
+    if (!directoryStat) continue;
+    if (directoryStat.isSymbolicLink() || !directoryStat.isDirectory()) {
+      throw foundationError(
+        `transaction created-directory cleanup ${record.path}`,
+        'a missing path or exact physical directory',
+        directoryStat.isSymbolicLink() ? 'symbolic link or junction' : 'non-directory',
+        'Recovery: preserve the unexpected entry and operation evidence.',
+      );
+    }
+    const entries = await readdir(record.path);
+    if (entries.length > 0) {
+      throw foundationError(
+        `transaction created-directory cleanup ${record.path}`,
+        'the exact recorded operation-created directory with no unexpected content',
+        `unexpected entries ${entries.join(', ')}`,
+        'Recovery: preserve the directory and its content; remove nothing by emptiness inference.',
+      );
+    }
+    await rmdir(record.path);
+  }
+}
+
+async function validateTransactionRoot(transactionRoot, candidateRealPath) {
+  const transactionStat = await pathState(transactionRoot);
+  if (!transactionStat || transactionStat.isSymbolicLink() || !transactionStat.isDirectory()) {
+    throw foundationError(
+      'candidate transaction',
+      'a physical operation-owned transaction directory',
+      !transactionStat
+        ? 'missing'
+        : transactionStat.isSymbolicLink()
+          ? 'symbolic link or junction'
+          : 'non-directory',
+      'Recovery: preserve the candidate and restore the physical transaction directory.',
+    );
+  }
+  const transactionRealPath = await realpath(transactionRoot);
+  if (!isContained(candidateRealPath, transactionRealPath)) {
+    throw foundationError(
+      'candidate transaction',
+      'a real path contained by the candidate root',
+      `outside at ${transactionRealPath}`,
+      'Recovery: restore the transaction inside the candidate root.',
+    );
+  }
+  return transactionRealPath;
+}
+
+async function removeOwnedTransactionDirectory(
+  transactionRoot,
+  journal,
+  candidateRealPath,
+  { allowIncompleteBackups = false } = {},
+) {
+  const transactionRealPath = await validateTransactionRoot(
+    transactionRoot,
+    candidateRealPath,
+  );
+  const allowedTop = new Set([
+    'journal.json',
+    `.journal.${journal.operationNonce}.tmp`,
+    'approved-spec.md',
+    'backups',
+  ]);
+  const topEntries = await readdir(transactionRoot, { withFileTypes: true });
+  for (const entry of topEntries) {
+    if (!allowedTop.has(entry.name) || entry.isSymbolicLink()) {
+      throw foundationError(
+        'candidate transaction cleanup',
+        'only exact nonce-bound journal, approved-spec, and backup state',
+        `unexpected ${entry.name}`,
+        'Recovery: preserve the transaction; recursive cleanup is not authorized.',
+      );
+    }
+  }
+  const backupsRoot = join(transactionRoot, 'backups');
+  const backupStat = await pathState(backupsRoot);
+  if (backupStat) {
+    if (backupStat.isSymbolicLink() || !backupStat.isDirectory()) {
+      throw foundationError(
+        'candidate transaction backup cleanup',
+        'a physical backups directory',
+        backupStat.isSymbolicLink() ? 'symbolic link' : 'non-directory',
+        'Recovery: preserve the transaction.',
+      );
+    }
+    const expected = new Set(
+      journal.entries
+        .filter(({ existed }) => existed)
+        .map(({ backupPath }) => basename(backupPath)),
+    );
+    for (const entry of await readdir(backupsRoot, { withFileTypes: true })) {
+      if (entry.isSymbolicLink() || !entry.isFile() || !expected.has(entry.name)) {
+        throw foundationError(
+          'candidate transaction backup cleanup',
+          'only exact content-identified backup files',
+          `unexpected ${entry.name}`,
+          'Recovery: preserve the transaction and unexpected backup state.',
+        );
+      }
+      expected.delete(entry.name);
+    }
+    if (!allowIncompleteBackups && expected.size > 0) {
+      throw foundationError(
+        'candidate transaction backup cleanup',
+        'every exact recorded backup',
+        `missing ${[...expected].join(', ')}`,
+        'Recovery: preserve the incomplete transaction.',
+      );
+    }
+  } else if (
+    !allowIncompleteBackups &&
+    journal.entries.some(({ existed }) => existed)
+  ) {
+    throw foundationError(
+      'candidate transaction backup cleanup',
+      'the exact backups directory',
+      'missing',
+      'Recovery: preserve the incomplete transaction.',
+    );
+  }
+  if (!isContained(candidateRealPath, transactionRealPath)) {
+    throw foundationError(
+      'candidate transaction recursive cleanup',
+      'physical containment by the candidate root',
+      transactionRealPath,
+      'Recovery: preserve the transaction.',
+    );
+  }
+  await rm(transactionRoot, { recursive: true });
 }
 
 async function validateRestoredState(args) {
@@ -2083,8 +2653,368 @@ async function validateRestoredState(args) {
     expectedRevision: args.expectedSpecRevision,
   });
 }
+function transactionEntryOwned(transaction, targetPath) {
+  const entry = transaction.journal.entries.find(
+    (candidate) => candidate.targetPath === targetPath,
+  );
+  if (!entry) {
+    throw foundationError(
+      'candidate transaction target binding',
+      `an exact entry for ${targetPath}`,
+      'missing',
+      'Recovery: preserve the transaction and retry only from the exact candidate.',
+    );
+  }
+  return entry;
+}
 
-async function validateTerminalAppliedState(
+async function createOwnedTransaction(context, args, operation, location, lock) {
+  const transactionRoot = join(args.candidateRoot, TRANSACTION_DIRECTORY);
+  await validatePhysicalTargetPath(
+    args.candidateRoot,
+    transactionRoot,
+    'candidate transaction directory',
+  );
+  if (await pathState(transactionRoot)) {
+    throw foundationError(
+      'candidate transaction directory',
+      'no existing transaction after lock acquisition',
+      `present at ${transactionRoot}`,
+      'Recovery: preserve the unexpected transaction and rerun exact stale recovery.',
+    );
+  }
+  const targetPaths = sortedOperationTargetPaths(args, operation);
+  const source = [];
+  for (const targetPath of targetPaths) {
+    await validatePhysicalTargetPath(
+      args.root,
+      targetPath,
+      `transaction target ${targetPath}`,
+    );
+    const targetStat = await validateRegularTargetIfPresent(
+      targetPath,
+      `transaction target ${targetPath}`,
+    );
+    source.push({
+      targetPath,
+      targetStat,
+      bytes: targetStat ? await readFile(targetPath) : null,
+    });
+  }
+
+  await mkdir(transactionRoot);
+  const entries = source.map(({ targetPath, targetStat, bytes }, index) => ({
+    index,
+    targetPath,
+    backupPath: targetStat
+      ? deterministicBackupPath(args.root, targetPath, index)
+      : null,
+    backupDigest: targetStat ? sha256Digest(bytes) : null,
+    existed: Boolean(targetStat),
+    mode: targetStat ? targetStat.mode : null,
+  }));
+  const journal = {
+    schema: TRANSACTION_SCHEMA,
+    operationNonce: lock.operationNonce,
+    lockPath: location.lockPath,
+    root: args.root,
+    manifestPath: args.manifestPath,
+    specPath: args.specPath,
+    candidateRoot: args.candidateRoot,
+    expectedBaseRevision: args.expectedBaseRevision,
+    expectedSpecRevision: args.expectedSpecRevision,
+    expectedResultRevision: args.expectedResultRevision,
+    additionMode: ADDITION_MODE,
+    state: 'preparing',
+    entries,
+    stagedPaths: [],
+    createdDirectories: [],
+  };
+  await writeTransactionJournal(transactionRoot, journal);
+
+  const backupsRoot = join(transactionRoot, 'backups');
+  await mkdir(backupsRoot);
+  for (let index = 0; index < source.length; index += 1) {
+    if (!entries[index].existed) continue;
+    const backupPath = join(
+      transactionRoot,
+      ...entries[index].backupPath.split('/'),
+    );
+    await writeExclusiveSynced(backupPath, source[index].bytes, 0o600);
+  }
+  await validateTransactionJournalOwned(
+    journal,
+    args,
+    operation,
+    location,
+    transactionRoot,
+    lock,
+  );
+  journal.state = 'prepared';
+  await writeTransactionJournal(transactionRoot, journal);
+  return {
+    args,
+    context,
+    journal,
+    location,
+    lock,
+    operation,
+    transactionRoot,
+  };
+}
+
+async function ensureOperationDirectories(transaction, targetPath) {
+  const { args, journal, transactionRoot } = transaction;
+  await validatePhysicalTargetPath(
+    args.root,
+    targetPath,
+    `operation directory target ${targetPath}`,
+  );
+  const missing = [];
+  let current = dirname(targetPath);
+  while (current !== args.root && isContained(args.root, current)) {
+    const currentStat = await pathState(current);
+    if (currentStat) {
+      if (currentStat.isSymbolicLink() || !currentStat.isDirectory()) {
+        throw foundationError(
+          `operation directory ${current}`,
+          'a physical directory',
+          currentStat.isSymbolicLink() ? 'symbolic link or junction' : 'non-directory',
+          'Recovery: restore the physical authoritative ancestor before retrying.',
+        );
+      }
+      break;
+    }
+    missing.push(current);
+    current = dirname(current);
+  }
+  for (const directoryPath of missing.reverse()) {
+    const existing = journal.createdDirectories.find(
+      ({ path }) => path === directoryPath,
+    );
+    if (existing) {
+      throw foundationError(
+        'candidate transaction created-directory reservation',
+        'a new unique directory path',
+        `duplicate ${directoryPath}`,
+        'Recovery: preserve the duplicate ledger and stop.',
+      );
+    }
+    const record = { path: directoryPath, state: 'planned' };
+    journal.createdDirectories.push(record);
+    await writeTransactionJournal(transactionRoot, journal);
+    await mkdir(directoryPath);
+    record.state = 'created';
+    await writeTransactionJournal(transactionRoot, journal);
+  }
+}
+
+async function reserveAndWriteOwnedStage(
+  transaction,
+  targetPath,
+  purpose,
+  content,
+  mode,
+) {
+  await ensureOperationDirectories(transaction, targetPath);
+  const ordinal = transaction.journal.stagedPaths.length;
+  const stagedPath = deterministicStagedPath(
+    targetPath,
+    transaction.journal.operationNonce,
+    ordinal,
+    purpose,
+  );
+  const record = {
+    path: stagedPath,
+    targetPath,
+    purpose,
+    ordinal,
+  };
+  transaction.journal.stagedPaths.push(record);
+  await writeTransactionJournal(
+    transaction.transactionRoot,
+    transaction.journal,
+  );
+  await validatePhysicalTargetPath(
+    transaction.args.root,
+    stagedPath,
+    `candidate staged path ${stagedPath}`,
+  );
+  await writeExclusiveSynced(stagedPath, content, mode);
+  return stagedPath;
+}
+
+async function buildOwnedMutations(context, approvedAt, transaction) {
+  const mutations = [];
+  const specEntry = transactionEntryOwned(transaction, context.specPath);
+  const transactionSpecPath = join(
+    transaction.transactionRoot,
+    'approved-spec.md',
+  );
+  await writeExclusiveSynced(
+    transactionSpecPath,
+    await readFile(context.specPath),
+    0o600,
+  );
+  await approveArtifact({
+    path: transactionSpecPath,
+    artifactType: 'Design Spec',
+    expectedRevision: context.expectedSpecRevision,
+    approvedAt,
+  });
+  mutations.push({
+    path: context.designSpecPath,
+    action: 'upsert',
+    targetPath: context.specPath,
+    stagedPath: await reserveAndWriteOwnedStage(
+      transaction,
+      context.specPath,
+      'approved-spec',
+      await readFile(transactionSpecPath),
+      specEntry.mode,
+    ),
+    mode: specEntry.mode,
+  });
+
+  for (const change of context.changedFiles) {
+    if (change.path === MANIFEST_RELATIVE_PATH) continue;
+    const targetPath = join(context.root, ...change.path.split('/'));
+    const targetEntry = transactionEntryOwned(transaction, targetPath);
+    if (change.action === 'delete') {
+      mutations.push({
+        ...change,
+        targetPath,
+        stagedPath: null,
+        mode: null,
+      });
+      continue;
+    }
+    const mode = targetEntry.existed
+      ? targetEntry.mode
+      : transaction.journal.additionMode;
+    mutations.push({
+      ...change,
+      targetPath,
+      stagedPath: await reserveAndWriteOwnedStage(
+        transaction,
+        targetPath,
+        'candidate-upsert',
+        context.candidateFiles.get(change.path).content,
+        mode,
+      ),
+      mode,
+    });
+  }
+
+  const manifestEntry = transactionEntryOwned(
+    transaction,
+    context.manifestPath,
+  );
+  const approvedManifest = replaceLifecycleMetadata(
+    context.normalizedManifest,
+    {
+      artifactType: FOUNDATION_ARTIFACT_TYPE,
+      status: 'Approved',
+      revision: context.prospectiveRevision,
+      approvedRevision: context.prospectiveRevision,
+      approvedAt,
+    },
+  );
+  mutations.push({
+    path: MANIFEST_RELATIVE_PATH,
+    action: 'upsert',
+    targetPath: context.manifestPath,
+    stagedPath: await reserveAndWriteOwnedStage(
+      transaction,
+      context.manifestPath,
+      'approved-manifest',
+      approvedManifest,
+      manifestEntry.mode,
+    ),
+    mode: manifestEntry.mode,
+  });
+  transaction.journal.state = 'staged';
+  await writeTransactionJournal(
+    transaction.transactionRoot,
+    transaction.journal,
+  );
+  return mutations;
+}
+
+async function restoreOwnedTransaction(transaction) {
+  const {
+    args,
+    journal,
+    location,
+    lock,
+    operation,
+    transactionRoot,
+  } = transaction;
+  await assertCurrentOperationLock(args, location, lock);
+  await validateTransactionJournalOwned(
+    journal,
+    args,
+    operation,
+    location,
+    transactionRoot,
+    lock,
+  );
+  for (const entry of [...journal.entries].reverse()) {
+    await validatePhysicalTargetPath(
+      args.root,
+      entry.targetPath,
+      `transaction restore target ${entry.targetPath}`,
+    );
+    await validateRegularTargetIfPresent(
+      entry.targetPath,
+      `transaction restore target ${entry.targetPath}`,
+    );
+    if (!entry.existed) {
+      await rm(entry.targetPath, { force: true });
+      continue;
+    }
+    const backupPath = join(
+      transactionRoot,
+      ...entry.backupPath.split('/'),
+    );
+    const stagedPath = await reserveAndWriteOwnedStage(
+      transaction,
+      entry.targetPath,
+      'restore',
+      await readFile(backupPath),
+      entry.mode,
+    );
+    await validatePhysicalTargetPath(
+      args.root,
+      entry.targetPath,
+      `transaction restore replacement ${entry.targetPath}`,
+    );
+    await validateRegularTargetIfPresent(
+      entry.targetPath,
+      `transaction restore replacement ${entry.targetPath}`,
+    );
+    await realReplacePath({
+      targetPath: entry.targetPath,
+      stagedPath,
+      action: 'upsert',
+    });
+    await chmod(entry.targetPath, entry.mode & 0o777);
+  }
+  await cleanupExactStagedPaths(journal, args);
+  await cleanupCreatedDirectories(journal, args);
+  await validateRestoredState(args);
+  await assertCurrentOperationLock(args, location, lock);
+  await validateTransactionJournalOwned(
+    journal,
+    args,
+    operation,
+    location,
+    transactionRoot,
+    lock,
+  );
+}
+
+async function validateTerminalAppliedStateOwned(
   args,
   operation,
   journal,
@@ -2098,7 +3028,7 @@ async function validateTerminalAppliedState(
       'candidate terminal transaction state',
       'recording-applied when APPLIED.json exists',
       journal.state,
-      'Recovery: preserve the transaction and marker for exact inspection; do not roll back an uncertain applied result.',
+      'Recovery: preserve the uncertain marker and transaction.',
     );
   }
   const applied = await readStrictJsonFile(
@@ -2110,6 +3040,7 @@ async function validateTerminalAppliedState(
     applied,
     [
       'schema',
+      'operationNonce',
       'specPath',
       'specRevision',
       'manifestPath',
@@ -2125,7 +3056,15 @@ async function validateTerminalAppliedState(
       'candidate applied marker schema',
       APPLIED_SCHEMA,
       applied.schema ?? 'missing',
-      'Recovery: preserve the terminal transaction and restore the exact applied marker.',
+      'Recovery: preserve the terminal transaction.',
+    );
+  }
+  if (applied.operationNonce !== journal.operationNonce) {
+    throw foundationError(
+      'candidate applied marker nonce binding',
+      journal.operationNonce,
+      applied.operationNonce ?? 'missing',
+      'Recovery: preserve the cross-wired marker and transaction.',
     );
   }
   const bindings = [
@@ -2141,7 +3080,7 @@ async function validateTerminalAppliedState(
         `candidate applied marker ${subject} binding`,
         expected,
         actual ?? 'missing',
-        'Recovery: preserve the terminal state and retry only from the exact candidate operation that created it.',
+        'Recovery: preserve the terminal state and exact evidence.',
       );
     }
   }
@@ -2153,7 +3092,7 @@ async function validateTerminalAppliedState(
       'candidate applied marker actions binding',
       JSON.stringify(operation.changedFiles),
       JSON.stringify(applied.actions),
-      'Recovery: preserve the terminal state and restore the exact applied marker actions.',
+      'Recovery: preserve the terminal state and restore its exact sorted actions.',
     );
   }
   if (!isIso8601Timestamp(applied.approvedAt)) {
@@ -2161,7 +3100,7 @@ async function validateTerminalAppliedState(
       'candidate applied marker timestamp',
       'an ISO-8601 timestamp',
       applied.approvedAt ?? 'missing',
-      'Recovery: preserve the terminal state and restore the exact applied marker timestamp.',
+      'Recovery: preserve the invalid terminal marker.',
     );
   }
   const foundation = await validateApprovedFoundation({
@@ -2180,288 +3119,188 @@ async function validateTerminalAppliedState(
   ) {
     throw foundationError(
       'candidate terminal approval timestamp',
-      `the same ${applied.approvedAt} timestamp in marker, Design Spec, and Foundation`,
+      `one common ${applied.approvedAt} timestamp`,
       `Design Spec ${spec.approvedAt}; Foundation ${foundation.approvedAt}`,
-      'Recovery: preserve the terminal state; the applied result does not match its marker.',
+      'Recovery: preserve the terminal state; its artifacts do not match.',
     );
   }
   return true;
 }
 
-async function recoverExistingTransaction(args, operation) {
+async function cleanupPreJournalTransaction(
+  args,
+  location,
+  lock,
+  transactionRoot,
+) {
+  await validateRestoredState(args);
+  const transactionRealPath = await validateTransactionRoot(
+    transactionRoot,
+    location.candidateRealPath,
+  );
+  const allowed = new Set([`.journal.${lock.operationNonce}.tmp`]);
+  for (const entry of await readdir(transactionRoot, { withFileTypes: true })) {
+    if (
+      !allowed.has(entry.name) ||
+      entry.isSymbolicLink() ||
+      !entry.isFile()
+    ) {
+      throw foundationError(
+        'candidate pre-journal transaction cleanup',
+        'only the exact nonce-bound journal temporary file',
+        `unexpected ${entry.name}`,
+        'Recovery: preserve the uncertain transaction state.',
+      );
+    }
+  }
+  if (!isContained(location.candidateRealPath, transactionRealPath)) {
+    throw foundationError(
+      'candidate pre-journal transaction cleanup',
+      'physical containment by the candidate root',
+      transactionRealPath,
+      'Recovery: preserve the transaction.',
+    );
+  }
+  await rm(transactionRoot, { recursive: true });
+}
+
+async function recoverOwnedOperation(args, operation, location, lock) {
   const transactionRoot = join(args.candidateRoot, TRANSACTION_DIRECTORY);
   const transactionStat = await pathState(transactionRoot);
-  if (!transactionStat) return false;
-  if (transactionStat.isSymbolicLink() || !transactionStat.isDirectory()) {
-    throw foundationError(
-      'candidate transaction',
-      'a physical operation-owned transaction directory',
-      transactionStat.isSymbolicLink() ? 'symbolic link' : 'non-directory',
-      'Recovery: preserve the candidate, remove the forged transaction entry, and rerun preview before apply.',
-    );
-  }
-  const transactionRealPath = await realpath(transactionRoot);
-  const candidateRealPath = await realpath(args.candidateRoot);
-  if (!isContained(candidateRealPath, transactionRealPath)) {
-    throw foundationError(
-      'candidate transaction',
-      'a real path contained by the candidate root',
-      `outside at ${transactionRealPath}`,
-      'Recovery: preserve the candidate and restore its transaction directory inside the candidate root.',
-    );
-  }
-  const journal = validateTransactionJournal(
-    await readStrictJsonFile(
-      join(transactionRoot, 'journal.json'),
-      'candidate transaction journal',
-      transactionRealPath,
-    ),
-    args,
-    transactionRoot,
-    operation.targetPaths,
-  );
-  for (const entry of journal.entries) {
-    await validatePhysicalTargetPath(
-      args.root,
-      entry.targetPath,
-      `candidate transaction target ${entry.targetPath}`,
-    );
-    await validateRegularTargetIfPresent(
-      entry.targetPath,
-      `candidate transaction target ${entry.targetPath}`,
-    );
-  }
-  try {
-    if (
-      await validateTerminalAppliedState(
-        args,
-        operation,
-        journal,
-        candidateRealPath,
-      )
-    ) {
-      await cleanupJournalStagedPaths(journal);
-      await rm(transactionRoot, { recursive: true, force: true });
-      return 'applied';
-    }
-    await restoreTransaction(journal, transactionRoot);
-    await cleanupJournalStagedPaths(journal);
+  if (!transactionStat) {
     await validateRestoredState(args);
-    await rm(transactionRoot, { recursive: true, force: true });
-    return true;
-  } catch (error) {
-    throw foundationError(
-      'candidate transaction recovery',
-      'exact restoration of the Approved base Foundation and Draft Design Spec',
-      error.message,
-      `Recovery: preserve ${transactionRoot} and its backups, repair the reported filesystem problem, then retry the exact foundation apply command.`,
-    );
+    await releaseOperationLock(args, location, lock);
+    return 'restored';
   }
-}
-
-async function createTransaction(context, expectedResultRevision) {
-  const transactionRoot = join(context.candidateRoot, TRANSACTION_DIRECTORY);
-  await validatePhysicalTargetPath(
-    context.candidateRoot,
+  const transactionRealPath = await validateTransactionRoot(
     transactionRoot,
-    'candidate transaction directory',
+    location.candidateRealPath,
   );
-  const targetPaths = [
-    context.specPath,
-    ...context.changedFiles.map(({ path }) =>
-      join(context.root, ...path.split('/'))),
-    context.manifestPath,
-  ];
-  const uniqueTargets = [...new Set(targetPaths)];
-  for (const targetPath of uniqueTargets) {
-    await validatePhysicalTargetPath(
-      context.root,
-      targetPath,
-      `transaction target ${targetPath}`,
-    );
-  }
-  await mkdir(transactionRoot);
-  try {
-    const backupsRoot = join(transactionRoot, 'backups');
-    await validatePhysicalTargetPath(
+  const journalPath = join(transactionRoot, 'journal.json');
+  if (!(await pathState(journalPath))) {
+    await cleanupPreJournalTransaction(
+      args,
+      location,
+      lock,
       transactionRoot,
-      backupsRoot,
-      'candidate transaction backup directory',
     );
-    await mkdir(backupsRoot);
-    const entries = [];
-    for (let index = 0; index < uniqueTargets.length; index += 1) {
-      const targetPath = uniqueTargets[index];
-      const targetStat = await pathState(targetPath);
-      if (targetStat && (targetStat.isSymbolicLink() || !targetStat.isFile())) {
-        throw foundationError(
-          `transaction target ${targetPath}`,
-          'a missing path or non-symbolic-link regular file',
-          targetStat.isSymbolicLink() ? 'symbolic link' : 'non-regular file',
-          'Recovery: restore the authoritative path as a regular file before retrying.',
-        );
-      }
-      if (!targetStat) {
-        entries.push({
-          targetPath,
-          backupPath: null,
-          existed: false,
-          mode: null,
-        });
-        continue;
-      }
-      const backupPath = `backups/${index}.bin`;
-      await writeFile(
-        join(transactionRoot, ...backupPath.split('/')),
-        await readFile(targetPath),
-      );
-      entries.push({
-        targetPath,
-        backupPath,
-        existed: true,
-        mode: targetStat.mode,
-      });
-    }
-    const journal = {
-      schema: TRANSACTION_SCHEMA,
-      root: context.root,
-      manifestPath: context.manifestPath,
-      specPath: context.specPath,
-      candidateRoot: context.candidateRoot,
-      expectedBaseRevision: context.expectedBaseRevision,
-      expectedSpecRevision: context.expectedSpecRevision,
-      expectedResultRevision,
-      state: 'prepared',
-      entries,
-      stagedPaths: [],
-    };
-    await writeTransactionJournal(transactionRoot, journal);
-    return { journal, transactionRoot };
-  } catch (error) {
-    await rm(transactionRoot, { recursive: true, force: true }).catch(() => {});
-    throw error;
+    await releaseOperationLock(args, location, lock);
+    return 'restored';
   }
+  const journal = await readStrictJsonFile(
+    journalPath,
+    'candidate transaction journal',
+    transactionRealPath,
+  );
+  const allowIncompleteBackups = journal.state === 'preparing';
+  await validateTransactionJournalOwned(
+    journal,
+    args,
+    operation,
+    location,
+    transactionRoot,
+    lock,
+    { allowIncompleteBackups },
+  );
+  const transaction = {
+    args,
+    journal,
+    location,
+    lock,
+    operation,
+    transactionRoot,
+  };
+  if (journal.state === 'preparing') {
+    await validateRestoredState(args);
+    await cleanupExactStagedPaths(journal, args);
+    await cleanupCreatedDirectories(journal, args);
+    await assertCurrentOperationLock(args, location, lock);
+    await validateTransactionJournalOwned(
+      journal,
+      args,
+      operation,
+      location,
+      transactionRoot,
+      lock,
+      { allowIncompleteBackups: true },
+    );
+    await removeOwnedTransactionDirectory(
+      transactionRoot,
+      journal,
+      location.candidateRealPath,
+      { allowIncompleteBackups: true },
+    );
+    await releaseOperationLock(args, location, lock);
+    return 'restored';
+  }
+  if (
+    await validateTerminalAppliedStateOwned(
+      args,
+      operation,
+      journal,
+      location.candidateRealPath,
+    )
+  ) {
+    await cleanupExactStagedPaths(journal, args);
+    await assertCurrentOperationLock(args, location, lock);
+    await validateTransactionJournalOwned(
+      journal,
+      args,
+      operation,
+      location,
+      transactionRoot,
+      lock,
+    );
+    await removeOwnedTransactionDirectory(
+      transactionRoot,
+      journal,
+      location.candidateRealPath,
+    );
+    await releaseOperationLock(args, location, lock);
+    return 'applied';
+  }
+  await restoreOwnedTransaction(transaction);
+  await removeOwnedTransactionDirectory(
+    transactionRoot,
+    journal,
+    location.candidateRealPath,
+  );
+  await releaseOperationLock(args, location, lock);
+  return 'restored';
 }
 
-function transactionEntry(transaction, targetPath) {
-  const entry = transaction.journal.entries.find(
-    (candidate) => candidate.targetPath === targetPath,
+async function recoverExistingOwnedOperation(args, operation, location) {
+  const lockStat = await pathState(location.lockPath);
+  const transactionStat = await pathState(
+    join(args.candidateRoot, TRANSACTION_DIRECTORY),
   );
-  if (!entry) {
+  if (!lockStat) {
+    if (transactionStat) {
+      throw foundationError(
+        'candidate transaction ownership',
+        'a matching checkout-scoped operation lock',
+        'transaction exists without its lock',
+        'Recovery: preserve the orphan transaction; ownership cannot be inferred.',
+      );
+    }
+    return false;
+  }
+  const lock = await readOperationLock(
+    args,
+    location,
+    undefined,
+    { validateBindings: false },
+  );
+  if (operationOwnerIsLive(lock.ownerPid)) {
     throw foundationError(
-      'candidate transaction target binding',
-      `an entry for ${targetPath}`,
-      'missing',
-      'Recovery: preserve the transaction and retry only from the exact reviewed candidate.',
+      'candidate operation lock',
+      'no live Foundation writer in this checkout',
+      `live owner pid ${lock.ownerPid}`,
+      'Recovery: wait for the cooperating writer; a live owner is never stale.',
     );
   }
-  return entry;
-}
-
-async function recordMutation(transaction, mutations, mutation) {
-  mutations.push(mutation);
-  if (!mutation.stagedPath) return;
-  transaction.journal.stagedPaths.push(mutation.stagedPath);
-  await writeTransactionJournal(
-    transaction.transactionRoot,
-    transaction.journal,
-  );
-}
-
-async function buildMutations(context, approvedAt, transaction) {
-  const mutations = [];
-  try {
-    const specEntry = transactionEntry(transaction, context.specPath);
-    const transactionSpecPath = join(transaction.transactionRoot, 'approved-spec.md');
-    await writeFile(transactionSpecPath, await readFile(context.specPath));
-    await approveArtifact({
-      path: transactionSpecPath,
-      artifactType: 'Design Spec',
-      expectedRevision: context.expectedSpecRevision,
-      approvedAt,
-    });
-    await recordMutation(transaction, mutations, {
-      path: context.designSpecPath,
-      action: 'upsert',
-      targetPath: context.specPath,
-      stagedPath: await stageSiblingFile(
-        context.specPath,
-        await readFile(transactionSpecPath),
-        specEntry.mode,
-        context.root,
-      ),
-      mode: specEntry.mode,
-    });
-
-    for (const change of context.changedFiles) {
-      if (change.path === MANIFEST_RELATIVE_PATH) continue;
-      const targetPath = join(context.root, ...change.path.split('/'));
-      if (change.action === 'delete') {
-        await recordMutation(transaction, mutations, {
-          ...change,
-          targetPath,
-          stagedPath: null,
-          mode: null,
-        });
-        continue;
-      }
-      const candidate = context.candidateFiles.get(change.path);
-      const targetEntry = transactionEntry(transaction, targetPath);
-      const mode = targetEntry.existed ? targetEntry.mode : 0o644;
-      await recordMutation(transaction, mutations, {
-        ...change,
-        targetPath,
-        stagedPath: await stageSiblingFile(
-          targetPath,
-          candidate.content,
-          mode,
-          context.root,
-        ),
-        mode,
-      });
-    }
-
-    const manifestEntry = transactionEntry(transaction, context.manifestPath);
-    const approvedManifest = replaceLifecycleMetadata(
-      context.normalizedManifest,
-      {
-        artifactType: FOUNDATION_ARTIFACT_TYPE,
-        status: 'Approved',
-        revision: context.prospectiveRevision,
-        approvedRevision: context.prospectiveRevision,
-        approvedAt,
-      },
-    );
-    await recordMutation(transaction, mutations, {
-      path: MANIFEST_RELATIVE_PATH,
-      action: 'upsert',
-      targetPath: context.manifestPath,
-      stagedPath: await stageSiblingFile(
-        context.manifestPath,
-        approvedManifest,
-        manifestEntry.mode,
-        context.root,
-      ),
-      mode: manifestEntry.mode,
-    });
-    return mutations;
-  } catch (error) {
-    await cleanupStagedMutations(mutations, context.root).catch(() => {});
-    throw error;
-  }
-}
-
-async function cleanupStagedMutations(mutations, physicalRoot) {
-  for (const mutation of mutations) {
-    if (mutation.stagedPath) {
-      await validatePhysicalTargetPath(
-        physicalRoot,
-        mutation.stagedPath,
-        `candidate staged cleanup ${mutation.stagedPath}`,
-      );
-      await rm(mutation.stagedPath, { force: true });
-    }
-  }
+  validateOperationLock(lock, args, location);
+  return recoverOwnedOperation(args, operation, location, lock);
 }
 
 export async function applyFoundationChangeSet({
@@ -2485,16 +3324,22 @@ export async function applyFoundationChangeSet({
     expectedResultRevision,
   };
   const location = await validateCandidateLocation(args);
-  const operation = await readBoundCandidateOperation(args, location);
-  await recoverExistingTransaction(args, { ...operation, location });
+  const operation = {
+    ...await readBoundCandidateOperation(args, location),
+    location,
+  };
+  await recoverExistingOwnedOperation(args, operation, location);
   await rejectAppliedCandidate(candidateRoot);
 
-  const context = await prepareFoundationChangeSet(args);
-  if (context.prospectiveRevision !== expectedResultRevision) {
+  const reviewedContext = await prepareFoundationChangeSet(
+    args,
+    { location },
+  );
+  if (reviewedContext.prospectiveRevision !== expectedResultRevision) {
     throw foundationError(
       'candidate prospective revision',
       `reviewed result ${expectedResultRevision}`,
-      context.prospectiveRevision,
+      reviewedContext.prospectiveRevision,
       'Recovery: rerun foundation preview and return the changed Design Change Set to user review.',
     );
   }
@@ -2518,31 +3363,67 @@ export async function applyFoundationChangeSet({
     );
   }
 
+  let lock;
   let transaction;
-  let mutations = [];
-  const appliedPath = join(candidateRoot, APPLIED_FILE);
   try {
-    transaction = await createTransaction(context, expectedResultRevision);
-    mutations = await buildMutations(
+    lock = await acquireOperationLock(args, location);
+    await rejectTransaction(candidateRoot);
+    await assertCurrentOperationLock(args, location, lock);
+    const context = await prepareFoundationChangeSet(
+      args,
+      {
+        allowOperationState: true,
+        location,
+        writeReview: false,
+      },
+    );
+    if (context.prospectiveRevision !== expectedResultRevision) {
+      throw foundationError(
+        'candidate prospective revision under operation lock',
+        expectedResultRevision,
+        context.prospectiveRevision,
+        'Recovery: release only after exact base/spec revalidation, then return the changed result to review.',
+      );
+    }
+    const lockedOperation = {
+      ...await readBoundCandidateOperation(args, location),
+      location,
+    };
+    transaction = await createOwnedTransaction(
+      context,
+      args,
+      lockedOperation,
+      location,
+      lock,
+    );
+    const mutations = await buildOwnedMutations(
       context,
       approvedAt,
       transaction,
     );
-    await validateApprovedFoundation({
-      root,
-      manifestPath,
-      expectedRevision: expectedBaseRevision,
-    });
-    await validateDraftArtifact({
-      path: specPath,
-      artifactType: 'Design Spec',
-      expectedRevision: expectedSpecRevision,
-    });
+    await assertCurrentOperationLock(args, location, lock);
+    const stagedContext = await prepareFoundationChangeSet(
+      args,
+      {
+        allowOperationState: true,
+        location,
+        writeReview: false,
+      },
+    );
+    if (stagedContext.prospectiveRevision !== expectedResultRevision) {
+      throw foundationError(
+        'candidate staged prospective revision',
+        expectedResultRevision,
+        stagedContext.prospectiveRevision,
+        'Recovery: restore the exact base and return candidate drift to review.',
+      );
+    }
 
     for (let index = 0; index < mutations.length; index += 1) {
       const mutation = mutations[index];
       transaction.journal.state = `replacing:${index}:${mutation.path}`;
       await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
+      await assertCurrentOperationLock(args, location, lock);
       await validatePhysicalTargetPath(
         root,
         mutation.targetPath,
@@ -2560,6 +3441,7 @@ export async function applyFoundationChangeSet({
 
     transaction.journal.state = 'validating';
     await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
+    await assertCurrentOperationLock(args, location, lock);
     await validateApprovedFoundation({
       root,
       manifestPath,
@@ -2573,8 +3455,11 @@ export async function applyFoundationChangeSet({
 
     transaction.journal.state = 'recording-applied';
     await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
+    await assertCurrentOperationLock(args, location, lock);
+    const appliedPath = join(candidateRoot, APPLIED_FILE);
     const applied = {
       schema: APPLIED_SCHEMA,
+      operationNonce: lock.operationNonce,
       specPath: context.designSpecPath,
       specRevision: expectedSpecRevision,
       manifestPath: MANIFEST_RELATIVE_PATH,
@@ -2583,37 +3468,49 @@ export async function applyFoundationChangeSet({
       approvedAt,
       actions: context.changedFiles,
     };
-    const stagedAppliedPath = await stageSiblingFile(
+    const stagedAppliedPath = await reserveAndWriteOwnedStage(
+      transaction,
       appliedPath,
+      'applied-marker',
       `${JSON.stringify(applied, null, 2)}\n`,
       0o600,
-      candidateRoot,
     );
-    try {
-      await validatePhysicalTargetPath(
-        candidateRoot,
-        appliedPath,
-        'candidate applied marker replacement',
-      );
-      await validateRegularTargetIfPresent(
-        appliedPath,
-        'candidate applied marker replacement',
-      );
-      await realReplacePath({
-        targetPath: appliedPath,
-        stagedPath: stagedAppliedPath,
-        action: 'upsert',
-      });
-    } finally {
-      await validatePhysicalTargetPath(
-        candidateRoot,
-        stagedAppliedPath,
-        'candidate applied marker staged cleanup',
-      );
-      await rm(stagedAppliedPath, { force: true });
-    }
-    await cleanupStagedMutations(mutations, context.root);
-    await rm(transaction.transactionRoot, { recursive: true, force: true });
+    await validatePhysicalTargetPath(
+      candidateRoot,
+      appliedPath,
+      'candidate applied marker replacement',
+    );
+    await validateRegularTargetIfPresent(
+      appliedPath,
+      'candidate applied marker replacement',
+    );
+    await realReplacePath({
+      targetPath: appliedPath,
+      stagedPath: stagedAppliedPath,
+      action: 'upsert',
+    });
+    await validateTerminalAppliedStateOwned(
+      args,
+      lockedOperation,
+      transaction.journal,
+      location.candidateRealPath,
+    );
+    await assertCurrentOperationLock(args, location, lock);
+    await validateTransactionJournalOwned(
+      transaction.journal,
+      args,
+      lockedOperation,
+      location,
+      transaction.transactionRoot,
+      lock,
+    );
+    await cleanupExactStagedPaths(transaction.journal, args);
+    await removeOwnedTransactionDirectory(
+      transaction.transactionRoot,
+      transaction.journal,
+      location.candidateRealPath,
+    );
+    await releaseOperationLock(args, location, lock);
 
     return {
       ...publicChangeSetResult(context),
@@ -2621,20 +3518,20 @@ export async function applyFoundationChangeSet({
       appliedPath,
     };
   } catch (operationError) {
-    await validatePhysicalTargetPath(
-      candidateRoot,
-      appliedPath,
-      'candidate applied marker cleanup',
-    )
-      .then(() => rm(appliedPath, { force: true }))
-      .catch(() => {});
-    await cleanupStagedMutations(mutations, context.root).catch(() => {});
-    if (!transaction) throw operationError;
+    if (!lock) throw operationError;
     try {
-      await restoreTransaction(transaction.journal, transaction.transactionRoot);
-      await cleanupJournalStagedPaths(transaction.journal);
-      await validateRestoredState(args);
-      await rm(transaction.transactionRoot, { recursive: true, force: true });
+      const recovery = await recoverOwnedOperation(
+        args,
+        transaction?.operation ?? operation,
+        location,
+        lock,
+      );
+      if (recovery === 'applied') {
+        throw new Error(
+          `Foundation Design Change Set apply failed after terminal installation: ${operationError.message} Recovery finalized the exact Approved result and cleaned its operation state.`,
+          { cause: operationError },
+        );
+      }
       throw new Error(
         `Foundation Design Change Set apply failed: ${operationError.message} Recovery succeeded; the exact Approved base Foundation and Draft Design Spec were restored.`,
         { cause: operationError },
@@ -2642,7 +3539,7 @@ export async function applyFoundationChangeSet({
     } catch (recoveryError) {
       if (recoveryError.cause === operationError) throw recoveryError;
       throw new Error(
-        `Foundation Design Change Set apply failed: ${operationError.message} Recovery failed: ${recoveryError.message}. Preserve ${transaction.transactionRoot} and its backups for deterministic retry.`,
+        `Foundation Design Change Set apply failed: ${operationError.message} Recovery failed: ${recoveryError.message}. Preserve ${join(candidateRoot, TRANSACTION_DIRECTORY)} and the exact operation lock for deterministic retry.`,
         { cause: operationError },
       );
     }

@@ -224,60 +224,148 @@ records the Foundation as Approved with the same approval timestamp.
 
 ## Recoverable Apply and Candidate Invalidation
 
-`foundation apply` first recovers a matching interrupted transaction, if one
-exists, then repeats every preview validation. The recomputed prospective
-revision must equal `--expected-result-revision`; any base, Design Spec,
-candidate, manifest, file-set, or result drift stops before mutation and returns
-the Design Change Set to review.
+`foundation preview` rejects either a transaction or the checkout-scoped
+operation lock, so it cannot render a review while apply or recovery owns the
+Foundation. The one lock is resolved from the already validated physical
+candidate parent and stored at:
 
-Apply is one recoverable local-filesystem transaction:
+```text
+docs/superpowers/foundation-candidates/.foundation-operation.lock.json
+```
 
-1. Persist `journal.json` with the exact checkout, candidate, Design Spec,
-   manifest, base/spec/result revisions, and backup entries.
-2. Back up exact bytes and file modes for the Design Spec, manifest, and every
-   affected authoritative path. Record originally missing paths explicitly.
-3. Prepare Approved Design Spec bytes through the shared artifact lifecycle and
-   stage every replacement in a sibling temporary file on the destination
-   volume. Each staged path is journaled before the next replacement is staged;
-   recovery also removes operation-named sibling files left by an interruption
-   between staging and the journal update.
-4. Record journal state before each replacement or deletion. States advance
-   from `prepared` through `replacing:<index>:<path>`, `validating`, and
-   `recording-applied`.
-5. Replace the Design Spec and reviewed candidates, then replace
-   `WAYFINDING.md` directly with Approved metadata at the exact prospective
-   revision and the same timestamp.
-6. Validate the exact Approved Design Spec and exact Approved Foundation from
-   disk.
-7. Write `APPLIED.json` with the exact relative paths, spec/base/result
-   revisions, timestamp, and sorted actions.
-8. Remove `.transaction/` only after both validations and the applied marker
-   succeed.
+Its exact schema is
+`superpowers-architecture-foundation-operation-lock-v1`. The record contains
+only `schema`, `operationNonce`, `ownerPid`, `root`, `manifestPath`, `specPath`,
+`candidateRoot`, `expectedBaseRevision`, `expectedSpecRevision`,
+`expectedResultRevision`, and `acquiredAt`. Acquisition uses exclusive create
+with mode `0o600`, writes and syncs the complete record, then closes it.
 
-The journal target set must exactly equal the Design Spec, manifest, and
-candidate-derived action targets for the validated operation binding. Before
-staging, replacement, deletion, or rollback, every existing target ancestor
-must be a physical directory inside the exact checkout; a symlink or junction
-ancestor fails before mutation. Candidate file modes are proposal metadata, not
-reviewed authority: replacements preserve the pre-transaction authoritative
-mode and additions use the deterministic implementation default.
+A lock owner is live when `process.kill(ownerPid, 0)` succeeds or reports
+`EPERM`. Only `ESRCH` proves a dead owner. A live owner is always a conflict,
+including when a second apply presents identical bindings. A different
+candidate is also blocked by the same checkout-scoped live lock before it can
+create transaction state or mutate authoritative bytes. Invalid, partial, or
+unreadable lock state fails closed instead of being guessed stale.
 
-Any failure restores original bytes, modes, and present/missing state, removes
-new files and empty directories created by the operation, revalidates the
-restored Approved base and Draft Design Spec, and reports whether recovery
-succeeded. A later apply may recover a stale journal only when every recorded
-checkout/path/revision binding and the exact candidate-derived target set match
-the retry. If an interruption occurs after `APPLIED.json` is installed but
-before transaction cleanup, apply validates the marker bindings, sorted
-actions, result artifacts, and common approval timestamp, removes the terminal
-transaction without rollback, and then rejects the already-applied candidate.
-Preview rejects stale transaction state so it cannot silently review a
-partially recovered checkout.
+A dead owner authorizes recovery only when every lock binding matches the exact
+retry and its nonce matches the exact transaction journal. A dead lock with no
+prepared journal may remove only its fixed candidate transaction directory and
+exact nonce-derived journal temporary file after the Approved base Foundation
+and Draft Design Spec revalidate unchanged. Before release, the operation
+re-reads the exact regular lock and revalidates nonce, owner, timestamp, and all
+bindings. Release occurs only after successful apply cleanup, successful
+rollback cleanup, or validated terminal recovery.
+
+The `.transaction/journal.json` schema is
+`superpowers-architecture-foundation-transaction-v1` and contains exactly:
+
+```text
+schema
+operationNonce
+lockPath
+root
+manifestPath
+specPath
+candidateRoot
+expectedBaseRevision
+expectedSpecRevision
+expectedResultRevision
+additionMode
+state
+entries
+stagedPaths
+createdDirectories
+```
+
+`additionMode` is the immutable implementation-owned integer `0o644`. It is
+validated before staging, apply, or recovery. Candidate filesystem modes are
+never authority. An existing authoritative replacement preserves the exact
+pre-apply mode recorded in its entry; a missing target uses only
+`journal.additionMode`.
+
+Entries are sorted by unsigned UTF-8 order of normalized checkout-relative
+target identity and contain exactly `index`, `targetPath`, `backupPath`,
+`backupDigest`, `existed`, and `mode`. For a missing original target,
+`backupPath`, `backupDigest`, and `mode` are all `null`. For an existing target,
+the backup path is deterministically bound to both the sorted index and target
+identity:
+
+```text
+backups/<four-digit-index>-<sha256 of normalized target identity>.bin
+```
+
+`backupDigest` is the lowercase `sha256:` identity of the exact backup bytes.
+Recovery validates entry order, indexes, target-set equality, unique derived
+backup paths, physical regular-file containment, every backup digest, and every
+recorded authoritative mode before any rollback mutation.
+
+The journal is first persisted as `preparing`, before backups can authorize a
+restore. Exact backups are written and synced, all content identities validate,
+and only then does the state become `prepared`. Subsequent durable boundaries
+are `staged`, `replacing:<index>:<path>`, `validating`, and
+`recording-applied`. The journal's own temporary path is derived exactly from
+the operation nonce; recovery never discovers journal state by prefix scan.
+
+Each staged replacement is reserved in `stagedPaths` before exclusive sibling
+creation. A record contains exactly `path`, `targetPath`, `purpose`, and
+`ordinal`. The path is derived from the operation nonce, deterministic ordinal,
+target basename, and one exact purpose: Approved Design Spec, candidate upsert,
+Approved manifest, applied marker, or restore. Deletions have no staged file.
+Recovery validates and removes only these exact recorded siblings. It never
+scans `.spa-foundation-*.tmp`; an unrelated file with that old prefix survives.
+
+For an addition, every missing ancestor is recorded in `createdDirectories` as
+`planned` before non-recursive creation and advances to `created` afterward.
+Rollback removes only these exact recorded paths, in reverse order, using
+non-recursive removal. A pre-existing empty directory is not recorded and
+survives. If a recorded directory contains unexpected content, recovery
+preserves it and fails visibly instead of inferring ownership from emptiness.
+
+Apply and recovery preserve this order:
+
+1. Validate candidate bindings and the exact prospective revision.
+2. Acquire the exact checkout-scoped cooperative lock.
+3. Recover a matching dead operation or reject a conflict.
+4. Create the nonce-bound `preparing` journal.
+5. Write, sync, identify, and validate exact backups; mark `prepared`.
+6. Reserve and write exact staged siblings while recording exact created
+   directories; mark `staged`.
+7. Revalidate the Approved base, Draft Design Spec, candidate, and result.
+8. Journal each replacement or deletion before mutation.
+9. Validate the exact Approved result; mark `recording-applied`.
+10. Atomically install exact `APPLIED.json`, including `operationNonce`.
+11. Validate marker nonce, sorted actions, artifact revisions, and the common
+    approval timestamp.
+12. Clean exact staged and transaction state, then release the exact lock.
+
+On an error after `prepared`, recovery first revalidates the lock, journal,
+target set, backup identities, modes, staged records, and directory ledger.
+Only then may it restore exact bytes, modes, and present/missing state. It cleans
+only exact operation-owned state, validates the restored Approved base and
+Draft Design Spec, removes `.transaction/` only after proving physical
+containment and terminal-or-restored ownership, and finally releases the lock.
+Uncertain binding or a corrupt backup preserves lock and transaction evidence
+without recovery mutation.
+
+If interruption occurs after `APPLIED.json` installation, recovery accepts a
+terminal result only from `recording-applied` and only after marker schema,
+operation nonce, sorted actions, both exact artifacts, revisions, and one common
+timestamp validate. It then cleans exact transaction state without rollback,
+releases the lock, and rejects duplicate application.
 
 `APPLIED.json` visibly invalidates the candidate. Preview and apply both reject
 an applied candidate, so the same Design Change Set cannot be applied twice.
 Candidate proposal files may remain for local evidence, but they are never
 authoritative.
+
+## Quiescent Application Boundary
+
+V1 rejects hazards present or observable at its validation boundaries and
+serializes cooperating Foundation writers. It does not protect against a
+malicious or uncooperative same-machine process racing path replacement after
+validation. Supporting that adversary requires a newly Approved design that
+selects platform-specific secure mutation primitives or a different runtime
+capability contract.
 
 ## Combined Design Change Set Authority
 
