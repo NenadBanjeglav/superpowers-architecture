@@ -304,22 +304,29 @@ restore. Exact backups are written and synced, all content identities validate,
 and only then does the state become `prepared`. Subsequent durable boundaries
 are `staged`, `replacing:<index>:<path>`, `validating`, and
 `recording-applied`. The journal's own temporary path is derived exactly from
-the operation nonce; recovery never discovers journal state by prefix scan.
+the operation nonce; recovery never discovers journal state by prefix scan. A
+`preparing` journal must have empty `stagedPaths` and `createdDirectories`
+ledgers because that state cannot yet authorize staging or directory cleanup.
 
 Each staged replacement is reserved in `stagedPaths` before exclusive sibling
 creation. A record contains exactly `path`, `targetPath`, `purpose`, and
 `ordinal`. The path is derived from the operation nonce, deterministic ordinal,
 target basename, and one exact purpose: Approved Design Spec, candidate upsert,
 Approved manifest, applied marker, or restore. Deletions have no staged file.
-Recovery validates and removes only these exact recorded siblings. It never
-scans `.spa-foundation-*.tmp`; an unrelated file with that old prefix survives.
+Recovery requires both path uniqueness and one semantic reservation per
+`purpose` and `targetPath`. An interrupted restore reuses and rewrites its exact
+recorded reservation rather than adding another semantic reservation. Cleanup
+removes only these exact recorded siblings. It never scans
+`.spa-foundation-*.tmp`; an unrelated file with that old prefix survives.
 
 For an addition, every missing ancestor is recorded in `createdDirectories` as
 `planned` before non-recursive creation and advances to `created` afterward.
-Rollback removes only these exact recorded paths, in reverse order, using
-non-recursive removal. A pre-existing empty directory is not recorded and
-survives. If a recorded directory contains unexpected content, recovery
-preserves it and fails visibly instead of inferring ownership from emptiness.
+Only the durable `created` state authorizes cleanup; a `planned` record is
+preserved and never removed. Rollback removes exact `created` paths in reverse
+order using non-recursive removal. A pre-existing empty directory is not
+recorded and survives. If a recorded directory contains unexpected content,
+recovery preserves it and fails visibly instead of inferring ownership from
+emptiness.
 
 Apply and recovery preserve this order:
 
@@ -344,8 +351,12 @@ Only then may it restore exact bytes, modes, and present/missing state. It clean
 only exact operation-owned state, validates the restored Approved base and
 Draft Design Spec, removes `.transaction/` only after proving physical
 containment and terminal-or-restored ownership, and finally releases the lock.
-Uncertain binding or a corrupt backup preserves lock and transaction evidence
-without recovery mutation.
+Before recursive transaction removal, every whitelisted top-level journal,
+nonce-temporary, approved-spec, and backups entry must have its exact expected
+regular-file or directory type and physical containment; wrong types and
+unexpected nested content are preserved and fail visibly. Uncertain binding or
+a corrupt backup preserves lock and transaction evidence without recovery
+mutation.
 
 If interruption occurs after `APPLIED.json` installation, recovery accepts a
 terminal result only from `recording-applied` and only after marker schema,

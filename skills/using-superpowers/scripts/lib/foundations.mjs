@@ -1259,7 +1259,7 @@ async function scanCandidateDirectory(directory, prefix, candidateRealPath, file
     assertNormalizedRecordPath(relativePath, `candidate file ${relativePath}`);
     const content = await readFile(absolutePath);
     decodeStrictUtf8(content, `candidate file ${relativePath}`);
-    files.set(relativePath, { content, mode: entryStat.mode });
+    files.set(relativePath, { content });
   }
 }
 
@@ -2428,6 +2428,7 @@ async function validateTransactionJournalOwned(
   }
   const purposeTargets = stagedPurposeTargets(args, operation);
   const seenStaged = new Set();
+  const seenSemanticBindings = new Set();
   for (let ordinal = 0; ordinal < journal.stagedPaths.length; ordinal += 1) {
     const record = journal.stagedPaths[ordinal];
     assertExactKeys(
@@ -2475,8 +2476,29 @@ async function validateTransactionJournalOwned(
       );
     }
     seenStaged.add(record.path);
+    const semanticBinding = `${record.purpose}\u0000${record.targetPath}`;
+    if (seenSemanticBindings.has(semanticBinding)) {
+      throw foundationError(
+        'candidate transaction staged semantic bindings',
+        'one exact reservation for each purpose and target path',
+        `duplicate ${record.purpose} -> ${record.targetPath}`,
+        'Recovery: preserve the transaction and remove the cross-wired duplicate only through a newly reviewed operation.',
+      );
+    }
+    seenSemanticBindings.add(semanticBinding);
   }
   validateCreatedDirectories(journal.createdDirectories, args, journal.entries);
+  if (
+    journal.state === 'preparing' &&
+    (journal.stagedPaths.length > 0 || journal.createdDirectories.length > 0)
+  ) {
+    throw foundationError(
+      'candidate preparing transaction ledgers',
+      'empty stagedPaths and createdDirectories before prepared state',
+      `${journal.stagedPaths.length} staged paths and ${journal.createdDirectories.length} created directories`,
+      'Recovery: preserve the impossible transaction state; preparing cannot authorize staged-file or directory cleanup.',
+    );
+  }
   return journal;
 }
 
@@ -2503,6 +2525,7 @@ async function cleanupExactStagedPaths(journal, args) {
 
 async function cleanupCreatedDirectories(journal, args) {
   for (const record of [...journal.createdDirectories].reverse()) {
+    if (record.state !== 'created') continue;
     await validatePhysicalTargetPath(
       args.root,
       join(record.path, '.ownership-probe'),
@@ -2567,15 +2590,16 @@ async function removeOwnedTransactionDirectory(
     transactionRoot,
     candidateRealPath,
   );
-  const allowedTop = new Set([
-    'journal.json',
-    `.journal.${journal.operationNonce}.tmp`,
-    'approved-spec.md',
-    'backups',
+  const expectedTopTypes = new Map([
+    ['journal.json', 'file'],
+    [`.journal.${journal.operationNonce}.tmp`, 'file'],
+    ['approved-spec.md', 'file'],
+    ['backups', 'directory'],
   ]);
   const topEntries = await readdir(transactionRoot, { withFileTypes: true });
   for (const entry of topEntries) {
-    if (!allowedTop.has(entry.name) || entry.isSymbolicLink()) {
+    const expectedType = expectedTopTypes.get(entry.name);
+    if (!expectedType) {
       throw foundationError(
         'candidate transaction cleanup',
         'only exact nonce-bound journal, approved-spec, and backup state',
@@ -2583,6 +2607,44 @@ async function removeOwnedTransactionDirectory(
         'Recovery: preserve the transaction; recursive cleanup is not authorized.',
       );
     }
+    const entryPath = join(transactionRoot, entry.name);
+    const entryStat = await lstat(entryPath);
+    const actualType = entryStat.isSymbolicLink()
+      ? 'symbolic link'
+      : entryStat.isFile()
+        ? 'file'
+        : entryStat.isDirectory()
+          ? 'directory'
+          : 'non-regular entry';
+    if (
+      entryStat.isSymbolicLink() ||
+      (expectedType === 'file' && !entryStat.isFile()) ||
+      (expectedType === 'directory' && !entryStat.isDirectory())
+    ) {
+      throw foundationError(
+        `candidate transaction cleanup ${entry.name}`,
+        `an exact physical ${expectedType}`,
+        actualType,
+        'Recovery: preserve the wrong-type transaction entry and its nested content.',
+      );
+    }
+    const entryRealPath = await realpath(entryPath);
+    if (!isContained(transactionRealPath, entryRealPath)) {
+      throw foundationError(
+        `candidate transaction cleanup ${entry.name}`,
+        'a physical entry contained by the exact transaction root',
+        `outside at ${entryRealPath}`,
+        'Recovery: preserve the escaping transaction entry and do not recursively remove it.',
+      );
+    }
+  }
+  if (!topEntries.some(({ name }) => name === 'journal.json')) {
+    throw foundationError(
+      'candidate transaction cleanup journal',
+      'the exact regular journal.json ownership record',
+      'missing',
+      'Recovery: preserve the transaction because recursive cleanup lacks its durable authority.',
+    );
   }
   const backupsRoot = join(transactionRoot, 'backups');
   const backupStat = await pathState(backupsRoot);
@@ -2601,7 +2663,18 @@ async function removeOwnedTransactionDirectory(
         .map(({ backupPath }) => basename(backupPath)),
     );
     for (const entry of await readdir(backupsRoot, { withFileTypes: true })) {
-      if (entry.isSymbolicLink() || !entry.isFile() || !expected.has(entry.name)) {
+      const backupPath = join(backupsRoot, entry.name);
+      const backupEntryStat = await lstat(backupPath);
+      const backupRealPath = backupEntryStat.isSymbolicLink()
+        ? null
+        : await realpath(backupPath);
+      if (
+        backupEntryStat.isSymbolicLink() ||
+        !backupEntryStat.isFile() ||
+        !backupRealPath ||
+        !isContained(transactionRealPath, backupRealPath) ||
+        !expected.has(entry.name)
+      ) {
         throw foundationError(
           'candidate transaction backup cleanup',
           'only exact content-identified backup files',
@@ -2817,6 +2890,41 @@ async function reserveAndWriteOwnedStage(
   mode,
 ) {
   await ensureOperationDirectories(transaction, targetPath);
+  const existing = transaction.journal.stagedPaths.find(
+    (record) =>
+      record.targetPath === targetPath &&
+      record.purpose === purpose,
+  );
+  if (existing) {
+    if (purpose !== 'restore') {
+      throw foundationError(
+        'candidate staged semantic reservation',
+        'a new unique purpose and target binding',
+        `existing ${purpose} -> ${targetPath}`,
+        'Recovery: preserve the duplicate operation state rather than creating a second semantic reservation.',
+      );
+    }
+    await validatePhysicalTargetPath(
+      transaction.args.root,
+      existing.path,
+      `candidate restore staged path ${existing.path}`,
+    );
+    const existingState = await pathState(existing.path);
+    if (
+      existingState &&
+      (existingState.isSymbolicLink() || !existingState.isFile())
+    ) {
+      throw foundationError(
+        `candidate restore staged path ${existing.path}`,
+        'a missing path or exact regular operation-owned staged file',
+        existingState.isSymbolicLink() ? 'symbolic link' : 'non-regular file',
+        'Recovery: preserve the unexpected exact staged entry for inspection.',
+      );
+    }
+    if (existingState) await rm(existing.path);
+    await writeExclusiveSynced(existing.path, content, mode);
+    return existing.path;
+  }
   const ordinal = transaction.journal.stagedPaths.length;
   const stagedPath = deterministicStagedPath(
     targetPath,
@@ -3314,6 +3422,23 @@ export async function applyFoundationChangeSet({
 }, adapters = {}) {
   assertSupportedNode();
   assertCompleteRevision('candidate expected result revision', expectedResultRevision);
+  if (
+    !adapters ||
+    typeof adapters !== 'object' ||
+    Array.isArray(adapters) ||
+    Object.keys(adapters).some((key) => key !== 'replacePath')
+  ) {
+    throw foundationError(
+      'Foundation apply adapter',
+      'an optional object containing only the approved replacePath test seam',
+      adapters && typeof adapters === 'object'
+        ? `keys ${Object.keys(adapters).sort().join(', ') || '(none)'}`
+        : adapters === null
+          ? 'null'
+          : typeof adapters,
+      'Recovery: remove unapproved adapters; the production clock and local filesystem own all other apply behavior.',
+    );
+  }
   const args = {
     root,
     manifestPath,
@@ -3344,7 +3469,7 @@ export async function applyFoundationChangeSet({
     );
   }
 
-  const approvedAt = (adapters.now ?? (() => new Date().toISOString()))();
+  const approvedAt = new Date().toISOString();
   if (!isIso8601Timestamp(approvedAt)) {
     throw foundationError(
       'Design Change Set timestamp',
