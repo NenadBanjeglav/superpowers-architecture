@@ -228,16 +228,22 @@ After the user explicitly approves the exact Draft Foundation revision:
 1. Re-run `foundation refresh` and require the same revision.
 2. Run `foundation approve` with that exact revision.
 3. Run `foundation validate` from disk with that exact Approved revision.
-4. Recheck checkout, manifest, roadmap outcome, and durable Phase Mode.
+4. Re-read the Approved `ROADMAP.md` from disk. Record the selected `OUT-NNN`
+   only after confirming that the identity exists, its readiness is
+   `Ready for Brainstorming`, and its exact canonical `Brainstorming Prompt`
+   is present.
+5. Recheck checkout, manifest, and durable Phase Mode.
 
 For Automated fresh-session mode, prepare the immutable fifteen-field
 same-checkout `brainstorming` record from
 [phase-handoff.md](../using-superpowers/references/phase-handoff.md). The
 Approved `WAYFINDING.md` is both the handoff artifact and Foundation manifest;
-the same exact Foundation revision fills both revision fields. Use the
+the same exact Foundation revision fills both revision fields. After the
+unchanged record, bind the selected outcome identity and exact canonical
+Brainstorming prompt as required by the shared handoff contract. Use the
 runtime-specific adapter only after shared preflight succeeds. If exact checkout
-or plugin affinity is uncertain, print the complete canonical fallback and
-stop.
+or plugin affinity is uncertain, print the complete canonical fallback with
+that same outcome identity and prompt, then stop.
 
 For Same-session mode, revalidate the exact Approved Foundation, then re-read
 root `AGENTS.md`, root `CONTEXT.md`, the manifest-selected Foundation documents,

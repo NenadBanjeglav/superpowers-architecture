@@ -388,7 +388,6 @@ Understanding remains in later Design Specs.
 
 ### DEC-0001: <Decision title>
 
-**Status:** Current | Superseded
 **Area:** <governed area>
 **Decision:** <concise statement>
 **Rationale:** <why>
@@ -400,10 +399,12 @@ Understanding remains in later Design Specs.
 **Supersedes:** <decision identity or none>
 ```
 
-The current index is replaceable. Ledger entries are append-only and immutable.
-When a decision changes, append a new identity, mark the earlier entry
-Superseded without rewriting its substance, and update the current index and
-current-truth owner.
+The Current Decision Index is the only place that records whether a decision is
+current or superseded; the index is replaceable. Ledger entries are append-only
+and immutable. When a decision changes, append a new immutable entry whose
+`**Supersedes:** <decision identity or none>` field names the prior identity,
+then update the current index and current-truth owner.
+The earlier entry remains byte-for-byte unchanged.
 
 ## ROADMAP.md Shape
 

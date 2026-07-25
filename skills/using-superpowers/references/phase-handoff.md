@@ -94,7 +94,11 @@ Run these checks from the checkout that owns every recorded artifact:
    reject `none`.
 8. For Brainstorming, additionally require `artifactPath` and
    `foundationManifestPath` equality and `approvedRevision` and
-   `foundationRevision` equality.
+   `foundationRevision` equality. Re-read the Approved Foundation and `ROADMAP.md` from disk.
+   Require that the selected identity exists, its readiness is
+   `Ready for Brainstorming`, and its prompt text matches exactly the canonical
+   `Brainstorming Prompt` copied into the prompt envelope.
+   Any outcome identity, readiness, or prompt mismatch stops automatic launch.
 9. If any phase artifact, source spec, or Foundation working artifact is under
    `docs/superpowers/`, require `git check-ignore --quiet -- <path>` to succeed.
    Ignored local state makes a different checkout non-equivalent.
@@ -119,16 +123,28 @@ instead.
 ## Canonical Prompt Envelope
 
 The Brainstorming, Planning, or implementation prompt contains the full handoff
-record as JSON, followed by these instructions:
+record as JSON. For `phase: brainstorming`, immediately after the unchanged
+fifteen-field record include these prompt bindings:
+
+```text
+Selected Roadmap Outcome: OUT-NNN
+Canonical Brainstorming Prompt: <exact text copied verbatim from the Approved ROADMAP.md>
+```
+
+These lines are part of the canonical prompt, not additional handoff-record
+fields. Follow the record and any Brainstorming bindings with these
+instructions:
 
 ```text
 Before invoking the phase skill, acknowledge all fifteen handoff fields with
 the exact received values. Then independently re-run repository, checkout,
 branch, worktree, phase-artifact lifecycle/revision, source-spec,
 Foundation-manifest/revision, ignored-file, and plugin-source checks from disk.
-Use foundation validate for a recorded Agentic Foundation. Do not begin
-next-phase work if any target-side value is missing, differs, or cannot be
-proven. Report the mismatch and stop.
+Use foundation validate for a recorded Agentic Foundation. For Brainstorming,
+re-read the Approved Foundation and ROADMAP.md from disk; verify the selected
+identity exists, its readiness is Ready for Brainstorming, and its prompt text
+matches exactly. Do not begin next-phase work if any target-side value is
+missing, differs, or cannot be proven. Report the mismatch and stop.
 ```
 
 The target's first output includes the complete acknowledged record. At a
@@ -162,7 +178,9 @@ allowing phase work.
 - **Unsafe fallback:** if checkout targeting, ignored-file continuity,
   Foundation continuity, plugin affinity, lifecycle state, or target
   acknowledgement cannot be proven, do not launch. Print all fifteen fields,
-  the canonical prompt, and a quoting-safe manual command.
+  the canonical prompt, and a quoting-safe manual command. For Brainstorming,
+  the safe fallback retains the same selected outcome identity and
+  exact canonical Brainstorming prompt.
 
 ## Target-Side Gate
 
@@ -174,8 +192,10 @@ before it:
 3. validates the phase artifact and source Design Spec when applicable;
 4. runs `foundation validate` for every recorded Foundation and confirms all
    cross-field phase bindings;
-5. verifies ignored local files and plugin affinity in that session; and
-6. confirms `workspacePolicy: same-checkout` is actually satisfied.
+5. for Brainstorming, re-reads the Approved Foundation and `ROADMAP.md`, then
+   verifies the selected outcome identity, readiness, and exact prompt;
+6. verifies ignored local files and plugin affinity in that session; and
+7. confirms `workspacePolicy: same-checkout` is actually satisfied.
 
 Mismatch is a terminal handoff result, not permission to choose a nearby
 checkout, branch, artifact revision, Foundation revision, or plugin
