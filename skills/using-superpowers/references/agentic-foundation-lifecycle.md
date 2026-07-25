@@ -112,6 +112,7 @@ spa foundation draft --root ROOT --manifest PATH
 spa foundation refresh --root ROOT --manifest PATH
 spa foundation approve --root ROOT --manifest PATH --expected-revision sha256:DIGEST
 spa foundation validate --root ROOT --manifest PATH --expected-revision sha256:DIGEST
+spa foundation validate --root ROOT --manifest PATH --expected-revision RESULT --receipt APPLIED_JSON --spec-path SPEC --expected-spec-revision SPEC_REVISION --expected-base-revision BASE_REVISION
 spa foundation preview --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST
 spa foundation apply --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST --expected-result-revision sha256:DIGEST
 ```
@@ -133,7 +134,10 @@ state only in `WAYFINDING.md`.
 
 `validate` requires Approved state, exact expected/recorded revision equality,
 a valid approval timestamp, and equality with the freshly recomputed bundle.
-It performs no write.
+It performs no write. Result-only validation keeps the original three required
+arguments. Receipt-backed validation uses `--receipt`, `--spec-path`,
+`--expected-spec-revision`, and `--expected-base-revision` as one all-or-none
+option group on the same read-only operation.
 
 ## Foundation Candidate Contract
 
@@ -194,6 +198,55 @@ The complete prospective `WAYFINDING.md` must still declare every core
 Foundation document. Its manifest set must equal the virtual prospective file
 set exactly. Adding or deleting an optional document therefore requires a
 complete `WAYFINDING.md` upsert in the same candidate.
+
+## Foundation Candidate Declaration
+
+The exact refreshed Design Spec contains one unfenced
+`## Durable Documentation Impact` table and one unfenced
+`## Foundation Candidate Declaration` section. Every Decision cell uses:
+
+```text
+DDI-NNN: <decision>; Classification reason: <concrete reason>
+```
+
+Task-local and No impact rows use exact Candidate action `none`.
+Project-durable and Operating-contract rows use a comma-and-space-separated
+list of unique `FCA-NNN` identities. Candidate action cells never contain
+paths. Paths occur only in the fenced JSON declaration:
+
+```json
+{
+  "schema": "superpowers-architecture-foundation-declaration-v1",
+  "actions": [
+    {
+      "id": "FCA-001",
+      "action": "upsert",
+      "path": "docs/agentic/ARCHITECTURE.md",
+      "decisionRefs": ["DDI-001"]
+    }
+  ]
+}
+```
+
+The object has exactly `schema` and `actions`. Every action has exactly `id`,
+`action`, `path`, and `decisionRefs`; actions are sorted by unsigned UTF-8 path
+bytes and then action. Paths are normalized repository-relative JSON strings,
+so spaces, semicolons, and Markdown delimiters are escape-safe. Decision
+references are sorted, unique, and non-empty, and table/JSON references are
+reciprocal.
+
+The declaration's sorted `(path, action)` projection must equal
+`candidate.json` exactly. Preview and apply also require every Project-durable
+decision's exact current-truth owner action plus a
+`docs/agentic/DECISIONS.md` upsert, every Operating-contract decision's exact
+`AGENTS.md` owner, every affected parent Child DOX Index action for a child
+boundary change, and a `docs/agentic/WAYFINDING.md` upsert for a managed-file
+add or delete. Several decisions may share one owner, ledger, or manifest
+action. Duplicate or conflicting paths remain invalid.
+
+An empty declaration requires exactly one unfenced literal sentence
+`No durable documentation changes` in Durable Documentation Impact. A
+non-empty declaration requires that sentence to be absent.
 
 ## Preview and Review Report
 
@@ -368,6 +421,46 @@ releases the lock, and rejects duplicate application.
 an applied candidate, so the same Design Change Set cannot be applied twice.
 Candidate proposal files may remain for local evidence, but they are never
 authoritative.
+
+## Foundation Application Receipt
+
+The sole Application Receipt is the operation-owned `APPLIED.json` at the
+deterministic candidate root derived from the Design Spec stem. No second
+receipt or lifecycle artifact exists. Its exact schema is:
+
+```json
+{
+  "schema": "superpowers-architecture-foundation-applied-v1",
+  "operationNonce": "123e4567-e89b-42d3-a456-426614174000",
+  "specPath": "docs/superpowers/specs/2026-07-24-account-flow-design.md",
+  "specRevision": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "manifestPath": "docs/agentic/WAYFINDING.md",
+  "baseRevision": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "resultRevision": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "approvedAt": "2026-07-25T12:00:00.000Z",
+  "actions": [
+    {
+      "path": "docs/agentic/ARCHITECTURE.md",
+      "action": "upsert"
+    }
+  ]
+}
+```
+
+Receipt-backed `foundation validate` requires the physical absolute
+deterministic receipt path, exact Approved Design Spec and result, the spec's
+exact Foundation Manifest and Base Agentic Foundation traceability, exact
+schema and operation nonce, sorted actions equal to the Approved declaration,
+and one common receipt/spec/result approval timestamp. A non-empty candidate
+normally has different base and result revisions. An empty candidate uses the
+same receipt flow with base equal to result.
+
+Receipt validation never reads `candidate.json`, `files/`, or prospective
+proposal metadata. Apply already proved declaration/candidate equality before
+installing the receipt; candidate proposal state is non-authoritative
+afterward. Receipt-backed validation remains the existing read-only `validate`
+operation and writes no lifecycle, receipt, spec, candidate, or Foundation
+bytes.
 
 ## Quiescent Application Boundary
 

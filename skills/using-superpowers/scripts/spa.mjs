@@ -131,12 +131,48 @@ async function runFoundation(command, args) {
     });
   }
   if (command === 'validate') {
-    requireOnly(options, ['--root', '--manifest', '--expected-revision']);
+    const receiptOptionNames = [
+      '--receipt',
+      '--spec-path',
+      '--expected-spec-revision',
+      '--expected-base-revision',
+    ];
+    const receiptMode = receiptOptionNames.some(
+      (name) => options[name] !== undefined,
+    );
+    if (
+      receiptMode &&
+      !receiptOptionNames.every((name) => options[name] !== undefined)
+    ) {
+      fail(
+        'foundation validate receipt mode requires --receipt, --spec-path, ' +
+          '--expected-spec-revision, and --expected-base-revision together.',
+      );
+    }
+    requireOnly(
+      options,
+      ['--root', '--manifest', '--expected-revision'],
+      receiptOptionNames,
+    );
     requireCompleteRevision(options['--expected-revision']);
+    if (receiptMode) {
+      requireCompleteRevision(
+        options['--expected-spec-revision'],
+        '--expected-spec-revision',
+      );
+      requireCompleteRevision(
+        options['--expected-base-revision'],
+        '--expected-base-revision',
+      );
+    }
     return validateApprovedFoundation({
       root: options['--root'],
       manifestPath: options['--manifest'],
       expectedRevision: options['--expected-revision'],
+      receiptPath: options['--receipt'],
+      specPath: options['--spec-path'],
+      expectedSpecRevision: options['--expected-spec-revision'],
+      expectedBaseRevision: options['--expected-base-revision'],
     });
   }
   if (command === 'preview') {

@@ -58,6 +58,12 @@ const ISO_8601_TIMESTAMP =
 const UTF8_BOM = Buffer.from([0xef, 0xbb, 0xbf]);
 const CANDIDATE_SCHEMA = 'superpowers-architecture-foundation-candidate-v1';
 const APPLIED_SCHEMA = 'superpowers-architecture-foundation-applied-v1';
+const FOUNDATION_DECLARATION_SCHEMA =
+  'superpowers-architecture-foundation-declaration-v1';
+const DURABLE_IMPACT_ID = /^DDI-[0-9]{3}$/;
+const FOUNDATION_CANDIDATE_ACTION_ID = /^FCA-[0-9]{3}$/;
+const FOUNDATION_DECLARATION_SECTION = '## Foundation Candidate Declaration';
+const DURABLE_IMPACT_SECTION = '## Durable Documentation Impact';
 const OPERATION_LOCK_SCHEMA =
   'superpowers-architecture-foundation-operation-lock-v1';
 const TRANSACTION_SCHEMA = 'superpowers-architecture-foundation-transaction-v1';
@@ -222,6 +228,652 @@ function assertNormalizedRecordPath(path, subject = 'record path') {
       'Recovery: remove traversal, dot, empty, and trailing-slash path segments.',
     );
   }
+}
+
+function immutable(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) immutable(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+function markdownSection(normalized, heading, subject) {
+  const masked = maskMarkdownFences(normalized);
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = [...masked.matchAll(new RegExp(`^${escaped}[ \\t]*$`, 'gm'))];
+  if (matches.length !== 1) {
+    throw foundationError(
+      subject,
+      `exactly one unfenced ${heading} section`,
+      `${matches.length} sections`,
+      `Recovery: write exactly one ${heading} section in the Design Spec.`,
+    );
+  }
+  const start = matches[0].index + matches[0][0].length;
+  const following = masked.slice(start).match(/^##[ \t]+.+$/m);
+  const end = following ? start + following.index : normalized.length;
+  return normalized.slice(start, end);
+}
+
+function parseMarkdownTableRow(line, subject) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) {
+    throw foundationError(
+      subject,
+      'a pipe-delimited Markdown table row',
+      line,
+      'Recovery: restore the exact four-column Durable Documentation Impact table.',
+    );
+  }
+  const cells = [];
+  let current = '';
+  let escaped = false;
+  for (const character of trimmed.slice(1, -1)) {
+    if (escaped) {
+      current += character;
+      escaped = false;
+    } else if (character === '\\') {
+      escaped = true;
+    } else if (character === '|') {
+      cells.push(current.trim());
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+  if (escaped) current += '\\';
+  cells.push(current.trim());
+  return cells;
+}
+
+function exactUnfencedField(normalized, label, subject) {
+  const masked = maskMarkdownFences(normalized);
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = [
+    ...masked.matchAll(
+      new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'),
+    ),
+  ];
+  if (matches.length !== 1) {
+    throw foundationError(
+      subject,
+      `exactly one unfenced ${label} field`,
+      `${matches.length} fields`,
+      `Recovery: restore the exact ${label} field in the Design Spec.`,
+    );
+  }
+  return matches[0][1];
+}
+
+function comparePathActions(left, right) {
+  const pathOrder = Buffer.compare(
+    Buffer.from(left.path, 'utf8'),
+    Buffer.from(right.path, 'utf8'),
+  );
+  return pathOrder || left.action.localeCompare(right.action);
+}
+
+function samePathActions(left, right) {
+  return (
+    left.length === right.length &&
+    left.every(
+      (entry, index) =>
+        entry.path === right[index].path &&
+        entry.action === right[index].action,
+    )
+  );
+}
+
+function parseFoundationCandidateDeclaration(specBytes) {
+  const normalized = decodeStrictUtf8(
+    specBytes,
+    'Foundation Candidate Declaration Design Spec',
+  );
+  const impactSection = markdownSection(
+    normalized,
+    DURABLE_IMPACT_SECTION,
+    'Durable Documentation Impact',
+  );
+  const declarationSection = markdownSection(
+    normalized,
+    FOUNDATION_DECLARATION_SECTION,
+    'Foundation Candidate Declaration',
+  );
+  const impactMasked = maskMarkdownFences(impactSection);
+  const impactLines = impactMasked.split('\n');
+  const headerIndexes = [];
+  for (let index = 0; index < impactLines.length; index += 1) {
+    if (
+      impactLines[index].trim() ===
+      '| Decision | Classification | Owning document | Candidate action |'
+    ) {
+      headerIndexes.push(index);
+    }
+  }
+  if (headerIndexes.length !== 1) {
+    throw foundationError(
+      'Durable Documentation Impact table',
+      'exactly one four-column header',
+      `${headerIndexes.length} headers`,
+      'Recovery: restore exactly one Decision, Classification, Owning document, Candidate action table.',
+    );
+  }
+  const headerIndex = headerIndexes[0];
+  if (
+    !/^\|\s*:?-{3,}:?\s*\|\s*:?-{3,}:?\s*\|\s*:?-{3,}:?\s*\|\s*:?-{3,}:?\s*\|$/.test(
+      impactLines[headerIndex + 1]?.trim() ?? '',
+    )
+  ) {
+    throw foundationError(
+      'Durable Documentation Impact table',
+      'one four-column Markdown separator after the header',
+      impactLines[headerIndex + 1] ?? 'missing',
+      'Recovery: restore the exact four-column table separator.',
+    );
+  }
+  const decisionRows = [];
+  for (let index = headerIndex + 2; index < impactLines.length; index += 1) {
+    const line = impactLines[index];
+    if (line.trim() === '') {
+      if (decisionRows.length > 0) break;
+      continue;
+    }
+    if (!line.trim().startsWith('|')) break;
+    decisionRows.push(parseMarkdownTableRow(
+      line,
+      `Durable Documentation Impact row ${index - headerIndex - 1}`,
+    ));
+  }
+  if (decisionRows.length === 0) {
+    throw foundationError(
+      'Durable Documentation Impact table',
+      'at least one classified decision row',
+      'no rows',
+      'Recovery: classify every design decision with a stable DDI-NNN identity.',
+    );
+  }
+
+  const decisions = [];
+  const decisionById = new Map();
+  for (const cells of decisionRows) {
+    if (cells.length !== 4) {
+      throw foundationError(
+        'Durable Documentation Impact row',
+        'exactly four Markdown cells',
+        `${cells.length} cells`,
+        'Recovery: restore Decision, Classification, Owning document, and Candidate action cells.',
+      );
+    }
+    const decisionMatch = cells[0].match(
+      /^(DDI-[0-9]{3}): (.+); Classification reason: (.+)$/,
+    );
+    if (
+      !decisionMatch ||
+      decisionMatch[2].trim() === '' ||
+      decisionMatch[3].trim() === ''
+    ) {
+      throw foundationError(
+        'Durable Documentation Impact Decision cell',
+        'DDI-NNN: <decision>; Classification reason: <concrete reason>',
+        cells[0],
+        'Recovery: use one stable decision identity and concrete classification reason.',
+      );
+    }
+    const id = decisionMatch[1];
+    if (!DURABLE_IMPACT_ID.test(id) || decisionById.has(id)) {
+      throw foundationError(
+        'Durable Documentation Impact decision identity',
+        'a unique DDI-NNN identity',
+        `duplicate or malformed ${id}`,
+        'Recovery: assign each decision one unique stable DDI-NNN identity.',
+      );
+    }
+    const classification = cells[1];
+    if (
+      ![
+        'Task-local',
+        'Project-durable',
+        'Operating-contract',
+        'No impact',
+      ].includes(classification)
+    ) {
+      throw foundationError(
+        `Durable Documentation Impact ${id} classification`,
+        'Task-local, Project-durable, Operating-contract, or No impact',
+        classification,
+        'Recovery: use exactly one documented classification.',
+      );
+    }
+    const owningDocument = cells[2];
+    if (classification === 'Task-local' && owningDocument !== 'Design Spec') {
+      throw foundationError(
+        `Durable Documentation Impact ${id} owner`,
+        'Design Spec for Task-local',
+        owningDocument,
+        'Recovery: use Design Spec as the exact Task-local owner.',
+      );
+    }
+    if (classification === 'No impact' && owningDocument !== 'none') {
+      throw foundationError(
+        `Durable Documentation Impact ${id} owner`,
+        'none for No impact',
+        owningDocument,
+        'Recovery: use literal none as the exact No impact owner.',
+      );
+    }
+    if (classification === 'Project-durable') {
+      assertNormalizedRecordPath(
+        owningDocument,
+        `Durable Documentation Impact ${id} current-truth owner`,
+      );
+    }
+    if (classification === 'Operating-contract') {
+      assertNormalizedRecordPath(
+        owningDocument,
+        `Durable Documentation Impact ${id} operating-contract owner`,
+      );
+      if (
+        owningDocument !== 'AGENTS.md' &&
+        !owningDocument.endsWith('/AGENTS.md')
+      ) {
+        throw foundationError(
+          `Durable Documentation Impact ${id} operating-contract owner`,
+          'root AGENTS.md or a normalized child AGENTS.md path',
+          owningDocument,
+          'Recovery: bind the operating decision to its exact AGENTS.md owner.',
+        );
+      }
+    }
+    let actionRefs;
+    if (classification === 'Task-local' || classification === 'No impact') {
+      if (cells[3] !== 'none') {
+        throw foundationError(
+          `Durable Documentation Impact ${id} Candidate action`,
+          'literal none for Task-local or No impact',
+          cells[3],
+          'Recovery: remove every action reference from non-durable decisions.',
+        );
+      }
+      actionRefs = [];
+    } else {
+      actionRefs = cells[3].split(', ');
+      if (
+        actionRefs.length === 0 ||
+        actionRefs.join(', ') !== cells[3] ||
+        actionRefs.some((value) => !FOUNDATION_CANDIDATE_ACTION_ID.test(value)) ||
+        new Set(actionRefs).size !== actionRefs.length
+      ) {
+        throw foundationError(
+          `Durable Documentation Impact ${id} Candidate action`,
+          'a comma-and-space-separated unique FCA-NNN identity list',
+          cells[3],
+          'Recovery: reference stable action identities only; never put a path in this cell.',
+        );
+      }
+    }
+    const decision = {
+      id,
+      classification,
+      owningDocument,
+      actionRefs,
+    };
+    decisions.push(decision);
+    decisionById.set(id, decision);
+  }
+
+  const fences = [
+    ...declarationSection.matchAll(
+      /^ {0,3}```json[ \t]*\n([\s\S]*?)^ {0,3}```[ \t]*$/gm,
+    ),
+  ];
+  if (fences.length !== 1) {
+    throw foundationError(
+      'Foundation Candidate Declaration',
+      'exactly one fenced json object',
+      `${fences.length} json fences`,
+      'Recovery: write one ```json fenced Foundation Candidate Declaration object.',
+    );
+  }
+  let record;
+  try {
+    record = JSON.parse(fences[0][1]);
+  } catch (error) {
+    throw foundationError(
+      'Foundation Candidate Declaration JSON',
+      'valid JSON',
+      error.message,
+      'Recovery: repair the declaration JSON syntax and refresh the Design Spec.',
+    );
+  }
+  assertExactKeys(
+    record,
+    ['schema', 'actions'],
+    'Foundation Candidate Declaration',
+  );
+  if (record.schema !== FOUNDATION_DECLARATION_SCHEMA) {
+    throw foundationError(
+      'Foundation Candidate Declaration schema',
+      FOUNDATION_DECLARATION_SCHEMA,
+      record.schema ?? 'missing',
+      'Recovery: use the exact documented declaration schema.',
+    );
+  }
+  if (!Array.isArray(record.actions)) {
+    throw foundationError(
+      'Foundation Candidate Declaration actions',
+      'an array',
+      typeof record.actions,
+      'Recovery: write a sorted declaration actions array.',
+    );
+  }
+  const actions = [];
+  const actionById = new Map();
+  const actionPaths = new Set();
+  for (const entry of record.actions) {
+    assertExactKeys(
+      entry,
+      ['id', 'action', 'path', 'decisionRefs'],
+      'Foundation Candidate Declaration action',
+    );
+    if (
+      !FOUNDATION_CANDIDATE_ACTION_ID.test(entry.id ?? '') ||
+      actionById.has(entry.id)
+    ) {
+      throw foundationError(
+        'Foundation Candidate Declaration action identity',
+        'a unique FCA-NNN identity',
+        `duplicate or malformed ${entry.id ?? 'missing'}`,
+        'Recovery: assign every declaration action one unique stable FCA-NNN identity.',
+      );
+    }
+    if (!['upsert', 'delete'].includes(entry.action)) {
+      throw foundationError(
+        `Foundation Candidate Declaration ${entry.id} action`,
+        'upsert or delete',
+        entry.action ?? 'missing',
+        'Recovery: use exactly one supported Foundation candidate action.',
+      );
+    }
+    assertNormalizedRecordPath(
+      entry.path,
+      `Foundation Candidate Declaration ${entry.id} path`,
+    );
+    if (actionPaths.has(entry.path)) {
+      throw foundationError(
+        'Foundation Candidate Declaration path',
+        'one unique non-conflicting action per path',
+        `duplicate or conflicting ${entry.path}`,
+        'Recovery: combine all decision references into one action for that path.',
+      );
+    }
+    if (
+      !Array.isArray(entry.decisionRefs) ||
+      entry.decisionRefs.length === 0 ||
+      entry.decisionRefs.some((id) => !DURABLE_IMPACT_ID.test(id)) ||
+      new Set(entry.decisionRefs).size !== entry.decisionRefs.length ||
+      [...entry.decisionRefs].sort().some(
+        (id, index) => id !== entry.decisionRefs[index],
+      )
+    ) {
+      throw foundationError(
+        `Foundation Candidate Declaration ${entry.id} decisionRefs`,
+        'a sorted, unique, non-empty DDI-NNN array',
+        JSON.stringify(entry.decisionRefs),
+        'Recovery: bind the action to every exact decision identity it implements.',
+      );
+    }
+    const action = {
+      id: entry.id,
+      action: entry.action,
+      path: entry.path,
+      decisionRefs: [...entry.decisionRefs],
+    };
+    actions.push(action);
+    actionById.set(action.id, action);
+    actionPaths.add(action.path);
+  }
+  const sortedActions = [...actions].sort(comparePathActions);
+  if (
+    actions.some(
+      (action, index) =>
+        action.id !== sortedActions[index].id ||
+        action.path !== sortedActions[index].path ||
+        action.action !== sortedActions[index].action,
+    )
+  ) {
+    throw foundationError(
+      'Foundation Candidate Declaration action order',
+      'unsigned UTF-8 path order and then action',
+      'unsorted actions',
+      'Recovery: sort declaration actions by path bytes and then action.',
+    );
+  }
+
+  for (const action of actions) {
+    for (const decisionId of action.decisionRefs) {
+      const decision = decisionById.get(decisionId);
+      if (!decision) {
+        throw foundationError(
+          `Foundation Candidate Declaration ${action.id} decision reference`,
+          'an existing Durable Documentation Impact identity',
+          `unknown ${decisionId}`,
+          'Recovery: remove the unknown reference or add its complete impact row.',
+        );
+      }
+      if (!decision.actionRefs.includes(action.id)) {
+        throw foundationError(
+          `Foundation Candidate Declaration ${action.id} binding`,
+          `a reciprocal ${decisionId} Candidate action reference`,
+          'missing',
+          'Recovery: make the impact table and JSON declaration references exactly reciprocal.',
+        );
+      }
+    }
+  }
+  for (const decision of decisions) {
+    for (const actionId of decision.actionRefs) {
+      const action = actionById.get(actionId);
+      if (!action) {
+        throw foundationError(
+          `Durable Documentation Impact ${decision.id} Candidate action`,
+          'an existing declaration action identity',
+          `unknown ${actionId}`,
+          'Recovery: declare the referenced FCA-NNN action in JSON.',
+        );
+      }
+      if (!action.decisionRefs.includes(decision.id)) {
+        throw foundationError(
+          `Durable Documentation Impact ${decision.id} binding`,
+          `a reciprocal reference from ${actionId}`,
+          'missing',
+          'Recovery: make the impact table and JSON declaration references exactly reciprocal.',
+        );
+      }
+    }
+  }
+
+  const noChangeCount = impactMasked
+    .split('\n')
+    .filter((line) => line === 'No durable documentation changes')
+    .length;
+  if (actions.length === 0 && noChangeCount !== 1) {
+    throw foundationError(
+      'empty Foundation Candidate Declaration',
+      'exactly one unfenced No durable documentation changes sentence',
+      `${noChangeCount} sentences`,
+      'Recovery: add the exact sentence once in Durable Documentation Impact.',
+    );
+  }
+  if (actions.length > 0 && noChangeCount !== 0) {
+    throw foundationError(
+      'non-empty Foundation Candidate Declaration',
+      'no No durable documentation changes sentence',
+      `${noChangeCount} sentences`,
+      'Recovery: remove the no-change sentence when declaration actions are present.',
+    );
+  }
+
+  return immutable({
+    decisions,
+    actions,
+    projection: actions.map(({ path, action }) => ({ path, action })),
+  });
+}
+
+function declarationActionFor(declaration, decision, path, action) {
+  return declaration.actions.find(
+    (entry) =>
+      entry.path === path &&
+      (action === undefined || entry.action === action) &&
+      entry.decisionRefs.includes(decision.id) &&
+      decision.actionRefs.includes(entry.id),
+  );
+}
+
+function closestManagedParentAgents(path, basePaths, prospectivePaths) {
+  let directory = posix.dirname(posix.dirname(path));
+  while (directory !== '.' && directory !== '/') {
+    const candidate = `${directory}/AGENTS.md`;
+    if (basePaths.has(candidate) || prospectivePaths.has(candidate)) {
+      return candidate;
+    }
+    directory = posix.dirname(directory);
+  }
+  return basePaths.has('AGENTS.md') || prospectivePaths.has('AGENTS.md')
+    ? 'AGENTS.md'
+    : null;
+}
+
+function validateDeclarationAgainstCandidate(
+  declaration,
+  candidateChanges,
+  baseLoaded,
+  prospectiveFoundation,
+) {
+  const candidateProjection = sortChangedFiles(candidateChanges).map(
+    ({ path, action }) => ({ path, action }),
+  );
+  if (!samePathActions(declaration.projection, candidateProjection)) {
+    throw foundationError(
+      'Foundation declaration candidate projection',
+      'exact path/action equality with candidate.json',
+      JSON.stringify(candidateProjection),
+      'Recovery: make the structured declaration and candidate.json changes exactly equal.',
+    );
+  }
+  const basePaths = new Set(baseLoaded.records.map(({ path }) => path));
+  const prospectivePaths = new Set(prospectiveFoundation.prospectiveFiles.keys());
+  for (const decision of declaration.decisions) {
+    if (decision.classification === 'Project-durable') {
+      if (
+        !declarationActionFor(
+          declaration,
+          decision,
+          decision.owningDocument,
+        )
+      ) {
+        throw foundationError(
+          `Project-durable ${decision.id} owning document`,
+          `an exact action for ${decision.owningDocument}`,
+          'missing owner action',
+          'Recovery: bind the decision to its exact current-truth owner action.',
+        );
+      }
+      if (
+        !declarationActionFor(
+          declaration,
+          decision,
+          'docs/agentic/DECISIONS.md',
+          'upsert',
+        )
+      ) {
+        throw foundationError(
+          `Project-durable ${decision.id} Decision Ledger`,
+          'docs/agentic/DECISIONS.md upsert',
+          'missing',
+          'Recovery: bind every durable decision to its immutable Decision Ledger upsert.',
+        );
+      }
+    }
+    if (decision.classification === 'Operating-contract') {
+      const ownerAction = declarationActionFor(
+        declaration,
+        decision,
+        decision.owningDocument,
+      );
+      if (!ownerAction) {
+        throw foundationError(
+          `Operating-contract ${decision.id} owner`,
+          `an exact action for ${decision.owningDocument}`,
+          'missing',
+          'Recovery: bind the decision to its exact AGENTS.md owner action.',
+        );
+      }
+      const boundaryChanged =
+        basePaths.has(decision.owningDocument) !==
+        prospectivePaths.has(decision.owningDocument);
+      if (boundaryChanged) {
+        const parentAgents = closestManagedParentAgents(
+          decision.owningDocument,
+          basePaths,
+          prospectivePaths,
+        );
+        if (
+          parentAgents &&
+          !declarationActionFor(
+            declaration,
+            decision,
+            parentAgents,
+            'upsert',
+          )
+        ) {
+          throw foundationError(
+            `Operating-contract ${decision.id} parent Child DOX Index`,
+            `${parentAgents} upsert`,
+            'missing',
+            'Recovery: declare every affected parent AGENTS.md Child DOX Index update.',
+          );
+        }
+      }
+    }
+    if (
+      ['Project-durable', 'Operating-contract'].includes(
+        decision.classification,
+      ) &&
+      basePaths.has(decision.owningDocument) !==
+        prospectivePaths.has(decision.owningDocument) &&
+      !declarationActionFor(
+        declaration,
+        decision,
+        MANIFEST_RELATIVE_PATH,
+        'upsert',
+      )
+    ) {
+      throw foundationError(
+        `${decision.id} managed Foundation file set`,
+        `${MANIFEST_RELATIVE_PATH} upsert`,
+        'missing manifest action',
+        'Recovery: bind every managed-document add or delete to the manifest update.',
+      );
+    }
+  }
+  return declaration;
+}
+
+function validateDeclarationAgainstReceipt(declaration, receiptActions) {
+  const normalizedReceiptActions = sortChangedFiles(receiptActions).map(
+    ({ path, action }) => ({ path, action }),
+  );
+  if (!samePathActions(declaration.projection, normalizedReceiptActions)) {
+    throw foundationError(
+      'Foundation declaration Application Receipt projection',
+      'exact path/action equality with APPLIED.json actions',
+      JSON.stringify(normalizedReceiptActions),
+      'Recovery: preserve the exact applied receipt and Approved Design Spec declaration.',
+    );
+  }
+  return declaration;
 }
 
 function encodeUnsigned64(value) {
@@ -749,9 +1401,269 @@ export async function approveFoundation({
   );
 }
 
-export async function validateApprovedFoundation({ root, manifestPath, expectedRevision }) {
+function validateReceiptActions(actions) {
+  if (!Array.isArray(actions)) {
+    throw foundationError(
+      'Foundation Application Receipt actions',
+      'a sorted array',
+      typeof actions,
+      'Recovery: restore the exact operation-owned APPLIED.json receipt.',
+    );
+  }
+  const normalized = [];
+  const paths = new Set();
+  for (const entry of actions) {
+    assertExactKeys(
+      entry,
+      ['path', 'action'],
+      'Foundation Application Receipt action',
+    );
+    assertNormalizedRecordPath(
+      entry.path,
+      'Foundation Application Receipt action path',
+    );
+    if (!['upsert', 'delete'].includes(entry.action)) {
+      throw foundationError(
+        `Foundation Application Receipt action ${entry.path}`,
+        'upsert or delete',
+        entry.action ?? 'missing',
+        'Recovery: restore the exact operation-owned APPLIED.json receipt.',
+      );
+    }
+    if (paths.has(entry.path)) {
+      throw foundationError(
+        'Foundation Application Receipt actions',
+        'one unique action per path',
+        `duplicate ${entry.path}`,
+        'Recovery: restore the exact operation-owned APPLIED.json receipt.',
+      );
+    }
+    paths.add(entry.path);
+    normalized.push({ path: entry.path, action: entry.action });
+  }
+  const sorted = [...normalized].sort(comparePathActions);
+  if (!samePathActions(normalized, sorted)) {
+    throw foundationError(
+      'Foundation Application Receipt action order',
+      'unsigned UTF-8 path order and then action',
+      'unsorted actions',
+      'Recovery: restore the exact operation-owned APPLIED.json receipt.',
+    );
+  }
+  return normalized;
+}
+
+export async function validateFoundationApplicationReceipt({
+  root,
+  manifestPath,
+  expectedRevision,
+  receiptPath,
+  specPath,
+  expectedSpecRevision,
+  expectedBaseRevision,
+  approvedFoundation,
+}) {
+  assertCompleteRevision(
+    'Foundation Application Receipt expected Design Spec revision',
+    expectedSpecRevision,
+  );
+  assertCompleteRevision(
+    'Foundation Application Receipt expected base revision',
+    expectedBaseRevision,
+  );
+  const approvedSpec = await validateApprovedArtifact({
+    path: specPath,
+    artifactType: 'Design Spec',
+    expectedRevision: expectedSpecRevision,
+  });
+  if (typeof receiptPath !== 'string' || !isAbsolute(receiptPath)) {
+    throw foundationError(
+      'Foundation Application Receipt path',
+      'the deterministic absolute APPLIED.json path',
+      receiptPath ?? 'missing',
+      'Recovery: pass the physical absolute APPLIED.json path returned by foundation apply.',
+    );
+  }
+  const candidateRoot = dirname(receiptPath);
+  const location = await validateCandidateLocation({
+    root,
+    manifestPath,
+    candidateRoot,
+    specPath,
+  });
+  const expectedReceiptPath = join(candidateRoot, APPLIED_FILE);
+  if (receiptPath !== expectedReceiptPath) {
+    throw foundationError(
+      'Foundation Application Receipt path',
+      `the deterministic path ${expectedReceiptPath}`,
+      receiptPath,
+      'Recovery: use only the operation-owned candidate-root APPLIED.json receipt.',
+    );
+  }
+  const receipt = await readStrictJsonFile(
+    receiptPath,
+    'Foundation Application Receipt APPLIED.json',
+    location.candidateRealPath,
+  );
+  assertExactKeys(
+    receipt,
+    [
+      'schema',
+      'operationNonce',
+      'specPath',
+      'specRevision',
+      'manifestPath',
+      'baseRevision',
+      'resultRevision',
+      'approvedAt',
+      'actions',
+    ],
+    'Foundation Application Receipt',
+  );
+  if (receipt.schema !== APPLIED_SCHEMA) {
+    throw foundationError(
+      'Foundation Application Receipt schema',
+      APPLIED_SCHEMA,
+      receipt.schema ?? 'missing',
+      'Recovery: restore the exact operation-owned APPLIED.json receipt.',
+    );
+  }
+  assertOperationNonce(
+    receipt.operationNonce,
+    'Foundation Application Receipt operation nonce',
+  );
+  if (receipt.specPath !== location.designSpecPath) {
+    throw foundationError(
+      'Foundation Application Receipt Design Spec path',
+      location.designSpecPath,
+      receipt.specPath ?? 'missing',
+      'Recovery: use the receipt installed for this exact Design Spec.',
+    );
+  }
+  if (receipt.specRevision !== expectedSpecRevision) {
+    throw foundationError(
+      'Foundation Application Receipt Design Spec revision',
+      expectedSpecRevision,
+      receipt.specRevision ?? 'missing',
+      'Recovery: use the receipt installed for this exact Approved Design Spec.',
+    );
+  }
+  if (receipt.manifestPath !== MANIFEST_RELATIVE_PATH) {
+    throw foundationError(
+      'Foundation Application Receipt manifest path',
+      MANIFEST_RELATIVE_PATH,
+      receipt.manifestPath ?? 'missing',
+      'Recovery: use the receipt installed for this exact Foundation manifest.',
+    );
+  }
+  if (receipt.baseRevision !== expectedBaseRevision) {
+    throw foundationError(
+      'Foundation Application Receipt base revision',
+      expectedBaseRevision,
+      receipt.baseRevision ?? 'missing',
+      'Recovery: use the receipt installed from the exact Approved base Foundation.',
+    );
+  }
+  if (receipt.resultRevision !== expectedRevision) {
+    throw foundationError(
+      'Foundation Application Receipt result revision',
+      expectedRevision,
+      receipt.resultRevision ?? 'missing',
+      'Recovery: use the receipt installed for the exact Approved resulting Foundation.',
+    );
+  }
+  if (!isIso8601Timestamp(receipt.approvedAt)) {
+    throw foundationError(
+      'Foundation Application Receipt timestamp',
+      'an ISO-8601 timestamp',
+      receipt.approvedAt ?? 'missing',
+      'Recovery: restore the operation-owned common approval timestamp.',
+    );
+  }
+  if (
+    receipt.approvedAt !== approvedSpec.approvedAt ||
+    receipt.approvedAt !== approvedFoundation.approvedAt
+  ) {
+    throw foundationError(
+      'Foundation Application Receipt common approval timestamp',
+      `Design Spec and Foundation Approved At ${receipt.approvedAt}`,
+      `spec ${approvedSpec.approvedAt}; Foundation ${approvedFoundation.approvedAt}`,
+      'Recovery: preserve the exact commonly approved spec, result, and receipt.',
+    );
+  }
+  const specBytes = await readFile(specPath);
+  const normalizedSpec = decodeStrictUtf8(
+    specBytes,
+    'Foundation Application Receipt Design Spec',
+  );
+  const tracedManifest = exactUnfencedField(
+    normalizedSpec,
+    'Foundation Manifest',
+    'Foundation Application Receipt Design Spec traceability',
+  );
+  if (tracedManifest !== manifestPath) {
+    throw foundationError(
+      'Foundation Application Receipt Design Spec manifest',
+      manifestPath,
+      tracedManifest,
+      'Recovery: preserve the exact reviewed Foundation Manifest traceability.',
+    );
+  }
+  const tracedBase = exactUnfencedField(
+    normalizedSpec,
+    'Base Agentic Foundation',
+    'Foundation Application Receipt Design Spec traceability',
+  );
+  if (tracedBase !== expectedBaseRevision) {
+    throw foundationError(
+      'Foundation Application Receipt Design Spec base',
+      expectedBaseRevision,
+      tracedBase,
+      'Recovery: preserve the exact reviewed Approved base Foundation traceability.',
+    );
+  }
+  const actions = validateReceiptActions(receipt.actions);
+  const declaration = parseFoundationCandidateDeclaration(specBytes);
+  validateDeclarationAgainstReceipt(declaration, actions);
+
+  return {
+    ...approvedFoundation,
+    applicationReceiptPath: receiptPath,
+    baseRevision: expectedBaseRevision,
+    resultRevision: expectedRevision,
+    specPath,
+    specRevision: expectedSpecRevision,
+    approvedAt: receipt.approvedAt,
+    actions,
+  };
+}
+
+export async function validateApprovedFoundation({
+  root,
+  manifestPath,
+  expectedRevision,
+  receiptPath,
+  specPath,
+  expectedSpecRevision,
+  expectedBaseRevision,
+}) {
   assertSupportedNode();
   assertCompleteRevision(`manifest ${manifestPath}`, expectedRevision);
+  const receiptOptions = [
+    receiptPath,
+    specPath,
+    expectedSpecRevision,
+    expectedBaseRevision,
+  ];
+  const receiptMode = receiptOptions.some((value) => value !== undefined);
+  if (receiptMode && !receiptOptions.every((value) => value !== undefined)) {
+    throw foundationError(
+      'validate receipt mode',
+      'receiptPath, specPath, expectedSpecRevision, and expectedBaseRevision together',
+      'partial receipt option group',
+      'Recovery: supply all four receipt bindings or omit all four for result-only validation.',
+    );
+  }
   const loaded = await loadFoundation({ root, manifestPath });
   assertArtifactType(manifestPath, loaded.current.artifactType);
   if (loaded.current.status !== 'Approved') {
@@ -790,10 +1702,21 @@ export async function validateApprovedFoundation({ root, manifestPath, expectedR
     );
   }
 
-  return foundationResult(
+  const approvedFoundation = foundationResult(
     { root, manifestPath, files: loaded.files },
     loaded.current,
   );
+  if (!receiptMode) return approvedFoundation;
+  return validateFoundationApplicationReceipt({
+    root,
+    manifestPath,
+    expectedRevision,
+    receiptPath,
+    specPath,
+    expectedSpecRevision,
+    expectedBaseRevision,
+    approvedFoundation,
+  });
 }
 
 function portableRelativePath(root, targetPath, subject) {
@@ -1678,11 +2601,20 @@ async function prepareFoundationChangeSet({
     },
     location,
   );
+  const declaration = parseFoundationCandidateDeclaration(
+    await readFile(specPath),
+  );
   const prospective = materializeProspectiveFoundation(
     baseLoaded,
     changes,
     candidateFiles,
     manifestPath,
+  );
+  validateDeclarationAgainstCandidate(
+    declaration,
+    changes,
+    baseLoaded,
+    prospective,
   );
   const reviewPath = writeReview
     ? await writeDesignChangeSet({
@@ -1709,6 +2641,7 @@ async function prepareFoundationChangeSet({
     baseLoaded,
     candidateFiles,
     changedFiles,
+    declaration,
     reviewPath,
     ...prospective,
   };
@@ -3577,6 +4510,30 @@ export async function applyFoundationChangeSet({
       artifactType: 'Design Spec',
       expectedRevision: expectedSpecRevision,
     });
+    const receiptDeclaration = parseFoundationCandidateDeclaration(
+      await readFile(specPath),
+    );
+    const receiptOperation = await readBoundCandidateOperation(args, location);
+    const receiptProspective = materializeProspectiveFoundation(
+      context.baseLoaded,
+      receiptOperation.changes,
+      receiptOperation.candidateFiles,
+      manifestPath,
+    );
+    if (receiptProspective.prospectiveRevision !== expectedResultRevision) {
+      throw foundationError(
+        'pre-receipt prospective revision',
+        expectedResultRevision,
+        receiptProspective.prospectiveRevision,
+        'Recovery: restore the exact reviewed declaration and candidate state before receipt installation.',
+      );
+    }
+    validateDeclarationAgainstCandidate(
+      receiptDeclaration,
+      receiptOperation.changes,
+      context.baseLoaded,
+      receiptProspective,
+    );
 
     transaction.journal.state = 'recording-applied';
     await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
