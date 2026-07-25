@@ -8,94 +8,157 @@ metadata:
 # Brainstorming
 
 <HARD-GATE>
-Do not write implementation code, scaffold production files, create implementation plans, or invoke implementation skills until the written local spec has been approved by the user at its exact recorded SHA-256 revision.
+Do not write implementation code, scaffold production files, create
+implementation plans, or invoke implementation skills until the user has
+approved the exact written Design Spec revision. When an Agentic Foundation is
+present, do not proceed until the same approval also names the exact prospective
+Foundation revision and the shared Foundation operation has applied and
+validated that one Design Change Set.
 </HARD-GATE>
 
 ## Priority
 
-Use this skill before frontend, app-builder, design, framework, implementation, or coding skills for generic app/site/tool/component prompts such as `Let's make a react todo list`.
+Use this skill before frontend, app-builder, design, framework,
+implementation, or coding skills for generic app/site/tool/component prompts
+such as `Let's make a react todo list`.
 
-Only skip this skill when the user explicitly provides an approved implementation plan path, explicitly asks to bypass design/spec work, or asks for a narrow mechanical edit that already has complete requirements.
+Only skip this skill when the user explicitly provides an Approved
+Implementation Plan path, explicitly asks to bypass design/spec work, or asks
+for a narrow mechanical edit that already has complete requirements.
 
-## Inputs
+## Inputs and Foundation Mode
 
-Start from the user prompt. If the prompt contains a Jira ticket key or URL and Atlassian tools are available, read the ticket and relevant comments read-only. If tools are unavailable, ask the user to paste the ticket content or continue from the prompt.
+Start from the user prompt. If it contains a Jira ticket key or URL and
+Atlassian tools are available, read the ticket and relevant comments read-only.
+If tools are unavailable, ask the user to paste the ticket content or continue
+from the prompt. Never comment on or update Jira unless the user explicitly
+asks.
 
-Never comment on or update Jira unless the user explicitly asks.
+Determine whether this is a Foundation-backed roadmap outcome or a generic
+established-project workflow:
+
+- A Foundation-backed invocation must supply a consistent pair: an absolute
+  `WAYFINDING.md` path and an exact Approved lowercase `sha256:` Foundation
+  revision. It must also identify one ready roadmap outcome and carry the exact
+  canonical Brainstorming prompt when the invocation came from Wayfinder.
+- Literal `none` is valid only as the complete path/revision pair for a generic
+  established-project workflow with no Foundation. If only one value is
+  `none`, the path is not absolute, the revision is incomplete, or a Foundation
+  appears to exist but no exact pair was supplied, stop and request the exact
+  values. Never infer approval from a filename or conversation memory.
+
+For a Foundation-backed invocation, resolve the sibling `using-superpowers`
+operation module and run:
+
+```text
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-approved-sha256>
+```
+
+Run this exact `foundation validate` before any Foundation or codebase
+inspection. If it fails, Node.js or the operation module is unavailable, the
+manifest is Draft, or the revision differs, stop with the expected and actual
+values and the full-package installation guidance. Do not calculate or
+canonicalize a Foundation revision independently.
 
 ## Explore Project Context
 
-Before asking design questions:
+### Foundation-backed workflow
 
-- Inspect the repo shape enough to identify affected backend, frontend, mobile, shared, or infrastructure areas.
-- Search for related modules, tests, and prior patterns.
-- If root `CONTEXT.md` exists, read it before asking feature questions and use it as durable project context.
-- If root `CONTEXT.md` does not exist, continue without it and keep task-specific language and architecture context inside the local spec.
-- Search local `docs/superpowers/specs/` and `docs/superpowers/architecture-reviews/` if they exist.
-- Do not create `CONTEXT.md` from this skill.
-- Do not create or update lowercase `context.md`.
-- Do not create ADRs.
-- Do not offer or use a visual companion.
+Only after exact validation succeeds:
 
-## Project Context Updates
+1. Read the Approved Foundation through the Root Router in root `AGENTS.md` and
+   follow its declared reading order.
+2. Re-read `WAYFINDING.md`, `PROJECT-BLUEPRINT.md`, `ROADMAP.md`, relevant
+   current-truth owners, and the immutable Decision Ledger entries selected by
+   the Router.
+3. Confirm the requested stable outcome identity exists, is `Ready for
+   Brainstorming`, still links the named Blueprint requirements, has all
+   decision prerequisites satisfied, and has the same exact canonical
+   Brainstorming prompt as the handoff. Stop on any mismatch.
+4. Inspect the codebase, related modules, interfaces, tests, and prior local
+   specs only after the Foundation checks above.
 
-If root `CONTEXT.md` exists and feature design reveals durable changes to domain language, architecture, stack decisions, verification, risks, or roadmap direction, propose a concise update and wait for user approval before editing `CONTEXT.md`.
+Design exactly one ready roadmap outcome. Ordinary decisions needed to make
+that one outcome coherent remain in Brainstorming and graduate through the
+Design Change Set. Return to `wayfinder` instead of widening the spec when
+discovery invalidates the project-wide destination, affects several roadmap
+outcomes, changes the release boundary, makes project-wide architecture
+unclear, reveals project-level fog, or requires roadmap reorientation.
+Project-wide destination, release-boundary, architecture, or fog uncertainty
+always returns to `wayfinder`.
 
-When approved, update the existing statement in place. Do not append feature history, task transcripts, implementation-plan detail, or completed-work logs.
+### Generic established-project workflow
 
-If root `CONTEXT.md` does not exist, do not create it from `brainstorming`; keep the discovered context in the local design spec under `docs/superpowers/specs/`.
+When the manifest and revision are both literal `none`, preserve the generic
+single-spec behavior:
+
+- inspect repository instructions, related modules, interfaces, tests, and
+  prior patterns;
+- read root `CONTEXT.md` if it exists as project context, but do not create it;
+- search local `docs/superpowers/specs/` and
+  `docs/superpowers/architecture-reviews/` if present; and
+- keep task-specific and durable-impact reasoning in the Design Spec.
+
+Do not create or update lowercase `context.md`, create ADRs, or offer a visual
+companion.
 
 ## Phase Mode Selection
 
-Before writing the first spec for a project or task chain, determine the Phase Mode.
+For a Foundation-backed workflow, use the durable Phase Mode recorded by
+Wayfinder in the Root Router. Do not ask again.
 
-1. Read root `AGENTS.md` and optional root `CONTEXT.md` for an existing Superpowers Architecture phase-mode preference.
-2. If a durable preference exists, use it and do not ask again.
-3. If no durable preference exists, ask this question before writing the spec:
+For a generic workflow, read root `AGENTS.md` and optional root `CONTEXT.md`
+for a durable preference. If none exists, ask:
 
 ```text
-Do you want approvals in this workflow to start each next phase in a fresh session automatically, or should I continue through planning and implementation in this same session after each approval?
+Do you want approvals in this workflow to start each next phase in a fresh
+session automatically, or should I continue through planning and implementation
+in this same session after each approval?
 
-Recommendation: Use automated fresh sessions for larger or architecture-sensitive work because each phase starts with clean context from the approved artifact. Use same-session mode only when speed matters more than context isolation.
+Recommendation: Use automated fresh sessions for larger or
+architecture-sensitive work because each phase starts with clean context from
+the approved artifact. Use same-session mode only when speed matters more than
+context isolation.
 ```
 
-4. Record the selected Phase Mode in the spec.
-5. If root `AGENTS.md` exists and the user wants this preference to be durable for the project, propose a concrete root `AGENTS.md` update that records the selected Phase Mode explicitly, including the selected mode, the reason, and that the preference is durable for later approval gates. Wait for user approval before editing the downstream root `AGENTS.md`. Keep any existing generic first-`brainstorming` preference bullet intact unless the downstream project owner explicitly asks to replace it.
-
-If no root `AGENTS.md` exists, do not create one from `brainstorming`; record the selected Phase Mode only in the spec and current workflow chain.
+Record the selected Phase Mode in the spec. If root `AGENTS.md` exists and the
+user asks to make the preference durable, propose the exact update and wait for
+approval before editing it. Do not create root `AGENTS.md` from Brainstorming.
 
 ## Adaptive Architecture Grilling
 
-Ask one concise question at a time until the design is decision-complete. Increase rigor when language, module ownership, interfaces, seams, adapters, data flow, test surface, or acceptance criteria are unclear.
-
-Every design question must be immediately followed by the agent's recommendation. Use this shape:
+Ask one concise question at a time until the design is decision-complete. Every
+question must be immediately followed by a concrete recommendation:
 
 ```text
 <one concise question>
 
-Recommendation: <the option or answer the agent recommends, with a short reason.>
+Recommendation: <the recommended answer and a short reason.>
 ```
 
-The recommendation must be concrete and opinionated enough for the user to accept, reject, or modify. It must not replace waiting for the user's answer.
+For terse or generic prompts, ask at least one design question before writing
+the spec. Increase rigor when language, module ownership, interfaces, seams,
+adapters, data flow, depth/locality/leverage intent, test surface, or acceptance
+criteria are unclear.
 
-For terse or generic prompts such as `Let's make a react todo list`, ask at least one design question before writing the spec. Do not draft the spec entirely from assumptions.
-
-Use the vocabulary from `codebase-design`:
+Use the `codebase-design` vocabulary:
 
 - **Module**: anything with an interface and implementation.
 - **Interface**: everything callers must know to use the module correctly.
-- **Seam**: where an interface lives and behavior can be altered without editing in place.
-- **Adapter**: concrete thing satisfying an interface at a seam.
+- **Seam**: where an interface lives and behavior can be altered without
+  editing in place.
+- **Adapter**: a concrete thing satisfying an interface at a seam.
 - **Depth**: leverage at the interface.
 - **Leverage**: capability callers get from the interface.
 - **Locality**: change and verification concentrated in one place.
 - **Test surface**: the interface through which behavior should be verified.
 
-Challenge shallow designs. Prefer deep modules with small interfaces, clear seams, explicit adapters, and tests through the public interface.
+Prefer deep modules with small interfaces, clear seams, explicit adapters, and
+tests through the public interface.
 
 ## Required Spec Shape
 
-Every spec must include:
+Every new Design Spec, Foundation-backed or generic, must include:
 
 ```markdown
 # <Feature Name> Design Spec
@@ -135,11 +198,25 @@ _Avoid_: <rejected synonyms>
 - **Seams:**
 - **Adapters:**
 - **Data flow:**
+- **Depth, locality, and leverage:**
 - **Test surface:**
 
 ### Key Decisions
 
 ### Open Risks
+
+## Foundation Traceability
+
+**Foundation Manifest:** <absolute WAYFINDING.md path or none>
+**Agentic Foundation:** <exact Approved sha256 revision or none>
+**Roadmap Outcome:** <stable identity and title or none>
+**Blueprint Requirements:** <stable identities or none>
+**Prior Decisions:** <stable identities or none>
+
+## Durable Documentation Impact
+
+| Decision | Classification | Owning document | Candidate action |
+|---|---|---|---|
 
 ## User-Facing Behavior
 
@@ -150,68 +227,193 @@ _Avoid_: <rejected synonyms>
 ## Acceptance Criteria
 ```
 
-## Writing The Spec
+The template describes the contract. The written spec must replace every angle-bracket token with a concrete value.
+No angle-bracket token, `TODO`, `TBD`, or other placeholder may remain. Use literal `none` for every
+Foundation Traceability value in a generic workflow.
+
+## Durable Documentation Impact
+
+Every design decision must be classified exactly once:
+
+- `Task-local`: the Design Spec remains the owner; state why no Foundation
+  candidate is needed.
+- `Project-durable`: name the one current-truth owning document, the immutable
+  Decision Ledger addition or supersession identity, and the complete candidate
+  action.
+- `Operating-contract`: name the root or child `AGENTS.md` owner and the
+  complete candidate action.
+- `No impact`: give an explicit reason.
+
+The table must cover actual decisions rather than repeat section headings.
+Owning-document locality matters: current truth changes in one owner, ledger
+history is append-only, and navigation documents receive pointers rather than
+copied detail.
+
+When a Foundation-backed spec has no project-durable or operating-contract
+changes, write the literal sentence `No durable documentation changes`, explain
+why each decision remains task-local or has no impact, and prepare an empty
+candidate. Its prospective Foundation revision must equal the Approved base Foundation revision.
+
+## Writing the Draft
 
 Write the Draft spec to:
 
 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
 
-These files are local developer working state. Do not commit them. If `docs/superpowers/**` is not ignored, warn the user but do not edit `.gitignore` automatically.
+These files are ignored local developer working state. Do not commit them. If
+`docs/superpowers/**` is not ignored, warn the user but do not edit
+`.gitignore` automatically.
 
-Resolve the sibling `using-superpowers` operation module and run `artifact refresh --path <path> --type "Design Spec"` after writing. If Node.js or the operation module is unavailable, fail closed with its full-package installation guidance; do not calculate a digest independently or rely on conversation memory.
-
-## Advisory Spec Review
-
-After refreshing the Draft, dispatch an isolated advisory document reviewer with:
-
-- the absolute spec path;
-- the absolute `codebase-design/ARCHITECTURE-CONFORMANCE.md` path;
-- isolated context with no parent conversation turns;
-- balanced capability;
-- read-only workspace policy.
-
-The reviewer may return only `Ready for user review` or `Issues found`; it cannot approve the artifact. If isolated advisory review is unavailable, perform this deterministic self-review instead:
-
-1. Confirm every required section is complete and contains no TODO, TBD, or placeholder.
-2. Confirm requirements and decisions are internally consistent and unambiguous for planning.
-3. Confirm Language and Architecture define modules, interfaces, seams, adapters, data flow, and test surface.
-4. Confirm scope is one coherent planning unit and contains no unrequested features.
-5. Confirm acceptance criteria cover every stated goal and risk.
-6. Confirm lifecycle metadata still says `Status: Draft` and `Revision` equals the refreshed digest.
-
-Resolve advisory issues before showing the artifact to the user. After any content change, run `artifact draft` before editing and `artifact refresh` afterward, repeat advisory review or the self-review, and report the new exact revision.
-
-## Written Spec Review Gate
-
-After writing the spec, ask one of these based on the selected Phase Mode.
-
-Automated fresh-session mode:
+Resolve the sibling operation module and run:
 
 ```text
-Draft spec written to `<path>` at `<sha256 revision>`. Please review that exact revision before planning. After you explicitly approve it, I will record approval in the artifact and start planning in a fresh session using the selected automated fresh-session mode.
+artifact refresh --path <absolute-spec-path> --type "Design Spec"
 ```
 
-Same-session mode:
+Missing Node.js or a missing operation module fails closed. Do not calculate a
+digest independently.
+
+## Foundation Candidate Preparation
+
+For a Foundation-backed spec, prepare the candidate only after the complete
+Draft spec has been refreshed:
+
+1. Re-run `foundation validate` for the exact Approved base revision.
+2. Create the ignored, non-authoritative candidate root at
+   `docs/superpowers/foundation-candidates/<design-spec-stem>/`.
+3. Write `candidate.json` with the exact schema from
+   `using-superpowers/references/agentic-foundation-lifecycle.md`. Its sorted
+   change list must equal the spec's declared complete candidate actions.
+4. Write complete candidate versions of every declared `upsert` under
+   `files/<repository-relative-path>`. A deletion has no candidate file.
+   Reject an undeclared candidate, a missing candidate, an extra file, a
+   duplicate action, or a declared no-op.
+5. For `No durable documentation changes`, write an empty `changes` array and
+   an empty `files/` tree.
+6. Run the public operation:
 
 ```text
-Draft spec written to `<path>` at `<sha256 revision>`. Please review that exact revision before planning. After you explicitly approve it, I will record approval in the artifact and continue to planning in this same session using the selected same-session mode.
+foundation preview --root <checkout-root> --manifest <absolute-WAYFINDING.md> --candidate-root <absolute-candidate-root> --spec-path <absolute-spec-path> --expected-spec-revision <exact-draft-spec-sha256> --expected-base-revision <exact-approved-foundation-sha256>
 ```
 
-If the user requests changes, run `artifact draft` before editing, update the spec, run `artifact refresh`, repeat advisory review or deterministic self-review, and repeat the review gate with the new digest.
+The preview must be non-authoritative: do not edit authoritative Foundation
+files before approval. Capture the exact prospective Foundation revision and
+the operation-owned readable affected-file review in
+`DESIGN-CHANGE-SET.md`. For an empty candidate, require the prospective
+Foundation revision to equal the base.
 
-## Terminal State
+Lifecycle canonicalization, candidate validation, readable diff generation,
+application, rollback, recovery, and approval remain behind the shared
+Foundation operation seam. Do not reproduce that policy in Brainstorming.
 
-After writing and reviewing the Draft spec, stop. Do not invoke `writing-plans` until the user explicitly approves the reported exact revision.
+## Advisory Design Change Set Review
 
-After approval:
+For a Foundation-backed spec, dispatch the isolated advisory document reviewer
+with:
 
-- Run `artifact approve --path <path> --type "Design Spec" --expected-revision <reviewed sha256>` before any handoff. If approval fails, stop and require renewed review of the actual refreshed revision.
-- In automated fresh-session mode, run the host-neutral `prepare handoff` preflight from `using-superpowers/references/phase-handoff.md`. Build the canonical planning prompt from the resulting immutable record, use the runtime adapter only when it can preserve every affinity field, report the new session identity or complete fallback prompt, then stop.
-- In same-session mode, use `writing-plans`, revalidate the Approved spec at its exact revision, re-read the spec and codebase from disk, write the implementation plan, and stop at the written-plan review gate.
+- the absolute Draft spec path and exact refreshed revision;
+- the absolute Approved `WAYFINDING.md` path and exact base revision;
+- the complete candidate root and `candidate.json`;
+- the operation-owned readable `DESIGN-CHANGE-SET.md` review path and exact
+  prospective Foundation revision; and
+- the absolute shared Architecture Conformance rubric.
+
+The reviewer uses isolated context, balanced capability, and a read-only
+workspace. It may return only `Ready for user review` or `Issues found` and
+cannot approve or mutate either artifact. If isolated review is unavailable,
+run the deterministic checks from
+`spec-document-reviewer-prompt.md`. Resolve every issue, then refresh and
+preview again because any spec or candidate edit changes the reviewed
+identities.
+
+For a generic workflow, dispatch the same advisory role with the spec and
+rubric only, preserving the existing single-artifact review.
+
+## One Combined Design Change Set Gate
+
+For a Foundation-backed spec, the sequence is exact:
+
+1. Refresh the Draft Design Spec.
+2. Revalidate the exact Approved base Foundation.
+3. Create all declared complete candidates.
+4. Run `foundation preview`.
+5. Run the isolated Design Change Set review.
+6. Present one readable review package naming the exact Design Spec path and
+   revision, exact Approved base Foundation revision, exact prospective
+   Foundation revision, candidate root, affected-file actions, and readable
+   review path.
+7. Stop for one exact approval that explicitly names both the exact Design
+   Spec revision and exact prospective Foundation revision.
+
+There is no second human Foundation review gate. A requested content change,
+base drift, spec drift, candidate drift, missing or extra candidate, or
+prospective digest mismatch returns to the same combined review gate with new
+exact revisions.
+
+Use this gate text:
+
+```text
+Draft Design Change Set is ready:
+- Design Spec: `<absolute path>` at `<exact sha256 revision>`
+- Approved base Foundation: `<exact sha256 revision>`
+- Prospective Foundation: `<exact sha256 revision>`
+- Candidate root: `<absolute path>`
+- Readable affected-file review: `<absolute DESIGN-CHANGE-SET.md path>`
+
+Please review that exact Design Spec revision and exact prospective Foundation
+revision. One approval must name both revisions. After that exact approval I
+will apply only this reviewed change set, validate both Approved results, and
+start or continue planning according to the recorded Phase Mode.
+```
+
+After the user gives that one exact approval, run:
+
+```text
+foundation apply --root <checkout-root> --manifest <absolute-WAYFINDING.md> --candidate-root <absolute-candidate-root> --spec-path <absolute-spec-path> --expected-spec-revision <exact-reviewed-spec-sha256> --expected-base-revision <exact-approved-base-sha256> --expected-result-revision <exact-reviewed-prospective-sha256>
+```
+
+Then validate both exact Approved artifacts from disk:
+
+```text
+artifact validate --path <absolute-spec-path> --type "Design Spec" --expected-revision <exact-reviewed-spec-sha256>
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-reviewed-prospective-sha256>
+```
+
+Any failure or drift stops planning and returns to the same combined review
+gate. Successful apply is the single authority for approving the spec and
+resulting Foundation; do not add a second `artifact approve` or Foundation
+approval gate.
+
+## Generic Written Spec Review Gate
+
+When Foundation Manifest and Agentic Foundation are both literal `none`,
+preserve the single-artifact lifecycle:
+
+1. Refresh the Draft spec.
+2. Run the advisory spec review or deterministic fallback.
+3. Present its exact path and revision and stop.
+4. After explicit approval, run
+   `artifact approve --path <path> --type "Design Spec" --expected-revision <reviewed-sha256>`.
+5. Validate the exact Approved spec before planning.
+
+If the user requests changes, run `artifact draft` before editing,
+`artifact refresh` afterward, and repeat review with the new digest.
+
+## Planning Handoff
+
+Planning may start only after the exact Approved Design Spec validates and, for
+a Foundation-backed workflow, the exact resulting Approved Foundation
+validates.
+
+In automated fresh-session mode, run the host-neutral `prepare handoff`
+preflight from `using-superpowers/references/phase-handoff.md`. Use the runtime
+adapter only when it preserves all fifteen handoff fields and report the new
+session identity or complete safe fallback prompt before stopping.
+
+In same-session mode, invoke `writing-plans`, revalidate both artifacts, re-read
+them and the codebase from disk, and stop at the written-plan review gate.
 
 Canonical planning prompt:
-
-Print:
 
 ```text
 Use the writing-plans skill to create an implementation plan from:
@@ -219,7 +421,9 @@ Use the writing-plans skill to create an implementation plan from:
 
 Approved artifact:
 - Type: Design Spec
-- Revision: <exact approved sha256 digest>
+- Revision: <exact approved spec sha256 digest>
+- Foundation Manifest: <absolute WAYFINDING.md path or none>
+- Foundation Revision: <exact resulting approved Foundation sha256 digest or none>
 - Repository remote: <canonical remote>
 - Checkout root: <absolute checkout root>
 - Branch: <branch or detached commit>
@@ -238,15 +442,25 @@ Handoff record:
   "worktreeIdentity": "<main-checkout | linked-worktree | codex-managed-worktree | detached>",
   "artifactPath": "<absolute-spec-path>",
   "artifactType": "Design Spec",
-  "approvedRevision": "<exact approved sha256 digest>",
+  "approvedRevision": "<exact approved spec sha256 digest>",
   "sourceSpecPath": "none",
   "sourceSpecRevision": "none",
+  "foundationManifestPath": "<absolute WAYFINDING.md path or none>",
+  "foundationRevision": "<exact resulting approved Foundation sha256 digest or none>",
   "pluginSource": "<installed | local-plugin-dir | skills-install>",
   "pluginRoot": "<verified absolute path or none>",
   "workspacePolicy": "same-checkout"
 }
 
-Before invoking writing-plans, acknowledge every handoff field with the exact received value. Then independently re-run repository, checkout, branch, worktree, artifact lifecycle/revision, ignored-file, and plugin-source checks from disk. Do not begin planning if any target-side value is missing, differs, or cannot be proven. Report the mismatch and stop.
+Before invoking writing-plans, acknowledge all fifteen handoff fields with the
+exact received values. Independently re-run repository, checkout, branch,
+worktree, artifact, Foundation, ignored-file, and plugin-source checks from
+disk. Validate the Approved Design Spec and every non-none Agentic Foundation
+at the recorded exact revisions before inspecting the codebase. Stop on any
+missing, inconsistent, unproven, or drifted value.
 
-Validate the Approved Design Spec at that exact revision before inspecting the codebase. Read the spec and codebase fresh. Save the Draft plan under docs/superpowers/plans/, refresh and review its exact revision, and stop at the written-plan review gate. Do not stage or commit docs/superpowers/** unless I explicitly ask.
+Read the Approved spec, resulting Approved Foundation, and codebase fresh. Save
+the Draft plan under docs/superpowers/plans/, refresh and review its exact
+revision, and stop at the written-plan review gate. Do not stage or commit
+docs/superpowers/** unless explicitly asked.
 ```

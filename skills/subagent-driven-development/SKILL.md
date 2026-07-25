@@ -7,11 +7,38 @@ description: Use when executing implementation plans with mostly independent tas
 
 ## Required Input
 
-Start only from an approved written Implementation Plan path and its exact expected `sha256:` revision. Resolve the sibling `using-superpowers` operation module and validate the plan as `Implementation Plan` at that revision before reading it for instructions.
+Start only from an Approved written Implementation Plan path and its exact
+expected `sha256:` revision. Resolve the sibling `using-superpowers` operation
+module and validate the plan as `Implementation Plan` at that revision before
+reading it for instructions.
 
-Read the validated plan's `Spec` and `Spec Revision` fields, then validate that source artifact as an Approved `Design Spec` at the recorded revision. Only after both validations pass may you read the plan, referenced spec, and codebase from disk. Do not rely on prior conversation context, even in same-session mode after plan approval.
+After plan validation, parse only these header bindings:
 
-If either artifact is Draft, missing or duplicated lifecycle metadata, the wrong type, edited after approval, or at a different revision, stop and report the expected and actual values. Missing Node.js or a missing operation module also fails closed with the full-package installation guidance.
+- `Spec` and `Spec Revision`;
+- `Foundation Manifest` and `Foundation Revision`.
+
+Validate the source artifact as an Approved `Design Spec` at the recorded exact
+revision. Parse its `Foundation Manifest` and `Agentic Foundation` traceability
+fields and require them to equal the plan's Foundation pair exactly. Both pairs
+must be literal `none` for a generic workflow or must contain the same absolute
+physical `WAYFINDING.md` path and complete lowercase `sha256:` revision.
+Reject an inconsistent Foundation pair before further inspection.
+
+For a non-none Foundation, run the sibling shared operation:
+
+```text
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-approved-foundation-sha256>
+```
+
+Only after plan, source-spec, and non-none Foundation validation pass may you
+read the plan, referenced spec, Foundation, and codebase from disk. Do not rely
+on prior conversation context, even in same-session mode after plan approval.
+
+If either artifact is Draft, has missing or duplicated lifecycle metadata, has
+the wrong type, was edited after approval, or is at a different revision, stop
+and report expected and actual values. Also stop on a missing, inconsistent, or
+drifted Foundation. Missing Node.js or a missing operation module fails closed
+with the full-package installation guidance.
 
 ## Local Superpowers Docs Guard
 
@@ -207,7 +234,8 @@ final whole-branch review. When you fill a reviewer template:
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
 - Give every implementer, task reviewer, and final reviewer the exact Approved
-  spec/plan paths and revisions plus the shared
+  spec/plan paths and revisions, the plan's exact Foundation Manifest and
+  Foundation Revision pair, plus the shared
   `codebase-design/ARCHITECTURE-CONFORMANCE.md` path. Copy the task-specific
   Approved modules, interfaces, seams/adapters, data flow,
   depth/locality/leverage intent, and test surface into the bounded prompt.
@@ -272,9 +300,10 @@ and is re-read on every later turn. Hand artifacts over as files:
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets the same brief, report, review
-  package, exact Approved spec, exact Approved plan, and shared Architecture
-  Conformance rubric paths — plus the global constraints and task-specific
-  architecture binding.
+  package, exact Approved spec, exact Approved plan, shared Architecture
+  Conformance rubric, and exact Foundation Manifest and Foundation Revision
+  pair — plus the global constraints and task-specific architecture binding.
+  Literal `none` remains explicit for a generic workflow.
 - Fix dispatches append their fix report (with test results) to the same
   report file and return a short summary; re-reviews read the updated file.
 

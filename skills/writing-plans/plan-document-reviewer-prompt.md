@@ -1,10 +1,14 @@
 # Plan Document Reviewer Prompt Template
 
-Use this template to dispatch an isolated advisory document reviewer through the host-neutral dispatch action.
+Use this template to dispatch an isolated advisory document reviewer through
+the host-neutral dispatch action.
 
-**Purpose:** Verify the Draft plan is complete, binds the Approved source spec, and has proper task decomposition. The reviewer cannot approve it.
+**Purpose:** Verify the Draft plan is complete, binds the exact Approved source
+spec and exact Approved Foundation, and has actionable task decomposition. The
+reviewer cannot approve it.
 
-**Dispatch after:** The complete plan is written and `artifact refresh` has recorded its exact revision.
+**Dispatch after:** The complete plan is written and `artifact refresh` has
+recorded its exact Draft revision.
 
 Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
 
@@ -14,49 +18,61 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
   "contextPolicy": "isolated",
   "capabilityTier": "balanced",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[ABSOLUTE_PLAN_FILE_PATH]", "[ABSOLUTE_SPEC_FILE_PATH]", "[CONFORMANCE_RUBRIC_FILE]"],
+  "artifactPaths": [
+    "[ABSOLUTE_PLAN_FILE_PATH]",
+    "[ABSOLUTE_SPEC_FILE_PATH]",
+    "[ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]",
+    "[CONFORMANCE_RUBRIC_FILE]"
+  ],
   "workspacePolicy": "read-only-review"
 }
 ```
 
 ```text
-    You are an advisory plan document reviewer. Verify this Draft plan is complete and ready for user review. You cannot approve it.
+You are an advisory plan document reviewer. Verify this Draft plan is complete
+and ready for user review. You cannot approve or mutate it.
 
-    Plan to review: [ABSOLUTE_PLAN_FILE_PATH]
-    Spec for reference: [ABSOLUTE_SPEC_FILE_PATH]
-    Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
+Plan to review: [ABSOLUTE_PLAN_FILE_PATH]
+Spec for reference: [ABSOLUTE_SPEC_FILE_PATH]
+Foundation manifest: [ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]
+Exact Approved Foundation revision: [FOUNDATION_REVISION_OR_NONE]
+Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 
-    ## What to Check
+## What to Check
 
-    | Category | What to Look For |
-    |----------|------------------|
-    | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
-    | Spec Alignment | Plan covers spec requirements without major scope creep |
-    | Task Decomposition | Tasks have clear boundaries and actionable steps |
-    | Buildability | An engineer can follow the plan without getting stuck |
-    | Lifecycle | Artifact Type is Implementation Plan; Status is Draft; Revision is a complete sha256 digest; Approved Revision and Approved At are none |
-    | Source Binding | Spec path and exact Approved Spec Revision are present and match the supplied source artifact |
-    | Architecture Conformance | Every task names and checks the Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface through the shared rubric |
+| Category | What to Look For |
+|---|---|
+| Completeness | No TODOs, placeholders, incomplete tasks, or missing steps |
+| Spec Alignment | Every source-spec requirement is covered without scope creep |
+| Task Decomposition | Tasks have clear boundaries, exact context, and actionable steps |
+| Buildability | An engineer can follow the plan without relying on conversation memory or prior tasks |
+| Lifecycle | Artifact Type is Implementation Plan; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
+| Source Binding | Spec path and exact Approved Spec Revision match the supplied source artifact |
+| Foundation Binding | Plan path/revision fields are both none or exactly match the source spec Foundation binding; a non-none manifest validates as the exact Approved Foundation |
+| Foundation Context | Planning evidence, every task, Architecture Conformance input, and implementation handoff carry the same exact Foundation identity |
+| Architecture Conformance | Every task names and checks the Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface through the shared rubric |
+| Handoff | The canonical implementation prompt contains exactly the shared fifteen-field record including foundationManifestPath and foundationRevision |
+| Git Hygiene | No task stages docs/superpowers unless the user explicitly requested it |
 
-    ## Calibration
+Only flag issues that could cause an incorrect or blocked implementation.
+Minor wording and style preferences are not issues.
 
-    Only flag issues that would cause real implementation problems. Minor wording, stylistic preferences, and nice-to-have suggestions are not issues.
+Return only `Ready for user review` or `Issues found`. Never write Approved or
+mutate lifecycle metadata; reviewers are advisory and only the user can
+approve the exact artifact revision.
 
-    Return only Ready for user review or Issues found. Never write Approved or mutate lifecycle metadata; reviewers are advisory and only the user can approve the exact artifact revision.
+## Output Format
 
-    ## Output Format
+## Plan Review
 
-    ## Plan Review
+**Status:** Ready for user review | Issues found
 
-    **Status:** Ready for user review | Issues found
+**Issues (if any):**
+- [Task X, Step Y]: [specific issue] - [why it matters]
 
-    **Issues (if any):**
-    - [Task X, Step Y]: [specific issue] - [why it matters for implementation]
-
-    **Recommendations (advisory):**
-    - [suggestions for improvement]
+**Recommendations (advisory):**
+- [suggestion]
 ```
 
-**Reviewer returns:** `Ready for user review` or `Issues found`, plus issues and advisory recommendations. It never returns `Approved`.
-
-`[CONFORMANCE_RUBRIC_FILE]` is the absolute path to `codebase-design/ARCHITECTURE-CONFORMANCE.md`.
+`[CONFORMANCE_RUBRIC_FILE]` is the absolute path to
+`codebase-design/ARCHITECTURE-CONFORMANCE.md`.
