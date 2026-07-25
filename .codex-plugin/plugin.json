@@ -1,7 +1,7 @@
 {
   "name": "superpowers-architecture",
   "version": "0.5.0",
-  "description": "Architecture-first Superpowers for Codex: design understanding, local specs, exact plans, TDD, reviews, and verified implementation.",
+  "description": "Architecture-first Superpowers for Codex: Wayfinder Agentic Foundations, one Design Change Set, exact phase handoffs, TDD, reviews, and verified implementation.",
   "author": {
     "name": "Nenad Banjeglav"
   },
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Superpowers Architecture",
     "shortDescription": "Architecture-first Superpowers workflow for Codex",
-    "longDescription": "Use Superpowers Architecture to guide Codex through Design Understanding, local specs, exact implementation plans, selected phase handoffs, TDD, reviews, and final verification summaries.",
+    "longDescription": "Use Superpowers Architecture to establish a Wayfinder Agentic Foundation and Blueprint-traceable roadmap, design one outcome as a stable DDI/FCA Design Change Set, apply its sole APPLIED.json receipt, and carry exact Approved artifacts through verified phase handoffs, TDD, reviews, and final verification.",
     "developerName": "Nenad Banjeglav",
     "category": "Coding",
     "capabilities": [
@@ -30,9 +30,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "I am starting a new project and want to create AGENTS.md, CONTEXT.md, and a high-level roadmap.",
-      "I have a feature idea and want to design it before implementation.",
-      "I want approvals to start each next phase in fresh sessions automatically."
+      "Use Wayfinder to establish the Agentic Foundation and a Blueprint-traceable roadmap for my project.",
+      "Design one ready roadmap outcome as a single exact Design Change Set before implementation.",
+      "Carry the Approved spec, resulting Agentic Foundation, and Foundation Application Receipt through exact phase handoffs."
     ],
     "websiteURL": "https://github.com/NenadBanjeglav/superpowers-architecture",
     "brandColor": "#2563EB",

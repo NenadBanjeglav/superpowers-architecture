@@ -26,22 +26,48 @@ The matrix must cover:
 
 1. JSON parsing, manifest references, Markdown links, skill frontmatter, public
    URLs, executable modes, and forbidden active guidance.
-2. Canonical artifact vectors and lifecycle transitions on Windows and a
-   Unix-compatible environment.
-3. Portable SDD operations, workspace-manager fixtures, serialization, paths
+2. Canonical Design Spec and Implementation Plan artifact vectors plus
+   canonical multi-file Agentic Foundation vectors. Cover strict UTF-8,
+   optional BOM, CRLF/LF normalization, bytewise path ordering, unambiguous
+   length framing, Draft/refresh/approve/validate transitions, and drift.
+3. The stable DDI/FCA declaration matrix: JSON-escaped paths containing spaces,
+   semicolons, and Markdown delimiters; exact declaration/candidate equality;
+   shared actions; owner, Decision Ledger, parent DOX index, router, and
+   manifest obligations; duplicate/conflicting paths; empty declaration; and
+   no-op rejection.
+4. The sole `APPLIED.json` receipt matrix. A non-empty candidate must prove
+   exact `spec -> base -> receipt -> result` with base and result different. An
+   empty candidate must use the same receipt flow with base equal to result.
+   Corrupt each schema, nonce, spec, base, result, action, path, and common
+   approval-timestamp binding and require read-only failure.
+5. Candidate preview/apply and recovery: readable complete diffs, base and
+   candidate drift, the checkout-scoped cooperative lock, interrupted durable
+   states, backup and mode integrity, exact staged/created-directory cleanup,
+   terminal completion, and restored-or-applied end state. Evidence must state
+   the V1 quiescent-application boundary: hostile same-machine mutation inside
+   the bounded window is not covered.
+6. Portable SDD operations, workspace-manager fixtures, serialization, paths
    containing spaces, and missing-Node failure behavior.
-4. Startup hooks through PowerShell/cmd, Git Bash, WSL Bash, and an actual Unix
-   checkout, including compaction and the 4,000-character envelope limit.
-5. Installed Codex plugin load, isolated dispatch, fresh-task handoff,
-   same-checkout acknowledgement, and fallback behavior.
-6. Installed Claude marketplace and `--plugin-dir` load, hook execution,
-   isolated Agent dispatch, named background handoff, checkout/plugin affinity,
-   and fallback behavior.
-7. A smoke pass through each supported distribution channel.
+7. Startup hooks through PowerShell/cmd, Git Bash, WSL Bash, and an actual Unix
+   checkout, including startup/resume/clear/compaction reinjection and the
+   4,000-character envelope limit.
+8. Installed Codex plugin load, Wayfinder and six Foundation operations,
+   isolated dispatch, receipt-backed validation, fixed fifteen-field
+   fresh-task handoff plus external receipt acknowledgement, exact
+   same-checkout/plugin affinity, and fallback behavior.
+9. Installed Claude marketplace and `--plugin-dir` load, auto-discovered hook
+   execution, Wayfinder and six Foundation operations, isolated Agent dispatch,
+   receipt-backed validation, fixed fifteen-field named background handoff plus
+   external receipt acknowledgement, checkout/plugin affinity, and fallback.
+10. A smoke pass through each supported distribution channel.
 
 A failed or unavailable mandatory row remains a failure and blocks release. It
 must not be rewritten as a limitation, waived by source inspection, or hidden
 behind a conditional support claim.
+
+Installed Codex and installed Claude Code evidence are independently mandatory.
+Source inspection, passing JSON, a printed fallback command, or one installed
+host cannot waive the other.
 
 ## Historical Tag Provenance
 

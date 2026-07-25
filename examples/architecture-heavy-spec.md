@@ -4,7 +4,7 @@
 **Date:** 2026-06-19
 **Artifact Type:** Design Spec
 **Status:** Draft
-**Revision:** sha256:442c6dcee14220a9db70854a528812a820beac51441ae45032928445c94ab861
+**Revision:** sha256:ed297d10b9b5eeb8f56736b07d8dfbc80274d7e1f236250fc0f9fea452244085
 **Approved Revision:** none
 **Approved At:** none
 
@@ -60,6 +60,31 @@ _Avoid_: retry config, payment setting
 
 - Existing jobs may bypass a central subscription state transition path.
 - Payment callbacks may need a compatibility adapter during migration.
+
+## Foundation Traceability
+
+**Foundation Manifest:** none
+**Base Agentic Foundation:** none
+**Roadmap Outcome:** none
+**Blueprint Requirements:** none
+**Prior Decisions:** none
+
+## Durable Documentation Impact
+
+No durable documentation changes
+
+| Decision | Classification | Owning document | Candidate action |
+| --- | --- | --- | --- |
+| DDI-001: Retry policy stays internal to `RenewalRetryService` behind payment and scheduler adapters; Classification reason: this generic example has no Agentic Foundation, so the module-boundary decision remains authoritative in this Design Spec | Task-local | Design Spec | none |
+
+## Foundation Candidate Declaration
+
+```json
+{
+  "schema": "superpowers-architecture-foundation-declaration-v1",
+  "actions": []
+}
+```
 
 ## User-Facing Behavior
 

@@ -1,9 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** removes `project-setup` without an alias and makes `wayfinder` the sole documentation-only skill for project inception and project-wide reorientation.
+- Adds the deterministic Agentic Foundation lifecycle, Root Router, compact dashboard, Project Blueprint, immutable Decision Ledger, and Blueprint-traceable roadmap outcomes.
+- Adds stable DDI/FCA identities and an escape-safe JSON Foundation Candidate Declaration with deterministic owner, ledger, DOX-index, router, manifest, and candidate-equality obligations.
+- Adds one combined Design Change Set approval and reuses the operation-owned candidate-root `APPLIED.json` as the sole Foundation Application Receipt.
+- Carries exact Design Spec, base Foundation, receipt, and resulting Foundation identities into Planning and implementation without requiring base/result equality for non-empty candidates.
+- Keeps the phase-handoff record fixed at fifteen fields and carries the receipt as an external prompt binding after exact artifact approval.
+
 ## 0.5.0
 
 - Adds a canonical Draft/Approved artifact lifecycle whose SHA-256 revisions bind spec approval, plan approval, and every downstream phase validation.
-- Adds host-neutral isolated dispatch and a separate thirteen-field fresh-session handoff contract with exact checkout, artifact, and plugin affinity.
+- Adds host-neutral isolated dispatch and a separate fifteen-field fresh-session handoff contract with exact checkout, artifact, Foundation, and plugin affinity.
 - Moves lifecycle, SDD workspace/progress, startup rendering, and project-bootstrap decisions into shared Node.js 20+ operations with thin Windows and Unix launchers.
 - Threads one Architecture Conformance rubric through plans, TDD, implementation, task review, and final review.
 - Replaces duplicated startup payloads with a compact marked contract, reinjects it after Codex and Claude compaction, and keeps missing-Node degradation visible.

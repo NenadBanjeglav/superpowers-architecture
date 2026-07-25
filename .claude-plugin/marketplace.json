@@ -3,12 +3,12 @@
   "owner": {
     "name": "Nenad Banjeglav"
   },
-  "description": "Claude Code marketplace for Superpowers Architecture.",
+  "description": "Claude Code marketplace for the Wayfinder and Agentic Foundation workflow in Superpowers Architecture.",
   "plugins": [
     {
       "name": "superpowers-architecture",
       "source": "./",
-      "description": "Architecture-first Superpowers workflow for Claude Code.",
+      "description": "Architecture-first Superpowers for Claude Code: Wayfinder, one exact Design Change Set, and verified phase handoffs.",
       "author": {
         "name": "Nenad Banjeglav"
       }

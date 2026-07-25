@@ -4,7 +4,7 @@
 **Date:** 2026-06-19
 **Artifact Type:** Design Spec
 **Status:** Draft
-**Revision:** sha256:454c4640dfc5589db9324b4b8375b0e17b6e9aa5bdec629e519c677dc9eb4b06
+**Revision:** sha256:bfa6c08893a926b3d65095655501cf6ec21a216da266c5ac4c8eb070ff08a8ce
 **Approved Revision:** none
 **Approved At:** none
 
@@ -54,6 +54,31 @@ _Avoid_: email setting, toggle row
 ### Open Risks
 
 - Existing email sender code may not have a single preference lookup point.
+
+## Foundation Traceability
+
+**Foundation Manifest:** none
+**Base Agentic Foundation:** none
+**Roadmap Outcome:** none
+**Blueprint Requirements:** none
+**Prior Decisions:** none
+
+## Durable Documentation Impact
+
+No durable documentation changes
+
+| Decision | Classification | Owning document | Candidate action |
+| --- | --- | --- | --- |
+| DDI-001: Security alerts remain required while product updates are optional; Classification reason: this generic example has no Agentic Foundation, so the notification rule remains authoritative in this Design Spec | Task-local | Design Spec | none |
+
+## Foundation Candidate Declaration
+
+```json
+{
+  "schema": "superpowers-architecture-foundation-declaration-v1",
+  "actions": []
+}
+```
 
 ## User-Facing Behavior
 

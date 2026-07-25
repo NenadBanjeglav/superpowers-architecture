@@ -2,6 +2,12 @@
 
 Every spec must include Design Understanding before planning.
 
+For a Foundation-backed project, Design Understanding is feature-level and
+bounded by the Approved Agentic Foundation. The Project Blueprint owns
+project-wide purpose, users, journeys, scope, stable requirements, release
+boundaries, and roadmap traceability. A Design Spec traces one ready roadmap
+outcome back to those requirements; it does not replace or copy the Blueprint.
+
 ## Language
 
 Name important concepts explicitly. Define preferred terms and rejected synonyms when language is overloaded.
@@ -26,6 +32,36 @@ Capture:
 - intended depth, locality, and leverage
 - test surface through public module behavior and justified external seams
 
+Current project truth is updated in place in the focused owning Foundation
+document. Decision history lives separately in the append-only Decision Ledger:
+each durable decision has a stable identity, rationale, alternatives, sources
+when required, current-truth owner, and any `Supersedes` link. Only the Current
+Decision Index records which immutable entries are current or superseded.
+
+## Durable Documentation Impact
+
+Every Foundation-backed Design Spec classifies each design decision as
+Task-local, Project-durable, Operating-contract, or No impact. Each table row:
+
+- begins with a stable `DDI-NNN` identity;
+- includes a concrete classification reason;
+- names the exact current-truth owner;
+- uses `none` for Task-local or No impact candidate actions; and
+- references stable `FCA-NNN` actions for durable or operating-contract
+  consequences.
+
+Paths occur only in the fenced JSON Foundation Candidate Declaration. Its
+sorted path/action projection must equal `candidate.json`. Project-durable
+decisions declare both their current-truth owner action and a
+`docs/agentic/DECISIONS.md` upsert. Operating-contract decisions declare their
+exact `AGENTS.md` owner and every affected parent Child DOX Index. Managed-file
+or reading-order changes also declare the applicable manifest/router action.
+
+Several decisions may share one action. Duplicate or conflicting paths,
+missing owner or ledger consequences, unreferenced actions, and action-bearing
+Task-local or No impact rows fail review. An empty declaration requires the
+literal sentence `No durable documentation changes`.
+
 ## Test Surface
 
 Tests should verify behavior through the correct interface. If a test must reach past the interface, the module shape is probably wrong.
@@ -33,13 +69,17 @@ Tests should verify behavior through the correct interface. If a test must reach
 ## Planning Impact
 
 Implementation plans bind each task to the modules, interfaces, seams/adapters,
-data flow, depth/locality/leverage intent, and test surface in the exact Approved
-spec revision. TDD, implementer, task-reviewer, and final-reviewer prompts use
-the same Architecture Conformance rubric, so a generic passing test suite does
-not excuse a violated seam or shallow module boundary.
+data flow, depth/locality/leverage intent, test surface, and applicable
+Foundation base/receipt/result identities in the exact Approved spec revision.
+TDD, implementer, task-reviewer, and final-reviewer prompts use the same
+[Architecture Conformance rubric](../skills/codebase-design/ARCHITECTURE-CONFORMANCE.md),
+so a generic passing test suite does not excuse a violated seam, shallow
+module boundary, or missing durable-document obligation.
 
 This is true whether later phases run in automated fresh-session mode or
 same-session mode: the Approved artifact is the source of truth, and the next phase
 must validate and re-read it from disk. If implementation reveals that the
 design is wrong, return the controlling artifact to Draft, refresh its revision,
-and obtain new user approval rather than silently changing architecture.
+and obtain new user approval rather than silently changing architecture. If
+the discovery invalidates project direction or affects several roadmap
+outcomes, return to Wayfinder instead of widening one feature Design Spec.
