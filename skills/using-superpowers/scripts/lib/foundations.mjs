@@ -822,10 +822,9 @@ function validateDeclarationAgainstCandidate(
         ({ path }) => path === 'AGENTS.md' || path.endsWith('/AGENTS.md'),
       );
       for (const boundary of changedBoundaries) {
-        const boundaryWasManaged = basePaths.has(boundary.path);
         const parentAgents = closestManagedParentAgents(
           boundary.path,
-          boundaryWasManaged ? basePaths : prospectivePaths,
+          prospectivePaths,
         );
         if (
           parentAgents &&
