@@ -26,7 +26,7 @@ Claude Code project instructions normally live in `CLAUDE.md`. This repository u
 Claude Code can load personal and project skills, and plugin skills are namespaced by plugin name. For this plugin, Claude Code invocations use:
 
 ```text
-/superpowers-architecture:project-setup
+/superpowers-architecture:wayfinder
 /superpowers-architecture:brainstorming
 /superpowers-architecture:writing-plans
 /superpowers-architecture:subagent-driven-development
@@ -65,7 +65,8 @@ start from the canonical prompt without current conversation history.
 Before launch:
 
 1. Resolve and change to the exact `checkoutRoot`. Re-run the remote,
-   branch/commit, worktree, ignored-artifact, and lifecycle checks there.
+   branch/commit, worktree, ignored-artifact, and lifecycle checks there. The
+   named background session must preserve `workspacePolicy: same-checkout`.
 2. Inspect the installed `claude --help`. Require it to advertise `--bg` and
    `--name`; command syntax that is absent from the installed CLI is not safe to
    assume. Also require Agent View/background operation to be enabled and the
@@ -76,10 +77,16 @@ Before launch:
 4. For `pluginSource: local-plugin-dir`, require the installed CLI to advertise
    `--plugin-dir`, verify the exact absolute `pluginRoot`, and include
    `--plugin-dir <pluginRoot>` in the launch. For `skills-install`, verify the
-   exact installed skill root on both sides.
-5. Require the new session's first output to acknowledge all thirteen fields
-   and show the exact `checkoutRoot`, `branch`, `artifactPath`, and
-   `approvedRevision` before invoking the next phase skill.
+   exact installed skill root on both sides. These checks are the required
+   plugin affinity proof; inventory by name alone does not prove a local root.
+5. Re-run `foundation validate` for a recorded `foundationManifestPath` and
+   `foundationRevision`. For `phase: brainstorming`, require those values to
+   equal the phase artifact path and revision.
+6. Require the new session's first output to acknowledge all fifteen handoff
+   fields and show the exact `checkoutRoot`, `branch`, `artifactPath`,
+   `approvedRevision`, `foundationManifestPath`, and `foundationRevision`
+   before invoking `/superpowers-architecture:brainstorming` or another next
+   phase skill.
 
 Only after every check passes, launch from the verified checkout. For an
 installed plugin:
@@ -126,7 +133,8 @@ claude --plugin-dir '<verified-plugin-root>' --bg --name 'spa-<phase>-<artifact-
 For `installed` or `skills-install`, omit `--plugin-dir` from those fallback
 templates. The canonical prompt names the next skill as
 `/superpowers-architecture:<skill>` when plugin namespacing is required and
-contains every field from [phase-handoff.md](phase-handoff.md).
+contains all fifteen handoff fields from
+[phase-handoff.md](phase-handoff.md).
 
 If `claude` is unavailable, authentication or background agents are disabled,
 the installed help lacks `--bg`, `--name`, or a required `--plugin-dir`, plugin

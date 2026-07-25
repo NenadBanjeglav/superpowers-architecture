@@ -16,16 +16,22 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Shared skill workflow policy must stay runtime-neutral; host-specific tool and install details belong in runtime adapters or `skills/using-superpowers/references/`.
 - Shared skills use bare canonical skill identities. Plugin namespaces, host tool names, context flags, session flags, and concrete model identifiers belong only in runtime references.
 - `skills/using-superpowers/references/dispatch-contract.md` owns the host-neutral subagent request. Isolation means no parent conversation turns and must be verified by the runtime adapter; capability tiers map only to choices advertised by the active host, with explicit user model choices taking precedence.
-- `skills/using-superpowers/references/phase-handoff.md` owns the host-neutral fresh-session preflight. Handoffs bind the exact repository, checkout, branch/worktree, Approved artifact revisions, plugin source, and `same-checkout` policy; the target must acknowledge and independently revalidate every field before phase work.
+- `skills/using-superpowers/references/phase-handoff.md` owns the host-neutral fifteen-field fresh-session preflight. Handoffs bind the exact repository, checkout, branch/worktree, phase artifact, source spec, Agentic Foundation, plugin source, and `same-checkout` policy; the target must acknowledge and independently revalidate every field before phase work.
 - `skills/using-superpowers/scripts/` owns the shared Node.js operation module, including artifact canonicalization and lifecycle state. Runtime adapters and consuming phase skills must call that module rather than reimplement its behavior.
+- `wayfinder` is the sole downstream project-inception and project-wide reorientation skill. It owns documentation-only discovery, the resumable Wayfinding Map, exact Foundation review, Blueprint-traceable roadmap outcomes, and the first Foundation-to-Brainstorming handoff.
+- `skills/wayfinder/references/agentic-foundation-contract.md` is the only detailed downstream document-shape contract. Keep the Root Router, compact dashboard, truth owners, Decision Ledger, Project Blueprint, roadmap, verification, lifecycle metadata, manifest grammar, identity grammar, readiness, Phase Mode, and optional-document rules local there.
+- Agentic Foundation lifecycle and candidate correctness remain in the one shared Node operation core and `agentic-foundation-lifecycle.md`. Skills call the six host-neutral Foundation operations; runtime references only map concrete host capabilities.
+- Current truth has one owning Foundation document. Each durable decision also appends one immutable ledger entry; navigation documents point to owners and identities instead of copying detail.
+- Blueprint requirements and roadmap outcomes use stable identities. Brainstorming Design Specs trace bounded outcomes back to the Blueprint, and durable or operating-contract changes enter one prospective Foundation candidate for the combined Design Change Set review.
+- Foundation candidates under `docs/superpowers/foundation-candidates/` are ignored, non-authoritative complete-file previews. Exact application is bound to the reviewed prospective revision and the lifecycle contract's quiescent-application precondition.
 - Portable SDD workspace, task-brief, review-package, and progress behavior lives in the shared Node operation core. Bash and Windows files under `subagent-driven-development/scripts/` are process-only launchers; progress writes use a sibling temporary file, atomic rename, and serialized replacement.
 - The marked `STARTUP-CONTRACT` block in `using-superpowers/SKILL.md` is the only startup-policy source. The shared Node renderer extracts it into host envelopes no larger than 4,000 characters; hook launchers own process invocation and exact visible Node-degraded JSON only.
 - Workspace preparation detection is a read-only shared Node operation. Applicable project instructions win; declarations outrank same-ecosystem lockfiles; ambiguity runs nothing; baseline verification is resolved independently and never inferred from the selected package manager.
 - Node.js 20 or newer is required for correctness-critical artifact operations. Missing Node or a missing sibling operation module must fail closed with actionable installation guidance.
 - Specs and implementation plans use the shared Draft/Approved lifecycle. Approval and downstream validation bind to the exact canonical SHA-256 payload revision, not a filename or conversation memory.
-- Spec and plan document reviewers are advisory only. Dispatch them with isolated read-only context and the shared architecture-conformance rubric when available; otherwise use the owning phase skill's deterministic self-review. They report only `Ready for user review` or `Issues found`; only the user can approve an exact artifact revision.
+- Foundation, spec, and plan document reviewers are advisory only. Dispatch them with isolated read-only context and the shared architecture-conformance rubric when available; otherwise use the owning phase skill's deterministic self-review. They report only `Ready for user review` or `Issues found`; only the user can approve an exact artifact revision or exact combined Design Change Set.
 - Do not create or maintain `context.md`.
-- `project-setup` may instruct downstream projects to create uppercase root `CONTEXT.md`; this plugin repository must not create its own root `CONTEXT.md`.
+- `wayfinder` may create uppercase root `CONTEXT.md` only in a deliberate downstream project; this plugin repository must not create its own root `CONTEXT.md` or `docs/agentic/` Foundation.
 - Do not create ADR files.
 - Do not include Matt issue, PRD, or triage flows.
 - Remove visual companion behavior from active brainstorming behavior.
@@ -34,7 +40,9 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 
 ## Work Guidance
 
-- Clean-rewrite high-policy skills only when changing workflow policy: `project-setup`, `using-superpowers`, `brainstorming`, `writing-plans`, `finishing-a-development-branch`, and `improve-codebase-architecture`.
+- Clean-rewrite high-policy skills only when changing workflow policy: `wayfinder`, `using-superpowers`, `brainstorming`, `writing-plans`, `finishing-a-development-branch`, and `improve-codebase-architecture`.
+- During Wayfinder, ask one concise question at a time and immediately follow it with a concrete recommendation and short reason.
+- Record the selected Phase Mode durably in the downstream Root Router. Recommend automated fresh sessions and preserve that choice across Foundation, spec, and plan approval gates; same-session continuation requires an exact disk reread.
 - `brainstorming` grilling questions must put the question first and immediately follow it with a concrete recommendation and short reason.
 - Patch operational skills narrowly: `subagent-driven-development`, `executing-plans`, `using-git-worktrees`, review, debugging, and TDD skills.
 - Keep inherited examples self-contained: remove upstream project names, dated session claims, unsupported metrics, and runtime-specific fixture names that are not part of this plugin.

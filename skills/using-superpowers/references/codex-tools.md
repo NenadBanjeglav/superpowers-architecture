@@ -25,6 +25,14 @@ When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`**
 
 User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
 
+## Wayfinder Invocation
+
+Invoke `wayfinder` natively for greenfield project inception or project-wide
+reorientation. The shared skill owns discovery and Foundation policy; this
+adapter only maps Codex capabilities. After exact Foundation approval, use the
+phase-handoff record for `phase: brainstorming` rather than carrying Wayfinder
+conversation history into the new task.
+
 ## Host-Neutral Dispatch Adapter
 
 Consume the request in [dispatch-contract.md](dispatch-contract.md). Multi-agent support must be present in the active tool schema; installations that expose it through configuration may require:
@@ -89,7 +97,10 @@ Before launch:
    task. For `local-plugin-dir`, launch only if the active app API or saved
    project configuration proves it will load the exact `pluginRoot`; otherwise
    use fallback.
-4. Pass the complete canonical prompt, including all thirteen handoff fields,
+4. Re-run `foundation validate` for a recorded `foundationManifestPath` and
+   `foundationRevision`. For `phase: brainstorming`, require those values to
+   equal the phase artifact path and revision.
+5. Pass the complete canonical prompt, including all fifteen handoff fields,
    to a new user-owned task. Omit model overrides unless the user explicitly
    selected one and the active schema advertises it.
 
@@ -110,10 +121,12 @@ exact saved `checkoutRoot`, the request has this shape:
 ```
 
 After `create_thread` succeeds, use the active task-wait/read surface to inspect
-the target's first output. It must acknowledge every field and must show the
-exact `checkoutRoot`, `branch`, `artifactPath`, and `approvedRevision` before
-`writing-plans`, `executing-plans`, or `subagent-driven-development` begins. If
-the acknowledgement or target-side validation reports a mismatch, do not ask
+the target's first output. It must acknowledge all fifteen handoff fields,
+re-run `foundation validate` when the Foundation pair is present, and show the
+exact `checkoutRoot`, `branch`, `artifactPath`, `approvedRevision`,
+`foundationManifestPath`, and `foundationRevision` before `brainstorming`,
+`writing-plans`, `executing-plans`, or `subagent-driven-development` begins.
+If acknowledgement or target-side validation reports a mismatch, do not ask
 that task to continue. Report the failed handoff.
 
 If no project path equals `checkoutRoot`, an exact linked/managed/detached

@@ -115,10 +115,15 @@ Good interfaces make testing natural:
 
 ## Integration With Superpowers Architecture
 
+Use the shared vocabulary as one coherent set: module, interface, seam, adapter, depth, leverage, locality, and test surface.
+
 Use this skill during:
 
-- `project-setup` to establish project-wide domain language, modules, interfaces, seams, adapters, data flow, and test surface in downstream `CONTEXT.md`.
-- `brainstorming` to shape Design Understanding.
+- `wayfinder` to establish project-wide architecture in
+  `docs/agentic/ARCHITECTURE.md`, including module, interface, seam, adapter,
+  data-flow, depth, leverage, locality, and test-surface current truth.
+- `brainstorming` to shape feature-level Design Understanding without
+  displacing Wayfinder's project-wide architecture owner.
 - `writing-plans` to preserve module, interface, seam, adapter, data-flow, and test-surface decisions.
 - implementation review to detect shallow modules, leaky seams, weak adapters, poor locality, and tests that cross the wrong interface.
 - architecture review to produce markdown-only local reviews under `docs/superpowers/architecture-reviews/`.
@@ -129,4 +134,7 @@ reported violation blocks completion. An implementation-discovered design
 change is conformant only after the controlling artifact returns to Draft and a
 new exact revision is Approved.
 
-Do not create `context.md` or ADRs from this skill in this plugin. Put feature-specific architecture decisions into the local spec or architecture review.
+Do not create `context.md` or ADRs from this skill in this plugin. Wayfinder
+owns project-wide architecture current truth; put feature-specific architecture
+decisions into the local Design Spec or architecture review and reconcile
+durable changes through the Foundation workflow.
