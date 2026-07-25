@@ -731,18 +731,16 @@ function declarationActionFor(declaration, decision, path, action) {
   );
 }
 
-function closestManagedParentAgents(path, basePaths, prospectivePaths) {
+function closestManagedParentAgents(path, managedPaths) {
   let directory = posix.dirname(posix.dirname(path));
   while (directory !== '.' && directory !== '/') {
     const candidate = `${directory}/AGENTS.md`;
-    if (basePaths.has(candidate) || prospectivePaths.has(candidate)) {
+    if (managedPaths.has(candidate)) {
       return candidate;
     }
     directory = posix.dirname(directory);
   }
-  return basePaths.has('AGENTS.md') || prospectivePaths.has('AGENTS.md')
-    ? 'AGENTS.md'
-    : null;
+  return managedPaths.has('AGENTS.md') ? 'AGENTS.md' : null;
 }
 
 function validateDeclarationAgainstCandidate(
@@ -765,6 +763,16 @@ function validateDeclarationAgainstCandidate(
   const basePaths = new Set(baseLoaded.records.map(({ path }) => path));
   const prospectivePaths = new Set(prospectiveFoundation.prospectiveFiles.keys());
   for (const decision of declaration.decisions) {
+    const decisionActionIds = new Set(decision.actionRefs);
+    const decisionActions = declaration.actions.filter(
+      (action) =>
+        decisionActionIds.has(action.id) &&
+        action.decisionRefs.includes(decision.id),
+    );
+    const managedFileSetChanges = decisionActions.filter(
+      (action) =>
+        basePaths.has(action.path) !== prospectivePaths.has(action.path),
+    );
     if (decision.classification === 'Project-durable') {
       if (
         !declarationActionFor(
@@ -810,14 +818,14 @@ function validateDeclarationAgainstCandidate(
           'Recovery: bind the decision to its exact AGENTS.md owner action.',
         );
       }
-      const boundaryChanged =
-        basePaths.has(decision.owningDocument) !==
-        prospectivePaths.has(decision.owningDocument);
-      if (boundaryChanged) {
+      const changedBoundaries = managedFileSetChanges.filter(
+        ({ path }) => path === 'AGENTS.md' || path.endsWith('/AGENTS.md'),
+      );
+      for (const boundary of changedBoundaries) {
+        const boundaryWasManaged = basePaths.has(boundary.path);
         const parentAgents = closestManagedParentAgents(
-          decision.owningDocument,
-          basePaths,
-          prospectivePaths,
+          boundary.path,
+          boundaryWasManaged ? basePaths : prospectivePaths,
         );
         if (
           parentAgents &&
@@ -841,8 +849,7 @@ function validateDeclarationAgainstCandidate(
       ['Project-durable', 'Operating-contract'].includes(
         decision.classification,
       ) &&
-      basePaths.has(decision.owningDocument) !==
-        prospectivePaths.has(decision.owningDocument) &&
+      managedFileSetChanges.length > 0 &&
       !declarationActionFor(
         declaration,
         decision,
