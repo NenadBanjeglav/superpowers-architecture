@@ -12,7 +12,24 @@ The reviewer cannot approve either artifact.
 `foundation preview` has produced the exact prospective revision and readable
 `DESIGN-CHANGE-SET.md`.
 
-Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue exactly one
+request shape. For a generic spec, issue:
+
+```json
+{
+  "role": "document-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "balanced",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": [
+    "[ABSOLUTE_SPEC_FILE_PATH]",
+    "[CONFORMANCE_RUBRIC_FILE]"
+  ],
+  "workspacePolicy": "read-only-review"
+}
+```
+
+For a Foundation-backed spec, issue:
 
 ```json
 {
@@ -23,13 +40,17 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
   "artifactPaths": [
     "[ABSOLUTE_SPEC_FILE_PATH]",
     "[CONFORMANCE_RUBRIC_FILE]",
-    "[ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]",
-    "[ABSOLUTE_CANDIDATE_JSON_OR_NONE]",
-    "[ABSOLUTE_DESIGN_CHANGE_SET_REPORT_OR_NONE]"
+    "[ABSOLUTE_FOUNDATION_MANIFEST]",
+    "[ABSOLUTE_CANDIDATE_JSON]",
+    "[ABSOLUTE_DESIGN_CHANGE_SET_REPORT]"
   ],
   "workspacePolicy": "read-only-review"
 }
 ```
+
+Literal `none` is valid in optional prompt data fields for a generic review,
+but never include literal `none` or an absent optional artifact in
+`artifactPaths`.
 
 ```text
 You are an advisory spec and Design Change Set document reviewer. Verify the
@@ -55,9 +76,9 @@ Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
 | Source and Phase Mode | Source, one supported Phase Mode, reason, and durability are concrete |
 | Architecture Conformance | Modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface are decision-complete under the shared rubric |
 | Foundation Traceability | Manifest/revision are a consistent absolute-path/exact-revision pair or both none; a Foundation-backed spec has one ready outcome, complete Blueprint traceability, and relevant prior decisions |
-| Decision Classification | Every actual design decision is exactly Task-local, Project-durable, Operating-contract, or No impact; every No impact has a reason |
+| Decision Classification | Every decision is exactly Task-local, Project-durable, Operating-contract, or No impact and has a concrete classification reason |
 | Owning-document Locality | Every durable or operating-contract decision names the one authoritative owner and preserves immutable ledger history and pointer-based navigation |
-| Declared/Candidate Equality | Declared candidate actions equal candidate.json exactly; complete upsert files exist; there are no missing, extra, undeclared, duplicate, or no-op candidates |
+| Declared/Candidate Equality | Every Candidate action follows the normalized action grammar; the normalized union has exact set equality with candidate.json; complete upsert files exist; there are no missing, extra, undeclared, duplicate, or no-op candidates |
 | Candidate Coherence | The prospective manifest and complete candidate files remain a coherent Agentic Foundation and an empty candidate preserves the base revision |
 | Readable Review | The operation-owned readable report covers every affected-file action and exposes review paths or normalized diffs |
 | Prospective Identity | The report, candidate, exact Draft spec, exact Approved base, and prospective Foundation revision have consistent bindings |

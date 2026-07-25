@@ -10,7 +10,8 @@ reviewer cannot approve it.
 **Dispatch after:** The complete plan is written and `artifact refresh` has
 recorded its exact Draft revision.
 
-Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
+Render the bounded prompt below to `[PROMPT_FILE]`, then issue exactly one
+request shape. For a generic plan, issue:
 
 ```json
 {
@@ -21,12 +22,33 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue:
   "artifactPaths": [
     "[ABSOLUTE_PLAN_FILE_PATH]",
     "[ABSOLUTE_SPEC_FILE_PATH]",
-    "[ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]",
     "[CONFORMANCE_RUBRIC_FILE]"
   ],
   "workspacePolicy": "read-only-review"
 }
 ```
+
+For a Foundation-backed plan, issue:
+
+```json
+{
+  "role": "document-reviewer",
+  "contextPolicy": "isolated",
+  "capabilityTier": "balanced",
+  "promptPath": "[PROMPT_FILE]",
+  "artifactPaths": [
+    "[ABSOLUTE_PLAN_FILE_PATH]",
+    "[ABSOLUTE_SPEC_FILE_PATH]",
+    "[ABSOLUTE_FOUNDATION_MANIFEST]",
+    "[CONFORMANCE_RUBRIC_FILE]"
+  ],
+  "workspacePolicy": "read-only-review"
+}
+```
+
+Literal `none` is valid in optional prompt data fields for a generic review,
+but never include literal `none` or an absent optional artifact in
+`artifactPaths`.
 
 ```text
 You are an advisory plan document reviewer. Verify this Draft plan is complete

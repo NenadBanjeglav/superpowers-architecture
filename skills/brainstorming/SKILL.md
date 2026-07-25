@@ -37,10 +37,12 @@ asks.
 Determine whether this is a Foundation-backed roadmap outcome or a generic
 established-project workflow:
 
+- A generic established-project workflow has no Foundation.
 - A Foundation-backed invocation must supply a consistent pair: an absolute
   `WAYFINDING.md` path and an exact Approved lowercase `sha256:` Foundation
-  revision. It must also identify one ready roadmap outcome and carry the exact
-  canonical Brainstorming prompt when the invocation came from Wayfinder.
+  revision. It must also identify one ready roadmap outcome. A verified
+  Wayfinder handoff additionally carries the canonical Brainstorming prompt;
+  a direct Foundation-backed invocation does not need a handoff record.
 - Literal `none` is valid only as the complete path/revision pair for a generic
   established-project workflow with no Foundation. If only one value is
   `none`, the path is not absolute, the revision is incomplete, or a Foundation
@@ -72,10 +74,16 @@ Only after exact validation succeeds:
    current-truth owners, and the immutable Decision Ledger entries selected by
    the Router.
 3. Confirm the requested stable outcome identity exists, is `Ready for
-   Brainstorming`, still links the named Blueprint requirements, has all
-   decision prerequisites satisfied, and has the same exact canonical
-   Brainstorming prompt as the handoff. Stop on any mismatch.
-4. Inspect the codebase, related modules, interfaces, tests, and prior local
+   Brainstorming`, still links the named Blueprint requirements, and has all
+   decision prerequisites satisfied.
+4. For a verified Wayfinder handoff, require the carried Brainstorming prompt
+   to be exactly equal to the selected outcome's canonical prompt in the
+   Approved `ROADMAP.md`. For a direct Foundation-backed invocation without a handoff record, re-read
+   that canonical Brainstorming prompt and adopt it as the bounded design prompt;
+   do not compare it to a nonexistent handoff.
+5. Any identity, readiness, or prerequisite mismatch must stop both invocation
+   paths. A prompt mismatch must also stop a verified handoff.
+6. Inspect the codebase, related modules, interfaces, tests, and prior local
    specs only after the Foundation checks above.
 
 Design exactly one ready roadmap outcome. Ordinary decisions needed to make
@@ -235,16 +243,37 @@ Foundation Traceability value in a generic workflow.
 
 Every design decision must be classified exactly once:
 
-- `Task-local`: the Design Spec remains the owner; state why no Foundation
-  candidate is needed.
+- `Task-local`: the Design Spec remains the owner.
 - `Project-durable`: name the one current-truth owning document, the immutable
-  Decision Ledger addition or supersession identity, and the complete candidate
-  action.
+  Decision Ledger addition or supersession identity.
 - `Operating-contract`: name the root or child `AGENTS.md` owner and the
-  complete candidate action.
-- `No impact`: give an explicit reason.
+  complete operating contract.
+- `No impact`: no durable owner changes.
 
-The table must cover actual decisions rather than repeat section headings.
+The table must cover actual decisions rather than repeat section headings. In
+every row, including all four classifications, the Decision cell uses the exact
+grammar `<decision statement> — Classification reason: <concrete reason>`.
+Every concrete classification reason must explain why that classification is
+correct.
+
+Candidate action has one deterministic grammar:
+
+- For `Task-local` and `No impact`, Candidate action is exact `none`.
+- For `Project-durable` and `Operating-contract`, Candidate action contains one
+  or more exact action tokens: `upsert <normalized repository-relative path>`
+  or `delete <normalized repository-relative path>`.
+- Join multiple action tokens with the exact separator `; ` and sort them by
+  unsigned UTF-8 path bytes.
+- A normalized repository-relative path uses forward slashes and strict UTF-8.
+  Reject absolute paths, backslashes, empty components, `.` or `..`
+  dot-segments, and traversal outside the repository.
+- Every Project-durable or Operating-contract row must declare at least one
+  action token.
+
+The normalized union of all non-`none` Candidate action tokens must have exact
+set equality with the `{ path, action }` changes in `candidate.json`. Require
+no duplicates, omissions, extras, or no-ops.
+
 Owning-document locality matters: current truth changes in one owner, ledger
 history is append-only, and navigation documents receive pointers rather than
 copied detail.
@@ -283,7 +312,8 @@ Draft spec has been refreshed:
    `docs/superpowers/foundation-candidates/<design-spec-stem>/`.
 3. Write `candidate.json` with the exact schema from
    `using-superpowers/references/agentic-foundation-lifecycle.md`. Its sorted
-   change list must equal the spec's declared complete candidate actions.
+   change list must have exact set equality with the spec's normalized union of
+   declared complete candidate actions.
 4. Write complete candidate versions of every declared `upsert` under
    `files/<repository-relative-path>`. A deletion has no candidate file.
    Reject an undeclared candidate, a missing candidate, an extra file, a

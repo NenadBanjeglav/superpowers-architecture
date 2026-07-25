@@ -98,10 +98,10 @@ Each step is one concrete action:
 - commit one grouped change.
 
 Every implementation task must be self-contained. Its context block must repeat
-the exact Approved plan path/revision, exact Approved source spec path/revision,
-and the exact Foundation Manifest/Foundation Revision pair, including literal
-`none` for a generic workflow. Do not make a later task infer Foundation
-identity from an earlier task or conversation.
+the exact Approved source spec path/revision and the exact Foundation Manifest/Foundation Revision pair,
+including literal `none` for a generic workflow. A Draft plan cannot embed or
+require its own future digest. Do not make a later task infer source-spec or
+Foundation identity from an earlier task or conversation.
 
 ## Architecture Binding Per Task
 
@@ -116,7 +116,7 @@ must name the exact Approved Design Understanding it preserves:
 - intended test surface.
 
 Include an explicit Architecture Conformance check in each task with the exact
-Approved spec, plan, and non-none Foundation identities. The check blocks on
+Approved source spec and non-none Foundation identities. The check blocks on
 any `violation`. If a task requires a different module, interface, seam,
 adapter, data flow, or test surface, do not encode it as implementation
 discretion. Return the controlling artifact to Draft and user review first.
@@ -245,6 +245,10 @@ After approval:
   independent tasks or `executing-plans` for linear tasks. The controller must
   independently revalidate the plan, spec, and Foundation from disk.
 
+Only after exact plan approval may the handoff inject the exact Approved plan path and revision into the
+implementation dispatch prompt or task brief. This post-approval dispatch
+binding is external to the Draft plan's task contexts.
+
 ## Canonical Fifteen-Field Implementation Prompt
 
 ```text
@@ -314,9 +318,10 @@ Before handing off the plan:
 4. Search for placeholder language and remove it.
 5. Verify file paths, function names, command names, and commit messages are
    consistent.
-6. Verify every task repeats the exact artifact and Foundation context, names
-   the Approved modules/interfaces/seams/adapters/data flow/depth/locality/
-   leverage/test surface, and runs the shared conformance check.
+6. Verify every task repeats the exact Approved source spec and Foundation
+   context without a future plan digest, names the Approved modules/interfaces/
+   seams/adapters/data flow/depth/locality/leverage/test surface, and runs the
+   shared conformance check.
 7. Verify the advisory review received the exact Foundation identity.
 8. Verify the implementation handoff has exactly fifteen fields.
 9. Verify no task commits `docs/superpowers/**`.
