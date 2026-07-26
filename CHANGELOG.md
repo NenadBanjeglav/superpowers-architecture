@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Sets the current release boundary to `Codex supported; Claude deferred/unadvertised`.
+- Supports exactly two distribution channels: GitHub/skills.sh for Codex and the Codex plugin package; removes the Claude marketplace catalog and defers the retained thin adapter source.
+- Requires genuine installed-Codex startup-context evidence as the remaining runtime gate before clean closeout and merge readiness.
 - **Breaking:** removes `project-setup` without an alias and makes `wayfinder` the sole documentation-only skill for project inception and project-wide reorientation.
 - Adds the deterministic Agentic Foundation lifecycle, Root Router, compact dashboard, Project Blueprint, immutable Decision Ledger, and Blueprint-traceable roadmap outcomes.
 - Adds stable DDI/FCA identities and an escape-safe JSON Foundation Candidate Declaration with deterministic owner, ledger, DOX-index, router, manifest, and candidate-equality obligations.
@@ -18,9 +21,9 @@
 - Replaces duplicated startup payloads with a compact marked contract, reinjects it after Codex and Claude compaction, and keeps missing-Node degradation visible.
 - Aligns public examples and advisory document review with lifecycle metadata, Phase Mode, exact revisions, and user-only approval.
 - Removes inherited product-specific fixtures, dates, metrics, runtime names, and default merge wording from active guidance.
-- Defines GitHub/skills.sh, the Codex plugin package, and the Claude marketplace plugin as the supported distribution channels; npm is unsupported and `package.json` is private tooling metadata.
-- Replaces the Claude roadmap with current runtime-support and evidence-bearing release documentation, and removes unrelated GitHub policy URLs from Codex metadata.
-- Prepares, but does not publish, the 0.5.0 release contract. Installed Claude evidence and a passing installed Codex compaction canary remain hard release blockers; source inspection does not close them.
+- Defines GitHub/skills.sh for Codex and the Codex plugin package as the supported distribution channels; npm is unsupported and `package.json` is private tooling metadata.
+- Aligns runtime-support and evidence-bearing release documentation with the current Codex-only release boundary and removes unrelated GitHub policy URLs from Codex metadata.
+- Prepares, but does not publish, the 0.5.0 release contract. Genuine installed-Codex startup evidence remains mandatory; source inspection does not close it.
 
 ## 0.4.0
 

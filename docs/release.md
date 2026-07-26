@@ -2,7 +2,9 @@
 
 Superpowers Architecture uses manual, evidence-bearing releases. Source-tree
 inspection can catch packaging defects, but it never substitutes for running
-the installed Codex and Claude Code adapters.
+the installed Codex adapter.
+
+Codex supported; Claude deferred/unadvertised.
 
 ## Supported Distribution Channels
 
@@ -10,7 +12,6 @@ the installed Codex and Claude Code adapters.
 | --- | --- | --- |
 | GitHub/skills.sh | This repository's shared `skills/` tree | Install through `skills.sh`; complete lifecycle and SDD workflows include `using-superpowers` |
 | Codex plugin package | `.codex-plugin/plugin.json`, shared skills, assets, and Codex hooks | Install through a supported Codex plugin or marketplace flow |
-| Claude marketplace plugin | `.claude-plugin/marketplace.json`, plugin manifest, shared skills, and Claude hooks | Add the repository marketplace and install `superpowers-architecture@superpowers-architecture` |
 
 npm is unsupported. `package.json` is private repository/tooling metadata and
 does not promise an npm package.
@@ -55,19 +56,14 @@ The matrix must cover:
    isolated dispatch, receipt-backed validation, fixed fifteen-field
    fresh-task handoff plus external receipt acknowledgement, exact
    same-checkout/plugin affinity, and fallback behavior.
-9. Installed Claude marketplace and `--plugin-dir` load, auto-discovered hook
-   execution, Wayfinder and six Foundation operations, isolated Agent dispatch,
-   receipt-backed validation, fixed fifteen-field named background handoff plus
-   external receipt acknowledgement, checkout/plugin affinity, and fallback.
-10. A smoke pass through each supported distribution channel.
+9. A smoke pass through each supported distribution channel.
 
 A failed or unavailable mandatory row remains a failure and blocks release. It
 must not be rewritten as a limitation, waived by source inspection, or hidden
 behind a conditional support claim.
 
-Installed Codex and installed Claude Code evidence are independently mandatory.
-Source inspection, passing JSON, a printed fallback command, or one installed
-host cannot waive the other.
+Installed Codex evidence is mandatory. Source inspection, passing JSON, or a
+printed fallback command cannot waive the installed-host gate.
 
 ## Historical Tag Provenance
 
@@ -100,6 +96,7 @@ manual matrix passes and local refs are reported. Publication then verifies the
 remote refs and release artifacts; it must not force-push, rewrite history,
 merge, open a pull request, or discard local work unless separately requested.
 
-The current 0.5.0 preparation remains blocked until the installed Claude matrix,
-the refreshed installed Codex package passes its compaction canary, and every
-other required environment row is recorded as passing evidence.
+The current 0.5.0 preparation remains blocked until the refreshed installed
+Codex package passes its genuine startup and compaction canary and every other
+required Codex environment row is recorded as passing evidence. Clean Git and
+review closeout are required before a merge-readiness claim.

@@ -2,7 +2,9 @@
 
 [![skills.sh](https://skills.sh/b/NenadBanjeglav/superpowers-architecture)](https://skills.sh/NenadBanjeglav/superpowers-architecture)
 
-Architecture-first Superpowers for Codex and Claude Code.
+Architecture-first Superpowers for Codex.
+
+Codex supported; Claude deferred/unadvertised.
 
 Superpowers Architecture is a shared skill pack and runtime plugin for developers who want an agent to agree on project direction and design before it writes plans or code. It keeps the best parts of Superpowers - specs, plans, TDD, reviews, worktree-aware implementation, task commits, and final verification - and adds Wayfinder, an exact Agentic Foundation lifecycle, and module, interface, seam, adapter, data-flow, and test-surface thinking.
 
@@ -67,32 +69,6 @@ The `npx skills` flow installs the shared skills. The Codex plugin package is a
 separate supported channel that also installs the Codex startup hook; use a
 Codex plugin or marketplace flow that supports this repository's manifest.
 
-### Claude Code Plugin
-
-In Claude Code, add the marketplace and install the plugin:
-
-```text
-/plugin marketplace add NenadBanjeglav/superpowers-architecture
-/plugin install superpowers-architecture@superpowers-architecture
-```
-
-Then invoke skills with the plugin namespace:
-
-```text
-/superpowers-architecture:wayfinder
-/superpowers-architecture:brainstorming
-/superpowers-architecture:writing-plans
-/superpowers-architecture:subagent-driven-development
-/superpowers-architecture:finishing-a-development-branch
-```
-
-For local plugin development from a clone of this repository, pass the verified
-absolute checkout path so fresh sessions can preserve plugin affinity:
-
-```bash
-claude --plugin-dir "/absolute/path/to/superpowers-architecture"
-```
-
 ## Agentic Foundation
 
 Wayfinder creates a complete but focused project knowledge base:
@@ -156,8 +132,8 @@ Foundation candidate roots also hold the operation-owned review report, transact
 - [Shared Agentic Foundation Lifecycle](skills/using-superpowers/references/agentic-foundation-lifecycle.md)
 - [Shared Phase Handoff Contract](skills/using-superpowers/references/phase-handoff.md)
 
-The supported distribution channels are GitHub/skills.sh, the Codex plugin
-package, and the Claude marketplace plugin. npm is not supported;
+The supported distribution channels are GitHub/skills.sh for Codex and the
+Codex plugin package. npm is not supported;
 `package.json` is private repository/tooling metadata.
 
 ## Examples

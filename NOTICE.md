@@ -11,7 +11,7 @@ This project is not affiliated with, endorsed by, or maintained by either upstre
 
 The Wayfinder adaptation does not import `mattpocock/skills` issue, PRD, or
 triage flows. Superpowers Architecture is an independent
-Architecture-first Superpowers workflow for Codex and Claude Code, with an
+Architecture-first Superpowers workflow for Codex, with an
 Agentic Foundation, Design Understanding, local specs and plans, exact phase
 handoffs, worktree-aware implementation, code commits, TDD, reviews, and
 verified summaries.

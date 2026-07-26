@@ -1,10 +1,12 @@
 # Runtime Support
 
 Superpowers Architecture ships one shared `skills/<skill>/SKILL.md` core with
-thin adapters for Codex and Claude Code. Runtime support is accepted only after
-the relevant installed host completes the manual evidence matrix in
+a thin supported Codex adapter. Runtime support is accepted only after
+installed Codex completes the manual evidence matrix in
 [Release](release.md). Reading manifests or adapter source is not a substitute
 for running the installed host.
+
+Codex supported; Claude deferred/unadvertised.
 
 ## Prerequisite
 
@@ -40,7 +42,6 @@ reimplement its schema or canonicalization.
 | --- | --- | --- | --- |
 | GitHub/skills.sh | Skills selected from `skills/` | The installing agent's native skill runtime | Skill discovery, complete-operation install, lifecycle/SDD invocation, and fail-closed partial-install behavior |
 | Codex plugin package | `skills/` | `.codex-plugin/plugin.json` and `hooks/hooks-codex.json` | Plugin load, startup/resume/clear/compaction behavior, Wayfinder and six-operation discovery, isolated dispatch, fresh-task handoff, same-checkout affinity, receipt validation, and safe fallback |
-| Claude marketplace plugin | `skills/` | `.claude-plugin/`, `hooks/hooks.json`, and the Claude tool mapping | Marketplace and local-plugin load, startup/resume/clear/compaction hooks, Wayfinder and six-operation discovery, isolated Agent dispatch, named background handoff, same-checkout/plugin affinity, receipt validation, and safe fallback |
 
 The repository `package.json` is private tooling metadata. npm is not a
 supported installation or publication surface.
@@ -55,10 +56,9 @@ Runtime adapters discover the active host's available tools and model choices;
 they do not hard-code stale identifiers.
 
 Codex maps no-history isolation to an advertised `spawn_agent` operation with
-`fork_turns: "none"`. Claude maps it to the installed Agent/subagent surface
-only when that version documents and exposes fresh-context behavior. If the
-host cannot prove isolation, the adapter discloses the reduced guarantee or
-uses the owning workflow's deterministic fallback.
+`fork_turns: "none"`. If the host cannot prove isolation, the adapter
+discloses the reduced guarantee or uses the owning workflow's deterministic
+fallback.
 
 ## Automated Fresh-Session Handoff
 
@@ -97,11 +97,7 @@ manifest/revision/receipt, ignored-file state, and plugin source from disk. Any
 mismatch stops phase work.
 
 Codex handoff may use only a new project task that the installed app can bind
-to the exact saved checkout. It must never use a conversation fork. Claude
-handoff may use named background-session flags only after the installed
-`claude --help` advertises them. A local Claude checkout must also pass the
-verified absolute plugin root through `--plugin-dir`; an installed copy or a
-different checkout is not equivalent.
+to the exact saved checkout. It must never use a conversation fork.
 
 Specs, plans, Foundation candidates, and receipts under `docs/superpowers/`
 are ignored local state. They remain valid only in the same physical checkout;
@@ -126,11 +122,11 @@ The following conditions block a runtime or release claim:
   compaction;
 - Node degradation is silent, or a correctness-critical operation continues;
 - required shell/operating-system evidence is unavailable; or
-- an installed Codex or Claude matrix remains incomplete.
+- the installed Codex matrix remains incomplete.
 
-Both hook adapters use the `startup|resume|clear|compact` SessionStart matcher
-and render only the shared six-invariant marked startup contract within the
-4,000-character envelope. For the 0.5.0 preparation, installed Claude CLI
-evidence and a passing installed Codex compaction canary are still mandatory.
-Until the release evidence closes both, 0.5.0 must not be described as fully
-verified or published.
+The Codex hook adapter uses the `startup|resume|clear|compact` SessionStart
+matcher and renders only the shared six-invariant marked startup contract
+within the 4,000-character envelope. Genuine installed-Codex evidence,
+including startup context and compaction reinjection, is mandatory before
+0.5.0 can be described as fully verified. Publication remains separately
+authorized.

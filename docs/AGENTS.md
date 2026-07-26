@@ -12,9 +12,9 @@ Public documentation and local Superpowers working docs.
 
 ## Local Contracts
 
-- Public docs must describe Codex and Claude Code support as shipped runtime adapters over the shared skill core.
-- Public docs must clearly distinguish the three supported channels: GitHub/skills.sh, the Codex plugin package, and the Claude marketplace plugin. npm is unsupported and `package.json` is private tooling metadata.
-- Runtime and release documentation must require installed-host evidence; source inspection cannot substitute for Codex or Claude execution, and missing mandatory evidence is a hard release blocker.
+- Public docs must state the exact current boundary: `Codex supported; Claude deferred/unadvertised`.
+- Public docs must distinguish exactly two supported channels: GitHub/skills.sh for Codex and the Codex plugin package. npm is unsupported and `package.json` is private tooling metadata.
+- Runtime and release documentation must require installed Codex evidence; source inspection cannot substitute, and missing mandatory Codex evidence is a hard release blocker.
 - Local tag preparation and external publication are separate gates. Public docs must not imply that a local tag was pushed or a GitHub release was created.
 - Mentions of removed upstream behavior must be descriptive, not active instructions.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
@@ -28,7 +28,7 @@ Public documentation and local Superpowers working docs.
 ## Verification
 
 - Review Markdown links and headings after documentation edits.
-- For runtime-related docs, confirm Codex and Claude Code guidance stays aligned with shared skill policy.
+- For runtime-related docs, confirm Codex guidance stays aligned with shared host-neutral skill policy.
 - Confirm `runtime-support.md` and `release.md` agree on distribution channels, evidence blockers, and publication authority.
 
 ## Child DOX Index

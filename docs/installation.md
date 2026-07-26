@@ -1,7 +1,7 @@
 # Installation
 
-Superpowers Architecture supports three distribution channels: GitHub/skills.sh,
-the Codex plugin package, and the Claude marketplace plugin. npm is not a
+Superpowers Architecture supports two distribution channels: GitHub/skills.sh
+for Codex and the Codex plugin package. npm is not a
 supported channel; the repository `package.json` is private tooling metadata.
 
 Node.js 20 or newer is required for artifact lifecycle, portable SDD workspace,
@@ -94,9 +94,7 @@ Automated fresh-session mode depends on runtime support.
 
 - Codex App uses only a genuinely new project task that can target the exact
   saved checkout; it never uses a conversation fork.
-- Claude Code uses a named background session only after the installed
-  `claude --help` advertises the required flags.
-- Both targets must echo and independently revalidate the complete
+- The target must echo and independently revalidate the complete
   fifteen-field handoff record before phase work.
 - Foundation-backed Planning and implementation keep the receipt outside that
   fixed record as `Foundation Application Receipt: <absolute APPLIED.json
@@ -109,48 +107,6 @@ Automated fresh-session mode depends on runtime support.
   session. Uncertain affinity falls back without automatic launch.
 
 If the runtime cannot launch a fresh session automatically, Superpowers Architecture prints the exact next-phase prompt or command and stops.
-
-## Claude Code Plugin
-
-Claude support is shipped through a Claude Code plugin adapter over the same shared skills.
-
-In Claude Code:
-
-```text
-/plugin marketplace add NenadBanjeglav/superpowers-architecture
-/plugin install superpowers-architecture@superpowers-architecture
-```
-
-Invoke skills with the plugin namespace:
-
-```text
-/superpowers-architecture:wayfinder
-/superpowers-architecture:brainstorming
-/superpowers-architecture:writing-plans
-/superpowers-architecture:subagent-driven-development
-/superpowers-architecture:finishing-a-development-branch
-```
-
-For local development, pass the verified absolute plugin root:
-
-```bash
-claude --plugin-dir "/absolute/path/to/superpowers-architecture"
-```
-
-Fresh local-plugin sessions must receive that same absolute `--plugin-dir`
-path. A cached install or a different checkout is not equivalent.
-
-After editing plugin manifests or hooks in an active Claude session, run:
-
-```text
-/reload-plugins
-```
-
-Claude support is release-verified only after both marketplace and local-plugin
-loads run in an installed CLI, including hooks, isolated Agent dispatch, named
-background handoff, Foundation Application Receipt validation,
-checkout/plugin affinity, and fallback behavior. The equivalent installed
-Codex evidence is also mandatory; source inspection cannot waive either host.
 
 See [Runtime Support](runtime-support.md) for host behavior and
 [Release](release.md) for the evidence and publication gates.

@@ -79,8 +79,8 @@ Approved Design Spec
 -> resulting Approved Agentic Foundation
 ```
 
-In automated fresh-session mode, approval starts a fresh Codex or Claude
-planning session only after the source proves repository, checkout,
+In automated fresh-session mode, approval starts a fresh Codex planning task
+only after the source proves repository, checkout,
 branch/worktree, artifact, ignored-file, receipt, and plugin affinity. The new
 session acknowledges all fifteen handoff fields and separately acknowledges
 the external Foundation Application Receipt binding before repeating those
@@ -137,23 +137,12 @@ The agent runs final verification, checks git status, confirms local Superpowers
 
 With skills.sh or Codex skill installs, use the skill names directly.
 
-With the Claude Code plugin, use the plugin namespace:
-
-```text
-/superpowers-architecture:wayfinder
-/superpowers-architecture:brainstorming
-/superpowers-architecture:writing-plans
-/superpowers-architecture:subagent-driven-development
-/superpowers-architecture:finishing-a-development-branch
-```
-
 ## Runtime Handoffs
 
 Codex App automated fresh-session handoff uses only a genuinely new project task when the installed app can bind it to the exact checkout. It never uses a conversation fork.
 
-Claude Code automated fresh-session handoff uses an installed, advertised named-background-session interface. Local-plugin handoff also binds the verified absolute `--plugin-dir` path.
-
-Both adapters fall back to printing the exact next-phase prompt or command when automatic launch is unavailable, disabled, or unsafe.
+The Codex adapter falls back to printing the exact next-phase prompt or
+command when automatic launch is unavailable, disabled, or unsafe.
 
 The immutable handoff record contains exactly fifteen fields. Brainstorming
 adds its selected roadmap outcome and exact canonical prompt outside the

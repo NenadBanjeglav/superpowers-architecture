@@ -2,7 +2,7 @@
   "name": "superpowers-architecture",
   "displayName": "Superpowers Architecture",
   "version": "0.5.0",
-  "description": "Architecture-first Superpowers for Claude Code: design understanding, local specs, exact plans, selected phase handoffs, TDD, reviews, and verified implementation.",
+  "description": "Deferred Claude Code adapter source for Superpowers Architecture; unsupported and unadvertised in the current Codex-only release.",
   "author": {
     "name": "Nenad Banjeglav"
   },
@@ -10,13 +10,11 @@
   "repository": "https://github.com/NenadBanjeglav/superpowers-architecture",
   "license": "MIT",
   "keywords": [
-    "claude-code",
     "agent-skills",
     "superpowers",
     "architecture",
     "tdd",
     "developer-tools"
   ],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
