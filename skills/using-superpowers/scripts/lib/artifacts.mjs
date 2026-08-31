@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rmdir, writeFile } from 'node:fs/promises';
+import { isIso8601Timestamp, policyAcceptsReady, resolveApprovalPolicy } from './policy.mjs';
 
 const LIFECYCLE_LABELS = ['Artifact Type', 'Status', 'Revision', 'Approved Revision', 'Approved At'];
 const LIFECYCLE_LINE = /^\*\*(Artifact Type|Status|Revision|Approved Revision|Approved At):\*\*[^\n]*(?:\n|$)/gm;
@@ -59,7 +60,7 @@ export function computeArtifactRevision(input) {
 }
 
 function recoveryAction() {
-  return 'Recovery: run artifact draft before editing, run artifact refresh after editing, obtain renewed user review, then run artifact approve with the exact refreshed revision.';
+  return 'Recovery: run artifact draft before editing and artifact refresh afterward. Resolve applicable review findings, then use artifact ready under Autonomous or obtain clear human approval and use artifact approve under Review-gated.';
 }
 
 function artifactError(path, expected, actual, recovery = recoveryAction()) {
@@ -172,7 +173,33 @@ async function writeArtifact(path, normalized, metadata) {
   return { path, ...metadata };
 }
 
-export async function draftArtifact({ path, artifactType }) {
+async function withArtifactWriterLock(path, operation) {
+  const lockPath = `${path}.spa-artifact-operation.lock`;
+  try {
+    await mkdir(lockPath, { mode: 0o700 });
+  } catch (error) {
+    throw artifactError(path, `exclusive cooperative writer lock ${lockPath}`, error.code ?? error.message, `Recovery: confirm no artifact lifecycle writer is active. Remove ${lockPath} only when a prior writer demonstrably terminated, then reread and refresh the artifact.`);
+  }
+  let operationError;
+  try {
+    return await operation();
+  } catch (error) {
+    operationError = error;
+    throw error;
+  } finally {
+    try {
+      await rmdir(lockPath);
+    } catch (error) {
+      const cleanupError = artifactError(path, `empty operation-owned writer lock ${lockPath}`, error.code ?? error.message, `Recovery: preserve and inspect ${lockPath}; do not recursively remove unknown contents.`);
+      if (operationError) {
+        throw new AggregateError([operationError, cleanupError], `${operationError.message} Artifact writer-lock cleanup also failed: ${cleanupError.message}`, { cause: operationError });
+      }
+      throw cleanupError;
+    }
+  }
+}
+
+async function draftArtifactUnlocked({ path, artifactType }) {
   if (!artifactType) {
     throw artifactError(
       path,
@@ -192,12 +219,12 @@ export async function draftArtifact({ path, artifactType }) {
   });
 }
 
-export async function refreshArtifactRevision({ path, artifactType }) {
+async function refreshArtifactRevisionUnlocked({ path, artifactType }) {
   const { bytes, normalized } = await readArtifact(path);
   const current = parseLifecycleMetadata(path, normalized);
   assertArtifactType(path, artifactType, current.artifactType);
-  if (!['Draft', 'Approved'].includes(current.status)) {
-    throw artifactError(path, 'status Draft or Approved', current.status || 'missing status');
+  if (!['Draft', 'Ready', 'Approved'].includes(current.status)) {
+    throw artifactError(path, 'status Draft, Ready, or Approved', current.status || 'missing status');
   }
 
   const revision = computeArtifactRevision(bytes);
@@ -205,18 +232,45 @@ export async function refreshArtifactRevision({ path, artifactType }) {
     current.status === 'Approved' &&
     current.revision === revision &&
     current.approvedRevision === revision &&
-    current.approvedAt !== 'none';
+    current.approvedAt !== 'none' &&
+    isIso8601Timestamp(current.approvedAt);
+  const readinessStillValid =
+    current.status === 'Ready' &&
+    current.revision === revision &&
+    current.approvedRevision === 'none' &&
+    current.approvedAt === 'none';
+
+  if (approvalStillValid || readinessStillValid) {
+    return { path, ...current };
+  }
 
   return writeArtifact(path, normalized, {
     artifactType,
-    status: approvalStillValid ? 'Approved' : 'Draft',
+    status: 'Draft',
     revision,
-    approvedRevision: approvalStillValid ? revision : 'none',
-    approvedAt: approvalStillValid ? current.approvedAt : 'none',
+    approvedRevision: 'none',
+    approvedAt: 'none',
   });
 }
 
-export async function approveArtifact({ path, artifactType, expectedRevision, approvedAt = new Date().toISOString() }) {
+async function readyArtifactUnlocked({ path, artifactType, expectedRevision }) {
+  assertRevisionArgument(path, expectedRevision);
+  const checked = await readArtifact(path);
+  const current = parseLifecycleMetadata(path, checked.normalized);
+  assertArtifactType(path, artifactType, current.artifactType);
+  if (current.status !== 'Draft' || current.revision !== expectedRevision || current.approvedRevision !== 'none' || current.approvedAt !== 'none' || computeArtifactRevision(checked.bytes) !== expectedRevision) {
+    throw artifactError(path, `refreshed Draft ${expectedRevision} with no approval metadata`, `Status ${current.status}; Revision ${current.revision}; Approved Revision ${current.approvedRevision}; Approved At ${current.approvedAt}; payload ${computeArtifactRevision(checked.bytes)}`);
+  }
+  return writeArtifact(path, checked.normalized, {
+    artifactType,
+    status: 'Ready',
+    revision: expectedRevision,
+    approvedRevision: 'none',
+    approvedAt: 'none',
+  });
+}
+
+async function approveArtifactUnlocked({ path, artifactType, expectedRevision, approvedAt = new Date().toISOString() }) {
   assertRevisionArgument(path, expectedRevision);
   const { bytes, normalized } = await readArtifact(path);
   const current = parseLifecycleMetadata(path, normalized);
@@ -234,7 +288,7 @@ export async function approveArtifact({ path, artifactType, expectedRevision, ap
   if (actualRevision !== expectedRevision) {
     throw artifactError(path, `reviewed revision ${expectedRevision}`, actualRevision);
   }
-  if (Number.isNaN(Date.parse(approvedAt))) {
+  if (!isIso8601Timestamp(approvedAt)) {
     throw artifactError(
       path,
       'Approved At as an ISO-8601 timestamp',
@@ -250,6 +304,22 @@ export async function approveArtifact({ path, artifactType, expectedRevision, ap
     approvedRevision: actualRevision,
     approvedAt,
   });
+}
+
+export function draftArtifact(args) {
+  return withArtifactWriterLock(args.path, () => draftArtifactUnlocked(args));
+}
+
+export function refreshArtifactRevision(args) {
+  return withArtifactWriterLock(args.path, () => refreshArtifactRevisionUnlocked(args));
+}
+
+export function readyArtifact(args) {
+  return withArtifactWriterLock(args.path, () => readyArtifactUnlocked(args));
+}
+
+export function approveArtifact(args) {
+  return withArtifactWriterLock(args.path, () => approveArtifactUnlocked(args));
 }
 
 export async function validateDraftArtifact({ path, artifactType, expectedRevision }) {
@@ -279,29 +349,37 @@ export async function validateDraftArtifact({ path, artifactType, expectedRevisi
   return { path, ...current };
 }
 
-export async function validateApprovedArtifact({ path, artifactType, expectedRevision }) {
+export async function validateArtifact({ path, artifactType, expectedRevision, policy }) {
   assertRevisionArgument(path, expectedRevision);
+  const resolvedPolicy = resolveApprovalPolicy(policy);
   const { bytes, normalized } = await readArtifact(path);
   const current = parseLifecycleMetadata(path, normalized);
   assertArtifactType(path, artifactType, current.artifactType);
 
+  const actualRevision = computeArtifactRevision(bytes);
+  if (current.revision !== expectedRevision || actualRevision !== expectedRevision) {
+    throw artifactError(path, `current payload and Revision ${expectedRevision}`, `Revision ${current.revision}; payload ${actualRevision}`);
+  }
+  if (current.status === 'Ready' && policyAcceptsReady(resolvedPolicy)) {
+    if (current.approvedRevision !== 'none' || current.approvedAt !== 'none') {
+      throw artifactError(path, 'Ready with Approved Revision none and Approved At none', `Approved Revision ${current.approvedRevision}; Approved At ${current.approvedAt}`);
+    }
+    return { path, ...current, policy: resolvedPolicy };
+  }
   if (current.status !== 'Approved') {
-    throw artifactError(path, 'status Approved', current.status || 'missing status');
+    throw artifactError(path, `status Approved under ${resolvedPolicy}`, current.status || 'missing status');
   }
   if (current.approvedRevision !== expectedRevision) {
     throw artifactError(path, `approved revision ${expectedRevision}`, current.approvedRevision || 'missing approved revision');
   }
-  if (current.revision !== current.approvedRevision) {
-    throw artifactError(path, `Revision ${current.approvedRevision}`, current.revision || 'missing revision');
+  if (!isIso8601Timestamp(current.approvedAt)) {
+    throw artifactError(path, 'a valid ISO-8601 Approved At value', current.approvedAt || 'missing Approved At');
   }
-  if (current.approvedAt === 'none' || Number.isNaN(Date.parse(current.approvedAt))) {
-    throw artifactError(path, 'a valid Approved At value', current.approvedAt || 'missing Approved At');
-  }
+  return { path, ...current, policy: resolvedPolicy };
+}
 
-  const actualRevision = computeArtifactRevision(bytes);
-  if (actualRevision !== current.approvedRevision) {
-    throw artifactError(path, `approved payload digest ${current.approvedRevision}`, actualRevision);
-  }
-
-  return { path, ...current };
+export async function validateApprovedArtifact(args) {
+  const result = await validateArtifact({ ...args, policy: 'Review-gated' });
+  const { policy: omitted, ...legacyResult } = result;
+  return legacyResult;
 }

@@ -8,7 +8,7 @@ Every managed artifact contains exactly one line for each field:
 
 ```markdown
 **Artifact Type:** Design Spec | Implementation Plan
-**Status:** Draft | Approved
+**Status:** Draft | Ready | Approved
 **Revision:** sha256:<64 lowercase hex characters>
 **Approved Revision:** none | sha256:<64 lowercase hex characters>
 **Approved At:** none | ISO-8601 timestamp
@@ -25,19 +25,22 @@ Invoke the shared parser directly with Node or through the platform launcher:
 ```text
 spa artifact draft --path PATH --type "Design Spec"
 spa artifact refresh --path PATH --type "Design Spec"
+spa artifact ready --path PATH --type "Design Spec" --expected-revision sha256:DIGEST
 spa artifact approve --path PATH --type "Design Spec" --expected-revision sha256:DIGEST
-spa artifact validate --path PATH --type "Design Spec" --expected-revision sha256:DIGEST
+spa artifact validate --path PATH --type "Design Spec" --expected-revision sha256:DIGEST --policy Autonomous
 ```
 
-Each success prints one JSON object. Any failure prints an actionable error and exits nonzero. Types are explicit, and approval or validation requires the complete expected digest.
+Each success prints one JSON object. Any failure prints an actionable error and exits nonzero. Types are explicit, and readiness, approval, or validation requires the complete expected digest. `Autonomous` validation accepts Ready or Approved; `Review-gated` accepts Approved. Omitting policy preserves strict legacy behavior.
+
+All lifecycle writes acquire one exact sibling directory lock and reread state under that lock. Cooperating lifecycle writers serialize. A controlled validation or write failure releases its known-empty lock and preserves the original diagnostic; a terminated process or cleanup anomaly leaves visible state that must be inspected before its empty lock is removed. Cleanup errors never silently replace an operation error. An uncooperative external process can still replace bytes after validation, so controllers require a quiescent writer boundary and every later consumer recomputes the exact revision. Unknown drift is never treated as Ready.
 
 ## Managed Edit Sequence
 
 1. Run `artifact draft` before changing content. This invalidates prior approval.
 2. Edit the payload.
-3. Run `artifact refresh` and present the exact resulting revision for advisory review and user review.
-4. Only after explicit user approval, run `artifact approve` with that exact reviewed revision.
-5. Every downstream phase runs `artifact validate` with the expected type and revision before acting.
+3. Run `artifact refresh` and advisory review on the exact resulting revision.
+4. Under Autonomous, resolve findings and run `artifact ready`. Under Review-gated, present a readable review package and only after clear user approval run `artifact approve`.
+5. Every downstream phase runs `artifact validate` with explicit policy, expected type, and revision before acting.
 
 An unmanaged post-approval edit leaves stale metadata. Validation recomputes the payload and rejects it with both the expected approved digest and actual digest; filename, timestamp, or conversation memory never proves approval.
 

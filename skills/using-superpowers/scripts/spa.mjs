@@ -5,7 +5,9 @@ import { pathToFileURL } from 'node:url';
 import {
   approveArtifact,
   draftArtifact,
+  readyArtifact,
   refreshArtifactRevision,
+  validateArtifact,
   validateApprovedArtifact,
 } from './lib/artifacts.mjs';
 import {
@@ -75,13 +77,19 @@ async function runArtifact(command, args) {
       expectedRevision: options['--expected-revision'],
     });
   }
-  if (command === 'validate') {
+  if (command === 'ready') {
     requireOnly(options, ['--path', '--type', '--expected-revision']);
     requireCompleteRevision(options['--expected-revision']);
-    return validateApprovedArtifact({
+    return readyArtifact({ path: options['--path'], artifactType: options['--type'], expectedRevision: options['--expected-revision'] });
+  }
+  if (command === 'validate') {
+    requireOnly(options, ['--path', '--type', '--expected-revision'], ['--policy']);
+    requireCompleteRevision(options['--expected-revision']);
+    return validateArtifact({
       path: options['--path'],
       artifactType: options['--type'],
       expectedRevision: options['--expected-revision'],
+      policy: options['--policy'],
     });
   }
   fail(`Unknown artifact command ${command ?? '(missing)'}.`);
