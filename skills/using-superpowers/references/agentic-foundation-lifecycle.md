@@ -132,12 +132,26 @@ Commands emit one JSON success object. Errors emit one JSON error object and
 exit nonzero. Revisions supplied for approval or validation must be complete
 lowercase SHA-256 identities; abbreviated revisions are rejected.
 
-Lifecycle writes, preview, and apply share one exact temporary-directory
-cooperative writer lock derived from the physical checkout and manifest identities; it never creates tracked recovery state. Controlled failures release a known-empty lock while
-preserving their diagnostic; process termination and cleanup anomalies remain
-visible for inspection. Apply additionally retains the candidate-parent lock
-and recoverable journal. Uncooperative external replacement remains outside the
-portable Node guarantee and causes later exact validation to fail.
+Lifecycle writes, preview, apply, and Foundation-backed workflow migration share
+one exact temporary-directory cooperative writer lock derived from the physical
+checkout and manifest identities; it never creates tracked recovery state. Its
+v2 owner record binds PID, physical root/manifest, operation kind, and migration
+identity when applicable. Controlled acquisition failure removes only a proven
+empty newly created directory. Controlled operations release only their exact
+owner record and directory. An exact retry may reclaim a demonstrably dead lock
+only for the same migration identity and request digest; unknown, corrupt,
+changed, or uncertain ownership remains visible and fails closed. Apply
+additionally retains the candidate-parent lock and recoverable journal.
+Uncooperative external replacement remains outside the portable Node guarantee
+and causes later exact validation to fail.
+
+`workflow migrate` is the only repair seam for changing managed Foundation
+instructions together with stale/current lifecycle artifacts. It consumes the
+complete raw managed snapshot, reuses this canonicalizer and declaration/ledger
+checks, and writes the prospective Ready manifest and core-owned v2 receipt in
+one checkout-wide migration transaction. Generic migration rejects every path
+declared by an existing Foundation manifest. Migration history preserves every
+original Foundation record and is validated on terminal retry.
 
 `draft` computes current canonical bytes and writes Draft metadata.
 

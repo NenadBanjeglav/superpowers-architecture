@@ -312,6 +312,24 @@ async function runWorkspace(command, args) {
   return detectWorkspaceEvidence(options['--root']);
 }
 
+async function runWorkflow(command, args) {
+  if (command !== 'migrate') fail(`Unknown workflow command ${command ?? '(missing)'}.`);
+  let migrateWorkflow;
+  try {
+    ({ migrateWorkflow } = await import('./lib/workflow.mjs'));
+  } catch (error) {
+    const detail = error?.code ? `${error.code}: ${error.message}` : error?.message ?? String(error);
+    fail(`Workflow migration module unavailable (${detail}). Recovery: restore the complete shared Node operation package before retrying migration.`);
+  }
+  const options = parseOptions(args);
+  requireOnly(options, ['--root', '--request', '--policy']);
+  return migrateWorkflow({
+    root: options['--root'],
+    requestPath: options['--request'],
+    policy: options['--policy'],
+  });
+}
+
 export async function runSpa(argv) {
   const [group, command, ...args] = argv;
   if (group === 'artifact') return runArtifact(command, args);
@@ -319,6 +337,7 @@ export async function runSpa(argv) {
   if (group === 'sdd') return runSdd(command, args);
   if (group === 'startup') return runStartup(command, args);
   if (group === 'workspace') return runWorkspace(command, args);
+  if (group === 'workflow') return runWorkflow(command, args);
   fail(`Unknown command group ${group ?? '(missing)'}.`);
 }
 

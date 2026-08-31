@@ -59,6 +59,40 @@ export function computeArtifactRevision(input) {
   return `sha256:${createHash('sha256').update(canonicalizeArtifactBytes(input)).digest('hex')}`;
 }
 
+export function inspectArtifactBytes({ path, bytes, artifactType }) {
+  const normalized = decodeArtifactBytes(bytes);
+  const current = parseLifecycleMetadata(path, normalized);
+  assertArtifactType(path, artifactType, current.artifactType);
+  return {
+    ...current,
+    payloadRevision: computeArtifactRevision(bytes),
+  };
+}
+
+export function prepareReadyArtifactBytes({ path, bytes, artifactType }) {
+  const normalized = decodeArtifactBytes(bytes);
+  const current = parseLifecycleMetadata(path, normalized);
+  assertArtifactType(path, artifactType, current.artifactType);
+  const revision = computeArtifactRevision(bytes);
+  const content = Buffer.from(replaceLifecycleMetadata(normalized, {
+    artifactType,
+    status: 'Ready',
+    revision,
+    approvedRevision: 'none',
+    approvedAt: 'none',
+  }), 'utf8');
+  return {
+    content,
+    state: {
+      artifactType,
+      status: 'Ready',
+      revision,
+      approvedRevision: 'none',
+      approvedAt: 'none',
+    },
+  };
+}
+
 function recoveryAction() {
   return 'Recovery: run artifact draft before editing and artifact refresh afterward. Resolve applicable review findings, then use artifact ready under Autonomous or obtain clear human approval and use artifact approve under Review-gated.';
 }

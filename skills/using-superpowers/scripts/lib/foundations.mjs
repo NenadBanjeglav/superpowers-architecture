@@ -40,6 +40,7 @@ import { resolveApprovalPolicy } from './policy.mjs';
 const FOUNDATION_ARTIFACT_TYPE = 'Agentic Foundation';
 const FOUNDATION_SCHEMA = 'superpowers-architecture-agentic-foundation-v1';
 const MANIFEST_RELATIVE_PATH = 'docs/agentic/WAYFINDING.md';
+const DECISIONS_RELATIVE_PATH = 'docs/agentic/DECISIONS.md';
 const REQUIRED_FOUNDATION_FILES = [
   'AGENTS.md',
   'CONTEXT.md',
@@ -89,6 +90,10 @@ function recoveryAction() {
 
 function foundationError(subject, expected, actual, recovery = recoveryAction()) {
   return new Error(`Agentic Foundation ${subject}: expected ${expected}; actual ${actual}. ${recovery}`);
+}
+
+function compareUtf8(left, right) {
+  return Buffer.compare(Buffer.from(left, 'utf8'), Buffer.from(right, 'utf8'));
 }
 
 function assertSupportedNode() {
@@ -953,6 +958,99 @@ export function computeFoundationRevision(records) {
   return `sha256:${createHash('sha256').update(canonicalizeFoundationRecords(records)).digest('hex')}`;
 }
 
+function immutableLedgerEntries(content, subject) {
+  const normalized = decodeStrictUtf8(content, subject);
+  const heading = normalized.match(/^## Immutable Decision Ledger[ \t]*$/m);
+  if (!heading) throw foundationError(subject, 'one ## Immutable Decision Ledger section', 'missing');
+  const start = heading.index + heading[0].length;
+  const rest = normalized.slice(start);
+  const end = rest.search(/^## (?!#)/m);
+  const ledger = end < 0 ? rest : rest.slice(0, end);
+  const entryMatches = [...ledger.matchAll(/^### DEC-[0-9]+:[^\n]*$/gm)];
+  return entryMatches.map((match, index) => {
+    const next = entryMatches[index + 1]?.index ?? ledger.length;
+    return ledger.slice(match.index, next).replace(/\s+$/g, '');
+  });
+}
+
+function assertImmutableLedgerPreserved(baseContent, prospectiveContent) {
+  const baseEntries = immutableLedgerEntries(baseContent, 'base Decision Ledger');
+  const prospectiveEntries = immutableLedgerEntries(prospectiveContent, 'prospective Decision Ledger');
+  if (prospectiveEntries.length < baseEntries.length) {
+    throw foundationError('Decision Ledger migration', `at least ${baseEntries.length} immutable entries`, `${prospectiveEntries.length} entries`);
+  }
+  for (let index = 0; index < baseEntries.length; index += 1) {
+    if (prospectiveEntries[index] !== baseEntries[index]) {
+      throw foundationError(`Decision Ledger entry ${index}`, 'the exact prior immutable entry bytes in original order', 'entry changed or reordered', 'Recovery: restore every prior ledger entry byte-for-byte; append a superseding entry and update only the Current Decision Index.');
+    }
+  }
+}
+
+export function prepareFoundationMigration({ manifestPath, baseRecords, changes, specBytes }) {
+  if (!Array.isArray(baseRecords) || !Array.isArray(changes)) {
+    throw foundationError('migration records', 'baseRecords and changes arrays', 'invalid inputs');
+  }
+  const baseByPath = new Map(baseRecords.map((record) => [record.path, Buffer.from(record.content)]));
+  if (baseByPath.size !== baseRecords.length || !baseByPath.has(MANIFEST_RELATIVE_PATH)) {
+    throw foundationError('migration base records', `unique records including ${MANIFEST_RELATIVE_PATH}`, 'missing or duplicate records');
+  }
+  const baseManifest = `${decodeStrictUtf8(baseByPath.get(MANIFEST_RELATIVE_PATH), `manifest ${manifestPath}`).replace(/\n+$/g, '')}\n`;
+  const baseMetadata = parseLifecycleMetadata(manifestPath, baseManifest);
+  assertArtifactType(manifestPath, baseMetadata.artifactType);
+  const baseFiles = parseFoundationFiles(manifestPath, baseManifest);
+  if (JSON.stringify([...baseByPath.keys()].sort(compareUtf8)) !== JSON.stringify([...baseFiles].sort(compareUtf8))) {
+    throw foundationError('migration base record set', 'exact equality with the Foundation manifest', JSON.stringify([...baseByPath.keys()]));
+  }
+  const prospective = new Map(baseByPath);
+  const normalizedChanges = changes.map((change) => {
+    assertNormalizedRecordPath(change.path, 'migration Foundation change path');
+    if (!['upsert'].includes(change.action) || change.content === undefined) {
+      throw foundationError(`migration Foundation change ${change.path}`, 'one complete upsert', change.action ?? 'missing');
+    }
+    prospective.set(change.path, Buffer.from(change.content));
+    return { path: change.path, action: 'upsert' };
+  });
+  const prospectiveManifest = `${decodeStrictUtf8(prospective.get(MANIFEST_RELATIVE_PATH), `prospective manifest ${manifestPath}`).replace(/\n+$/g, '')}\n`;
+  const prospectiveFiles = parseFoundationFiles(manifestPath, prospectiveManifest);
+  if (JSON.stringify([...prospective.keys()].sort(compareUtf8)) !== JSON.stringify([...prospectiveFiles].sort(compareUtf8))) {
+    throw foundationError('migration prospective record set', 'exact equality with the prospective Foundation manifest', JSON.stringify([...prospective.keys()]));
+  }
+  const baseRevision = computeFoundationRevision(baseRecords);
+  const prospectiveFilesMap = new Map([...prospective.entries()]);
+  const declaration = parseFoundationCandidateDeclaration(specBytes);
+  validateDeclarationAgainstCandidate(
+    declaration,
+    normalizedChanges,
+    { records: baseRecords },
+    { prospectiveFiles: prospectiveFilesMap },
+  );
+  if (prospective.has(DECISIONS_RELATIVE_PATH) && baseByPath.has(DECISIONS_RELATIVE_PATH)) {
+    assertImmutableLedgerPreserved(baseByPath.get(DECISIONS_RELATIVE_PATH), prospective.get(DECISIONS_RELATIVE_PATH));
+  }
+  const resultRecords = prospectiveFiles.map((path) => ({ path, content: prospective.get(path) }));
+  const resultRevision = computeFoundationRevision(resultRecords);
+  const readyManifest = Buffer.from(replaceLifecycleMetadata(prospectiveManifest, {
+    artifactType: FOUNDATION_ARTIFACT_TYPE,
+    status: 'Ready',
+    revision: resultRevision,
+    approvedRevision: 'none',
+    approvedAt: 'none',
+  }), 'utf8');
+  prospective.set(MANIFEST_RELATIVE_PATH, readyManifest);
+  return {
+    baseRevision,
+    resultRevision,
+    actions: sortChangedFiles(normalizedChanges),
+    records: prospectiveFiles.map((path) => ({ path, content: prospective.get(path) })),
+    state: {
+      status: 'Ready',
+      revision: resultRevision,
+      approvedRevision: 'none',
+      approvedAt: 'none',
+    },
+  };
+}
+
 function maskMarkdownFences(normalized) {
   let insideFence = false;
   let fenceCharacter = '';
@@ -1114,6 +1212,12 @@ function parseFoundationFiles(manifestPath, normalized) {
     }
   }
   return files;
+}
+
+export function foundationManifestPaths({ manifestPath, bytes }) {
+  const normalized = `${decodeStrictUtf8(bytes, `manifest ${manifestPath}`).replace(/\n+$/g, '')}\n`;
+  parseLifecycleMetadata(manifestPath, normalized);
+  return parseFoundationFiles(manifestPath, normalized);
 }
 
 function assertCompleteRevision(subject, revision) {
@@ -1316,24 +1420,86 @@ async function writeFoundationMetadata(context, metadata) {
   return foundationResult(context, metadata);
 }
 
-async function withFoundationWriterLock(root, manifestPath, operation) {
+function foundationWriterIsLive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return null;
+  try { process.kill(pid, 0); return true; }
+  catch (error) {
+    if (error.code === 'EPERM') return true;
+    if (error.code === 'ESRCH') return false;
+    return null;
+  }
+}
+
+async function withFoundationWriterLock(root, manifestPath, operation, binding = null) {
   const { rootRealPath } = await validateCheckout(root, manifestPath);
   const manifestRealPath = await realpath(manifestPath);
   const identity = createHash('sha256').update(Buffer.from(`${rootRealPath}\0${manifestRealPath}`, 'utf8')).digest('hex');
   const lockPath = join(tmpdir(), `.spa-foundation-writer-${identity}.lock`);
+  const ownerPath = join(lockPath, 'owner.json');
+  const owner = {
+    schema: 'superpowers-architecture-foundation-writer-v2',
+    ownerPid: process.pid,
+    root: rootRealPath,
+    manifestPath: manifestRealPath,
+    kind: binding?.kind ?? 'foundation-operation',
+    id: binding?.id ?? 'none',
+    requestDigest: binding?.requestDigest ?? 'none',
+    acquiredAt: new Date().toISOString(),
+  };
   try { await mkdir(lockPath, { mode: 0o700 }); }
-  catch (error) { throw foundationError(`manifest ${manifestPath}`, `no live cooperative writer lock at ${lockPath}`, error.code ?? error.message, `Recovery: wait for the active Foundation writer. Inspect ${lockPath} before removing it after a demonstrably terminated writer.`); }
+  catch (error) {
+    if (error.code !== 'EEXIST' || !binding) throw foundationError(`manifest ${manifestPath}`, `no live cooperative writer lock at ${lockPath}`, error.code ?? error.message, `Recovery: wait for the active Foundation writer. Inspect ${lockPath} before removing it after a demonstrably terminated writer.`);
+    let existing;
+    try { existing = JSON.parse(await readFile(ownerPath, 'utf8')); }
+    catch (readError) { throw foundationError(`manifest ${manifestPath}`, 'readable exact writer ownership evidence', readError.code ?? readError.message, `Recovery: preserve ${lockPath}; ownership is uncertain.`); }
+    const expectedBinding = existing?.schema === owner.schema && existing.root === owner.root && existing.manifestPath === owner.manifestPath && existing.kind === owner.kind && existing.id === owner.id && existing.requestDigest === owner.requestDigest;
+    const live = foundationWriterIsLive(existing?.ownerPid);
+    if (!expectedBinding || live !== false) throw foundationError(`manifest ${manifestPath}`, 'the exact demonstrably terminated migration writer', JSON.stringify(existing), `Recovery: preserve ${lockPath}; never infer ownership or liveness.`);
+    const reread = JSON.parse(await readFile(ownerPath, 'utf8'));
+    if (JSON.stringify(reread) !== JSON.stringify(existing)) throw foundationError(`manifest ${manifestPath}`, 'stable dead writer evidence', 'owner changed');
+    await rm(ownerPath);
+    await rmdir(lockPath);
+    await mkdir(lockPath, { mode: 0o700 });
+  }
+  try {
+    await writeExclusiveSynced(ownerPath, Buffer.from(`${JSON.stringify(owner, null, 2)}\n`), 0o600);
+  } catch (error) {
+    let cleanup = 'lock preserved because ownership content may exist';
+    try {
+      const names = await readdir(lockPath);
+      if (names.length === 0) {
+        await rmdir(lockPath);
+        cleanup = 'proven-empty new lock removed';
+      }
+    } catch (cleanupError) {
+      cleanup = `cleanup inspection failed: ${cleanupError.message}`;
+    }
+    throw foundationError(`manifest ${manifestPath}`, 'a synced exact writer owner record', error.code ?? error.message, `Recovery: ${cleanup}; inspect ${lockPath} before retrying.`);
+  }
   let operationError;
   try { return await operation(); }
   catch (error) { operationError = error; throw error; }
   finally {
-    try { await rmdir(lockPath); }
+    try {
+      const current = JSON.parse(await readFile(ownerPath, 'utf8'));
+      if (JSON.stringify(current) !== JSON.stringify(owner)) throw new Error('writer owner record changed');
+      await rm(ownerPath);
+      await rmdir(lockPath);
+    }
     catch (error) {
-      const cleanupError = foundationError(`manifest ${manifestPath}`, `empty operation-owned writer lock ${lockPath}`, error.code ?? error.message, `Recovery: preserve and inspect ${lockPath}; never recursively remove unknown contents.`);
+      const cleanupError = foundationError(`manifest ${manifestPath}`, `exact operation-owned writer lock ${lockPath}`, error.code ?? error.message, `Recovery: preserve and inspect ${lockPath}; never recursively remove unknown contents.`);
       if (operationError) throw new AggregateError([operationError, cleanupError], `${operationError.message} Foundation writer-lock cleanup also failed: ${cleanupError.message}`, {cause:operationError});
       throw cleanupError;
     }
   }
+}
+
+export function withFoundationWriterExclusion({ root, manifestPath, id, requestDigest }, operation) {
+  return withFoundationWriterLock(root, manifestPath, operation, {
+    kind: 'workflow-migration',
+    id,
+    requestDigest,
+  });
 }
 
 async function draftFoundationUnlocked({ root, manifestPath }) {
