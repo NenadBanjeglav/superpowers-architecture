@@ -25,13 +25,17 @@ import {
   resolve,
   sep,
 } from 'node:path';
+import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 
 import {
   approveArtifact,
+  readyArtifact,
+  validateArtifact,
   validateApprovedArtifact,
   validateDraftArtifact,
 } from './artifacts.mjs';
+import { resolveApprovalPolicy } from './policy.mjs';
 
 const FOUNDATION_ARTIFACT_TYPE = 'Agentic Foundation';
 const FOUNDATION_SCHEMA = 'superpowers-architecture-agentic-foundation-v1';
@@ -67,6 +71,8 @@ const DURABLE_IMPACT_SECTION = '## Durable Documentation Impact';
 const OPERATION_LOCK_SCHEMA =
   'superpowers-architecture-foundation-operation-lock-v1';
 const TRANSACTION_SCHEMA = 'superpowers-architecture-foundation-transaction-v1';
+const OPERATION_LOCK_SCHEMA_V2 = 'superpowers-architecture-foundation-operation-lock-v2';
+const TRANSACTION_SCHEMA_V2 = 'superpowers-architecture-foundation-transaction-v2';
 const OPERATION_LOCK_FILE = '.foundation-operation.lock.json';
 const CANDIDATE_PARENT_RELATIVE_PATH = 'docs/superpowers/foundation-candidates';
 const DESIGN_SPEC_PARENT_RELATIVE_PATH = 'docs/superpowers/specs';
@@ -78,7 +84,7 @@ const OPERATION_NONCE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}
 const execFile = promisify(execFileCallback);
 
 function recoveryAction() {
-  return 'Recovery: run foundation draft before editing, run foundation refresh after editing, obtain renewed user review, then run foundation approve with the exact refreshed revision.';
+  return 'Recovery: run foundation draft before editing and foundation refresh afterward. Resolve applicable review findings, then use foundation ready under Autonomous or obtain clear human approval and use foundation approve under Review-gated.';
 }
 
 function foundationError(subject, expected, actual, recovery = recoveryAction()) {
@@ -876,7 +882,7 @@ function validateDeclarationAgainstReceipt(declaration, receiptActions) {
       'Foundation declaration Application Receipt projection',
       'exact path/action equality with APPLIED.json actions',
       JSON.stringify(normalizedReceiptActions),
-      'Recovery: preserve the exact applied receipt and Approved Design Spec declaration.',
+      'Recovery: preserve the exact applied receipt and reviewed Design Spec declaration.',
     );
   }
   return declaration;
@@ -1310,7 +1316,27 @@ async function writeFoundationMetadata(context, metadata) {
   return foundationResult(context, metadata);
 }
 
-export async function draftFoundation({ root, manifestPath }) {
+async function withFoundationWriterLock(root, manifestPath, operation) {
+  const { rootRealPath } = await validateCheckout(root, manifestPath);
+  const manifestRealPath = await realpath(manifestPath);
+  const identity = createHash('sha256').update(Buffer.from(`${rootRealPath}\0${manifestRealPath}`, 'utf8')).digest('hex');
+  const lockPath = join(tmpdir(), `.spa-foundation-writer-${identity}.lock`);
+  try { await mkdir(lockPath, { mode: 0o700 }); }
+  catch (error) { throw foundationError(`manifest ${manifestPath}`, `no live cooperative writer lock at ${lockPath}`, error.code ?? error.message, `Recovery: wait for the active Foundation writer. Inspect ${lockPath} before removing it after a demonstrably terminated writer.`); }
+  let operationError;
+  try { return await operation(); }
+  catch (error) { operationError = error; throw error; }
+  finally {
+    try { await rmdir(lockPath); }
+    catch (error) {
+      const cleanupError = foundationError(`manifest ${manifestPath}`, `empty operation-owned writer lock ${lockPath}`, error.code ?? error.message, `Recovery: preserve and inspect ${lockPath}; never recursively remove unknown contents.`);
+      if (operationError) throw new AggregateError([operationError, cleanupError], `${operationError.message} Foundation writer-lock cleanup also failed: ${cleanupError.message}`, {cause:operationError});
+      throw cleanupError;
+    }
+  }
+}
+
+async function draftFoundationUnlocked({ root, manifestPath }) {
   assertSupportedNode();
   const loaded = await loadFoundation({ root, manifestPath });
   return writeFoundationMetadata(
@@ -1325,14 +1351,14 @@ export async function draftFoundation({ root, manifestPath }) {
   );
 }
 
-export async function refreshFoundationRevision({ root, manifestPath }) {
+async function refreshFoundationRevisionUnlocked({ root, manifestPath }) {
   assertSupportedNode();
   const loaded = await loadFoundation({ root, manifestPath });
   assertArtifactType(manifestPath, loaded.current.artifactType);
-  if (!['Draft', 'Approved'].includes(loaded.current.status)) {
+  if (!['Draft', 'Ready', 'Approved'].includes(loaded.current.status)) {
     throw foundationError(
       `manifest ${manifestPath}`,
-      'Status Draft or Approved',
+      'Status Draft, Ready, or Approved',
       loaded.current.status || 'missing Status',
     );
   }
@@ -1343,6 +1369,14 @@ export async function refreshFoundationRevision({ root, manifestPath }) {
     loaded.current.approvedRevision === loaded.revision &&
     loaded.current.approvedAt !== 'none' &&
     isIso8601Timestamp(loaded.current.approvedAt);
+  const readinessStillValid =
+    loaded.current.status === 'Ready' &&
+    loaded.current.revision === loaded.revision &&
+    loaded.current.approvedRevision === 'none' &&
+    loaded.current.approvedAt === 'none';
+  if (approvalStillValid || readinessStillValid) {
+    return foundationResult({ root, manifestPath, files: loaded.files }, loaded.current);
+  }
   return writeFoundationMetadata(
     { root, manifestPath, ...loaded },
     {
@@ -1355,7 +1389,24 @@ export async function refreshFoundationRevision({ root, manifestPath }) {
   );
 }
 
-export async function approveFoundation({
+async function readyFoundationUnlocked({ root, manifestPath, expectedRevision }) {
+  assertSupportedNode();
+  assertCompleteRevision(`manifest ${manifestPath}`, expectedRevision);
+  const loaded = await loadFoundation({ root, manifestPath });
+  assertArtifactType(manifestPath, loaded.current.artifactType);
+  if (loaded.current.status !== 'Draft' || loaded.current.revision !== expectedRevision || loaded.revision !== expectedRevision || loaded.current.approvedRevision !== 'none' || loaded.current.approvedAt !== 'none') {
+    throw foundationError(`manifest ${manifestPath}`, `refreshed Draft ${expectedRevision} with no approval metadata`, `Status ${loaded.current.status}; Revision ${loaded.current.revision}; bundle ${loaded.revision}; Approved Revision ${loaded.current.approvedRevision}; Approved At ${loaded.current.approvedAt}`);
+  }
+  return writeFoundationMetadata({ root, manifestPath, ...loaded }, {
+    artifactType: FOUNDATION_ARTIFACT_TYPE,
+    status: 'Ready',
+    revision: expectedRevision,
+    approvedRevision: 'none',
+    approvedAt: 'none',
+  });
+}
+
+async function approveFoundationUnlocked({
   root,
   manifestPath,
   expectedRevision,
@@ -1468,6 +1519,7 @@ export async function validateFoundationApplicationReceipt({
   expectedSpecRevision,
   expectedBaseRevision,
   approvedFoundation,
+  policy,
 }) {
   assertCompleteRevision(
     'Foundation Application Receipt expected Design Spec revision',
@@ -1477,10 +1529,13 @@ export async function validateFoundationApplicationReceipt({
     'Foundation Application Receipt expected base revision',
     expectedBaseRevision,
   );
-  const approvedSpec = await validateApprovedArtifact({
+  const explicitPolicy = policy !== undefined;
+  const effectivePolicy = resolveApprovalPolicy(policy);
+  const approvedSpec = await validateArtifact({
     path: specPath,
     artifactType: 'Design Spec',
     expectedRevision: expectedSpecRevision,
+    policy: effectivePolicy,
   });
   if (typeof receiptPath !== 'string' || !isAbsolute(receiptPath)) {
     throw foundationError(
@@ -1511,9 +1566,27 @@ export async function validateFoundationApplicationReceipt({
     'Foundation Application Receipt APPLIED.json',
     location.candidateRealPath,
   );
+  const isV2 = explicitPolicy;
+  const expectedReceiptSchema = isV2
+    ? 'superpowers-architecture-foundation-application-v2'
+    : APPLIED_SCHEMA;
+  if (receipt.schema !== expectedReceiptSchema) {
+    throw foundationError(
+      'Foundation Application Receipt schema',
+      expectedReceiptSchema,
+      receipt.schema ?? 'missing',
+      isV2
+        ? 'Recovery: use the policy-bound v2 receipt installed by explicit-policy apply.'
+        : 'Recovery: use the historical v1 receipt installed by omitted-policy apply.',
+    );
+  }
   assertExactKeys(
     receipt,
-    [
+    isV2 ? [
+      'schema', 'operationNonce', 'specPath', 'specRevision', 'manifestPath',
+      'baseRevision', 'resultRevision', 'appliedAt', 'policy', 'specState',
+      'foundationState', 'actions',
+    ] : [
       'schema',
       'operationNonce',
       'specPath',
@@ -1526,14 +1599,6 @@ export async function validateFoundationApplicationReceipt({
     ],
     'Foundation Application Receipt',
   );
-  if (receipt.schema !== APPLIED_SCHEMA) {
-    throw foundationError(
-      'Foundation Application Receipt schema',
-      APPLIED_SCHEMA,
-      receipt.schema ?? 'missing',
-      'Recovery: restore the exact operation-owned APPLIED.json receipt.',
-    );
-  }
   assertOperationNonce(
     receipt.operationNonce,
     'Foundation Application Receipt operation nonce',
@@ -1551,7 +1616,7 @@ export async function validateFoundationApplicationReceipt({
       'Foundation Application Receipt Design Spec revision',
       expectedSpecRevision,
       receipt.specRevision ?? 'missing',
-      'Recovery: use the receipt installed for this exact Approved Design Spec.',
+      'Recovery: use the receipt installed for this exact policy-accepted Design Spec.',
     );
   }
   if (receipt.manifestPath !== MANIFEST_RELATIVE_PATH) {
@@ -1567,7 +1632,7 @@ export async function validateFoundationApplicationReceipt({
       'Foundation Application Receipt base revision',
       expectedBaseRevision,
       receipt.baseRevision ?? 'missing',
-      'Recovery: use the receipt installed from the exact Approved base Foundation.',
+      'Recovery: use the receipt installed from the exact policy-accepted base Foundation.',
     );
   }
   if (receipt.resultRevision !== expectedRevision) {
@@ -1575,18 +1640,27 @@ export async function validateFoundationApplicationReceipt({
       'Foundation Application Receipt result revision',
       expectedRevision,
       receipt.resultRevision ?? 'missing',
-      'Recovery: use the receipt installed for the exact Approved resulting Foundation.',
+      'Recovery: use the receipt installed for the exact policy-accepted resulting Foundation.',
     );
   }
-  if (!isIso8601Timestamp(receipt.approvedAt)) {
+  const recordedAt = isV2 ? receipt.appliedAt : receipt.approvedAt;
+  if (!isIso8601Timestamp(recordedAt)) {
     throw foundationError(
       'Foundation Application Receipt timestamp',
       'an ISO-8601 timestamp',
-      receipt.approvedAt ?? 'missing',
-      'Recovery: restore the operation-owned common approval timestamp.',
+      recordedAt ?? 'missing',
+      isV2
+        ? 'Recovery: restore the operation-owned application timestamp.'
+        : 'Recovery: restore the operation-owned common approval timestamp.',
     );
   }
-  if (
+  if (isV2) {
+    const specState = {status:approvedSpec.status,revision:approvedSpec.revision,approvedRevision:approvedSpec.approvedRevision,approvedAt:approvedSpec.approvedAt};
+    const foundationState = {status:approvedFoundation.status,revision:approvedFoundation.revision,approvedRevision:approvedFoundation.approvedRevision,approvedAt:approvedFoundation.approvedAt};
+    if (receipt.policy !== effectivePolicy || JSON.stringify(receipt.specState) !== JSON.stringify(specState) || JSON.stringify(receipt.foundationState) !== JSON.stringify(foundationState)) {
+      throw foundationError('Foundation Application Receipt lifecycle binding', `policy ${effectivePolicy} and exact resulting artifact states`, JSON.stringify({policy:receipt.policy,specState:receipt.specState,foundationState:receipt.foundationState}), 'Recovery: restore the exact operation-owned v2 receipt and resulting lifecycle states.');
+    }
+  } else if (
     receipt.approvedAt !== approvedSpec.approvedAt ||
     receipt.approvedAt !== approvedFoundation.approvedAt
   ) {
@@ -1625,7 +1699,7 @@ export async function validateFoundationApplicationReceipt({
       'Foundation Application Receipt Design Spec base',
       expectedBaseRevision,
       tracedBase,
-      'Recovery: preserve the exact reviewed Approved base Foundation traceability.',
+      'Recovery: preserve the exact reviewed policy-accepted base Foundation traceability.',
     );
   }
   const actions = validateReceiptActions(receipt.actions);
@@ -1639,7 +1713,7 @@ export async function validateFoundationApplicationReceipt({
     resultRevision: expectedRevision,
     specPath,
     specRevision: expectedSpecRevision,
-    approvedAt: receipt.approvedAt,
+    ...(isV2 ? { appliedAt: receipt.appliedAt, policy: receipt.policy } : { approvedAt: receipt.approvedAt }),
     actions,
   };
 }
@@ -1652,6 +1726,7 @@ export async function validateApprovedFoundation({
   specPath,
   expectedSpecRevision,
   expectedBaseRevision,
+  policy,
 }) {
   assertSupportedNode();
   assertCompleteRevision(`manifest ${manifestPath}`, expectedRevision);
@@ -1671,39 +1746,44 @@ export async function validateApprovedFoundation({
     );
   }
   const loaded = await loadFoundation({ root, manifestPath });
+  const resolvedPolicy = resolveApprovalPolicy(policy);
   assertArtifactType(manifestPath, loaded.current.artifactType);
-  if (loaded.current.status !== 'Approved') {
+  const readyAccepted = loaded.current.status === 'Ready' && resolvedPolicy === 'Autonomous';
+  if (!readyAccepted && loaded.current.status !== 'Approved') {
     throw foundationError(
       `manifest ${manifestPath}`,
-      'Status Approved',
+      `Status Approved under ${resolvedPolicy}`,
       loaded.current.status || 'missing Status',
     );
   }
-  if (loaded.current.approvedRevision !== expectedRevision) {
+  if (readyAccepted && (loaded.current.approvedRevision !== 'none' || loaded.current.approvedAt !== 'none')) {
+    throw foundationError(`manifest ${manifestPath}`, 'Ready with Approved Revision none and Approved At none', `Approved Revision ${loaded.current.approvedRevision}; Approved At ${loaded.current.approvedAt}`);
+  }
+  if (!readyAccepted && loaded.current.approvedRevision !== expectedRevision) {
     throw foundationError(
       `manifest ${manifestPath}`,
       `Approved Revision ${expectedRevision}`,
       loaded.current.approvedRevision || 'missing Approved Revision',
     );
   }
-  if (loaded.current.revision !== loaded.current.approvedRevision) {
+  if (loaded.current.revision !== expectedRevision) {
     throw foundationError(
       `manifest ${manifestPath}`,
-      `Revision ${loaded.current.approvedRevision}`,
+      `Revision ${expectedRevision}`,
       loaded.current.revision || 'missing Revision',
     );
   }
-  if (!isIso8601Timestamp(loaded.current.approvedAt)) {
+  if (!readyAccepted && !isIso8601Timestamp(loaded.current.approvedAt)) {
     throw foundationError(
       `manifest ${manifestPath}`,
       'Approved At as an ISO-8601 timestamp',
       loaded.current.approvedAt || 'missing Approved At',
     );
   }
-  if (loaded.revision !== loaded.current.approvedRevision) {
+  if (loaded.revision !== expectedRevision) {
     throw foundationError(
       `manifest ${manifestPath}`,
-      `approved bundle revision ${loaded.current.approvedRevision}`,
+      `${readyAccepted ? 'current' : 'approved'} bundle revision ${expectedRevision}`,
       loaded.revision,
     );
   }
@@ -1722,6 +1802,7 @@ export async function validateApprovedFoundation({
     expectedSpecRevision,
     expectedBaseRevision,
     approvedFoundation,
+    policy,
   });
 }
 
@@ -2111,7 +2192,7 @@ function validateCandidateRecord(
         `candidate ${subject}`,
         expected,
         actual ?? 'missing',
-        'Recovery: regenerate the candidate from the exact Approved base and exact Draft Design Spec.',
+        'Recovery: regenerate the candidate from the exact policy-accepted base and exact Draft Design Spec.',
       );
     }
   }
@@ -2272,7 +2353,7 @@ function materializeProspectiveFoundation(baseLoaded, changes, candidateFiles, m
           `candidate change ${change.path}`,
           'an existing optional Foundation file to delete',
           'declared delete is a no-op',
-          'Recovery: remove the no-op action or regenerate it from the exact Approved base.',
+          'Recovery: remove the no-op action or regenerate it from the exact policy-accepted base.',
         );
       }
       prospectiveFiles.delete(change.path);
@@ -2424,6 +2505,7 @@ async function writeDesignChangeSet({
   manifestPath,
   baseRevision,
   prospectiveRevision,
+  policy,
   changedFiles,
   baseFiles,
   prospectiveFiles,
@@ -2434,7 +2516,8 @@ async function writeDesignChangeSet({
     `- **Design Spec:** \`${specPath}\``,
     `- **Design Spec Revision:** \`${specRevision}\``,
     `- **Foundation Manifest:** \`${manifestPath}\``,
-    `- **Approved Base Foundation Revision:** \`${baseRevision}\``,
+    `- **Approval Policy:** ${policy}`,
+    `- **Policy-Accepted Base Foundation Revision:** \`${baseRevision}\``,
     `- **Prospective Foundation Revision:** \`${prospectiveRevision}\``,
     '',
     '## Changed Files',
@@ -2442,7 +2525,9 @@ async function writeDesignChangeSet({
   ];
   if (changedFiles.length === 0) {
     sections.push(
-      'No durable Foundation file changes. Applying this Design Change Set approves the exact Design Spec and preserves the current Approved Foundation revision.',
+      policy === 'Autonomous'
+        ? 'No durable Foundation file changes. Applying this Design Change Set marks the exact Design Spec Ready and preserves the current policy-accepted Foundation revision and lifecycle provenance.'
+        : 'No durable Foundation file changes. Applying this Design Change Set approves the exact Design Spec and preserves the current Approved Foundation revision.',
       '',
     );
   } else {
@@ -2561,6 +2646,7 @@ async function prepareFoundationChangeSet({
   specPath,
   expectedSpecRevision,
   expectedBaseRevision,
+  policy,
 }, {
   allowOperationState = false,
   location: providedLocation,
@@ -2585,6 +2671,7 @@ async function prepareFoundationChangeSet({
     root,
     manifestPath,
     expectedRevision: expectedBaseRevision,
+    policy,
   });
   await validateDraftArtifact({
     path: specPath,
@@ -2630,6 +2717,7 @@ async function prepareFoundationChangeSet({
         manifestPath,
         baseRevision: expectedBaseRevision,
         prospectiveRevision: prospective.prospectiveRevision,
+        policy: resolveApprovalPolicy(policy),
         changedFiles,
         baseFiles: prospective.baseFiles,
         prospectiveFiles: prospective.prospectiveFiles,
@@ -2666,13 +2754,14 @@ function publicChangeSetResult(context) {
   };
 }
 
-export async function previewFoundationChangeSet({
+async function previewFoundationChangeSetUnlocked({
   root,
   manifestPath,
   candidateRoot,
   specPath,
   expectedSpecRevision,
   expectedBaseRevision,
+  policy,
 }) {
   return publicChangeSetResult(await prepareFoundationChangeSet({
     root,
@@ -2681,6 +2770,7 @@ export async function previewFoundationChangeSet({
     specPath,
     expectedSpecRevision,
     expectedBaseRevision,
+    policy,
   }));
 }
 
@@ -2789,7 +2879,7 @@ async function writeTransactionJournal(transactionRoot, journal) {
 
 function lockBindings(args, location, operationNonce, ownerPid, acquiredAt) {
   return {
-    schema: OPERATION_LOCK_SCHEMA,
+    schema: args.policy === undefined ? OPERATION_LOCK_SCHEMA : OPERATION_LOCK_SCHEMA_V2,
     operationNonce,
     ownerPid,
     root: args.root,
@@ -2799,6 +2889,7 @@ function lockBindings(args, location, operationNonce, ownerPid, acquiredAt) {
     expectedBaseRevision: args.expectedBaseRevision,
     expectedSpecRevision: args.expectedSpecRevision,
     expectedResultRevision: args.expectedResultRevision,
+    ...(args.policy === undefined ? {} : { policy: args.policy }),
     acquiredAt,
   };
 }
@@ -2823,14 +2914,16 @@ function validateOperationLock(
       'expectedBaseRevision',
       'expectedSpecRevision',
       'expectedResultRevision',
+      ...(args.policy === undefined ? [] : ['policy']),
       'acquiredAt',
     ],
     'candidate operation lock',
   );
-  if (lock.schema !== OPERATION_LOCK_SCHEMA) {
+  const expectedSchema = args.policy === undefined ? OPERATION_LOCK_SCHEMA : OPERATION_LOCK_SCHEMA_V2;
+  if (lock.schema !== expectedSchema) {
     throw foundationError(
       'candidate operation lock schema',
-      OPERATION_LOCK_SCHEMA,
+      expectedSchema,
       lock.schema ?? 'missing',
       'Recovery: preserve the lock and retry only with the operation core that created it.',
     );
@@ -2869,6 +2962,7 @@ function validateOperationLock(
       ['base revision', args.expectedBaseRevision, lock.expectedBaseRevision],
       ['Design Spec revision', args.expectedSpecRevision, lock.expectedSpecRevision],
       ['result revision', args.expectedResultRevision, lock.expectedResultRevision],
+      ...(args.policy === undefined ? [] : [['Approval Policy', args.policy, lock.policy]]),
     ];
     for (const [subject, expected, actual] of bindings) {
       if (actual !== expected) {
@@ -3002,12 +3096,9 @@ async function releaseOperationLock(args, location, expectedLock) {
 }
 
 function sortedOperationTargetPaths(args, operation) {
-  const unique = new Set([
-    args.specPath,
-    ...operation.changedFiles.map(({ path }) =>
-      join(args.root, ...path.split('/'))),
-    args.manifestPath,
-  ]);
+  const targets = [args.specPath, ...operation.changedFiles.map(({ path }) => join(args.root, ...path.split('/')))];
+  if (!(args.policy !== undefined && operation.changedFiles.length === 0)) targets.push(args.manifestPath);
+  const unique = new Set(targets);
   return [...unique].sort((left, right) =>
     Buffer.compare(
       Buffer.from(portableRelativePath(args.root, left, 'transaction target identity'), 'utf8'),
@@ -3030,19 +3121,20 @@ function deterministicStagedPath(targetPath, operationNonce, ordinal, purpose) {
 }
 
 function expectedMutationPaths(args, operation) {
-  return [
+  const paths = [
     operation.location.designSpecPath,
     ...operation.changedFiles
       .filter(({ path }) => path !== MANIFEST_RELATIVE_PATH)
       .map(({ path }) => path),
-    MANIFEST_RELATIVE_PATH,
   ];
+  if (!(args.policy !== undefined && operation.changedFiles.length === 0)) paths.push(MANIFEST_RELATIVE_PATH);
+  return paths;
 }
 
 function stagedPurposeTargets(args, operation) {
   const result = new Map([
     ['approved-spec', new Set([args.specPath])],
-    ['approved-manifest', new Set([args.manifestPath])],
+    ['approved-manifest', new Set(args.policy !== undefined && operation.changedFiles.length === 0 ? [] : [args.manifestPath])],
     ['applied-marker', new Set([join(args.candidateRoot, APPLIED_FILE)])],
     ['restore', new Set(sortedOperationTargetPaths(args, operation))],
   ]);
@@ -3136,6 +3228,7 @@ async function validateTransactionJournalOwned(
       'expectedBaseRevision',
       'expectedSpecRevision',
       'expectedResultRevision',
+      ...(args.policy === undefined ? [] : ['policy']),
       'additionMode',
       'state',
       'entries',
@@ -3144,10 +3237,11 @@ async function validateTransactionJournalOwned(
     ],
     'candidate transaction journal',
   );
-  if (journal.schema !== TRANSACTION_SCHEMA) {
+  const expectedSchema = args.policy === undefined ? TRANSACTION_SCHEMA : TRANSACTION_SCHEMA_V2;
+  if (journal.schema !== expectedSchema) {
     throw foundationError(
       'candidate transaction schema',
-      TRANSACTION_SCHEMA,
+      expectedSchema,
       journal.schema ?? 'missing',
       'Recovery: preserve the transaction and restore the operation core that created it.',
     );
@@ -3177,6 +3271,7 @@ async function validateTransactionJournalOwned(
     ['base revision', args.expectedBaseRevision, journal.expectedBaseRevision],
     ['Design Spec revision', args.expectedSpecRevision, journal.expectedSpecRevision],
     ['result revision', args.expectedResultRevision, journal.expectedResultRevision],
+    ...(args.policy === undefined ? [] : [['Approval Policy', args.policy, journal.policy]]),
   ];
   for (const [subject, expected, actual] of bindings) {
     if (actual !== expected) {
@@ -3658,6 +3753,7 @@ async function validateRestoredState(args) {
     root: args.root,
     manifestPath: args.manifestPath,
     expectedRevision: args.expectedBaseRevision,
+    policy: args.policy,
   });
   await validateDraftArtifact({
     path: args.specPath,
@@ -3726,7 +3822,7 @@ async function createOwnedTransaction(context, args, operation, location, lock) 
     mode: targetStat ? targetStat.mode : null,
   }));
   const journal = {
-    schema: TRANSACTION_SCHEMA,
+    schema: args.policy === undefined ? TRANSACTION_SCHEMA : TRANSACTION_SCHEMA_V2,
     operationNonce: lock.operationNonce,
     lockPath: location.lockPath,
     root: args.root,
@@ -3736,6 +3832,7 @@ async function createOwnedTransaction(context, args, operation, location, lock) 
     expectedBaseRevision: args.expectedBaseRevision,
     expectedSpecRevision: args.expectedSpecRevision,
     expectedResultRevision: args.expectedResultRevision,
+    ...(args.policy === undefined ? {} : { policy: args.policy }),
     additionMode: ADDITION_MODE,
     state: 'preparing',
     entries,
@@ -3891,7 +3988,7 @@ async function reserveAndWriteOwnedStage(
   return stagedPath;
 }
 
-async function buildOwnedMutations(context, approvedAt, transaction) {
+async function buildOwnedMutations(context, appliedAt, transaction, policy, explicitPolicy) {
   const mutations = [];
   const specEntry = transactionEntryOwned(transaction, context.specPath);
   const transactionSpecPath = join(
@@ -3903,12 +4000,11 @@ async function buildOwnedMutations(context, approvedAt, transaction) {
     await readFile(context.specPath),
     0o600,
   );
-  await approveArtifact({
-    path: transactionSpecPath,
-    artifactType: 'Design Spec',
-    expectedRevision: context.expectedSpecRevision,
-    approvedAt,
-  });
+  if (policy === 'Autonomous') {
+    await readyArtifact({path:transactionSpecPath,artifactType:'Design Spec',expectedRevision:context.expectedSpecRevision});
+  } else {
+    await approveArtifact({path:transactionSpecPath,artifactType:'Design Spec',expectedRevision:context.expectedSpecRevision,approvedAt:appliedAt});
+  }
   mutations.push({
     path: context.designSpecPath,
     action: 'upsert',
@@ -3953,18 +4049,23 @@ async function buildOwnedMutations(context, approvedAt, transaction) {
     });
   }
 
+  if (explicitPolicy && context.changedFiles.length === 0) {
+    transaction.journal.state = 'staged';
+    await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
+    return mutations;
+  }
   const manifestEntry = transactionEntryOwned(
     transaction,
     context.manifestPath,
   );
-  const approvedManifest = replaceLifecycleMetadata(
+  const resultingManifest = replaceLifecycleMetadata(
     context.normalizedManifest,
     {
       artifactType: FOUNDATION_ARTIFACT_TYPE,
-      status: 'Approved',
+      status: policy === 'Autonomous' ? 'Ready' : 'Approved',
       revision: context.prospectiveRevision,
-      approvedRevision: context.prospectiveRevision,
-      approvedAt,
+      approvedRevision: policy === 'Autonomous' ? 'none' : context.prospectiveRevision,
+      approvedAt: policy === 'Autonomous' ? 'none' : appliedAt,
     },
   );
   mutations.push({
@@ -3975,7 +4076,7 @@ async function buildOwnedMutations(context, approvedAt, transaction) {
       transaction,
       context.manifestPath,
       'approved-manifest',
-      approvedManifest,
+      resultingManifest,
       manifestEntry.mode,
     ),
     mode: manifestEntry.mode,
@@ -4083,9 +4184,14 @@ async function validateTerminalAppliedStateOwned(
     'candidate applied marker',
     candidateRealPath,
   );
+  const explicitPolicy = args.policy !== undefined;
   assertExactKeys(
     applied,
-    [
+    explicitPolicy ? [
+      'schema', 'operationNonce', 'specPath', 'specRevision', 'manifestPath',
+      'baseRevision', 'resultRevision', 'appliedAt', 'policy', 'specState',
+      'foundationState', 'actions',
+    ] : [
       'schema',
       'operationNonce',
       'specPath',
@@ -4098,10 +4204,11 @@ async function validateTerminalAppliedStateOwned(
     ],
     'candidate applied marker',
   );
-  if (applied.schema !== APPLIED_SCHEMA) {
+  const expectedSchema = explicitPolicy ? 'superpowers-architecture-foundation-application-v2' : APPLIED_SCHEMA;
+  if (applied.schema !== expectedSchema) {
     throw foundationError(
       'candidate applied marker schema',
-      APPLIED_SCHEMA,
+      expectedSchema,
       applied.schema ?? 'missing',
       'Recovery: preserve the terminal transaction.',
     );
@@ -4142,11 +4249,12 @@ async function validateTerminalAppliedStateOwned(
       'Recovery: preserve the terminal state and restore its exact sorted actions.',
     );
   }
-  if (!isIso8601Timestamp(applied.approvedAt)) {
+  const recordedAt = explicitPolicy ? applied.appliedAt : applied.approvedAt;
+  if (!isIso8601Timestamp(recordedAt)) {
     throw foundationError(
       'candidate applied marker timestamp',
       'an ISO-8601 timestamp',
-      applied.approvedAt ?? 'missing',
+      recordedAt ?? 'missing',
       'Recovery: preserve the invalid terminal marker.',
     );
   }
@@ -4154,13 +4262,19 @@ async function validateTerminalAppliedStateOwned(
     root: args.root,
     manifestPath: args.manifestPath,
     expectedRevision: args.expectedResultRevision,
+    policy: args.policy,
   });
-  const spec = await validateApprovedArtifact({
+  const spec = await validateArtifact({
     path: args.specPath,
     artifactType: 'Design Spec',
     expectedRevision: args.expectedSpecRevision,
+    policy: args.policy,
   });
-  if (
+  if (explicitPolicy) {
+    if (applied.policy !== args.policy || JSON.stringify(applied.specState) !== JSON.stringify({status:spec.status,revision:spec.revision,approvedRevision:spec.approvedRevision,approvedAt:spec.approvedAt}) || JSON.stringify(applied.foundationState) !== JSON.stringify({status:foundation.status,revision:foundation.revision,approvedRevision:foundation.approvedRevision,approvedAt:foundation.approvedAt})) {
+      throw foundationError('candidate terminal lifecycle-state binding', `policy ${args.policy} and exact resulting artifact states`, JSON.stringify({policy:applied.policy,specState:applied.specState,foundationState:applied.foundationState}), 'Recovery: preserve the terminal state; do not invent lifecycle provenance.');
+    }
+  } else if (
     foundation.approvedAt !== applied.approvedAt ||
     spec.approvedAt !== applied.approvedAt
   ) {
@@ -4350,7 +4464,7 @@ async function recoverExistingOwnedOperation(args, operation, location) {
   return recoverOwnedOperation(args, operation, location, lock);
 }
 
-export async function applyFoundationChangeSet({
+async function applyFoundationChangeSetUnlocked({
   root,
   manifestPath,
   candidateRoot,
@@ -4358,6 +4472,7 @@ export async function applyFoundationChangeSet({
   expectedSpecRevision,
   expectedBaseRevision,
   expectedResultRevision,
+  policy,
 }, adapters = {}) {
   assertSupportedNode();
   assertCompleteRevision('candidate expected result revision', expectedResultRevision);
@@ -4386,7 +4501,10 @@ export async function applyFoundationChangeSet({
     expectedSpecRevision,
     expectedBaseRevision,
     expectedResultRevision,
+    ...(policy === undefined ? {} : { policy: resolveApprovalPolicy(policy) }),
   };
+  const effectivePolicy = resolveApprovalPolicy(policy);
+  const explicitPolicy = policy !== undefined;
   const location = await validateCandidateLocation(args);
   const operation = {
     ...await readBoundCandidateOperation(args, location),
@@ -4408,12 +4526,12 @@ export async function applyFoundationChangeSet({
     );
   }
 
-  const approvedAt = new Date().toISOString();
-  if (!isIso8601Timestamp(approvedAt)) {
+  const appliedAt = new Date().toISOString();
+  if (!isIso8601Timestamp(appliedAt)) {
     throw foundationError(
       'Design Change Set timestamp',
       'an ISO-8601 timestamp',
-      approvedAt,
+      appliedAt,
       'Recovery: restore the local clock adapter and retry.',
     );
   }
@@ -4462,8 +4580,10 @@ export async function applyFoundationChangeSet({
     );
     const mutations = await buildOwnedMutations(
       context,
-      approvedAt,
+      appliedAt,
       transaction,
+      effectivePolicy,
+      explicitPolicy,
     );
     await assertCurrentOperationLock(args, location, lock);
     const stagedContext = await prepareFoundationChangeSet(
@@ -4510,11 +4630,13 @@ export async function applyFoundationChangeSet({
       root,
       manifestPath,
       expectedRevision: expectedResultRevision,
+      policy: effectivePolicy,
     });
-    await validateApprovedArtifact({
+    await validateArtifact({
       path: specPath,
       artifactType: 'Design Spec',
       expectedRevision: expectedSpecRevision,
+      policy: effectivePolicy,
     });
     const receiptDeclaration = parseFoundationCandidateDeclaration(
       await readFile(specPath),
@@ -4545,7 +4667,22 @@ export async function applyFoundationChangeSet({
     await writeTransactionJournal(transaction.transactionRoot, transaction.journal);
     await assertCurrentOperationLock(args, location, lock);
     const appliedPath = join(candidateRoot, APPLIED_FILE);
-    const applied = {
+    const specState = await validateArtifact({path:specPath,artifactType:'Design Spec',expectedRevision:expectedSpecRevision,policy:effectivePolicy});
+    const foundationState = await validateApprovedFoundation({root,manifestPath,expectedRevision:expectedResultRevision,policy:effectivePolicy});
+    const applied = explicitPolicy ? {
+      schema: 'superpowers-architecture-foundation-application-v2',
+      operationNonce: lock.operationNonce,
+      specPath: context.designSpecPath,
+      specRevision: expectedSpecRevision,
+      manifestPath: MANIFEST_RELATIVE_PATH,
+      baseRevision: expectedBaseRevision,
+      resultRevision: expectedResultRevision,
+      appliedAt,
+      policy: effectivePolicy,
+      specState: {status:specState.status,revision:specState.revision,approvedRevision:specState.approvedRevision,approvedAt:specState.approvedAt},
+      foundationState: {status:foundationState.status,revision:foundationState.revision,approvedRevision:foundationState.approvedRevision,approvedAt:foundationState.approvedAt},
+      actions: context.changedFiles,
+    } : {
       schema: APPLIED_SCHEMA,
       operationNonce: lock.operationNonce,
       specPath: context.designSpecPath,
@@ -4553,7 +4690,7 @@ export async function applyFoundationChangeSet({
       manifestPath: MANIFEST_RELATIVE_PATH,
       baseRevision: expectedBaseRevision,
       resultRevision: expectedResultRevision,
-      approvedAt,
+      approvedAt: appliedAt,
       actions: context.changedFiles,
     };
     const stagedAppliedPath = await reserveAndWriteOwnedStage(
@@ -4602,7 +4739,7 @@ export async function applyFoundationChangeSet({
 
     return {
       ...publicChangeSetResult(context),
-      approvedAt,
+      ...(explicitPolicy ? { appliedAt, policy: effectivePolicy } : { approvedAt: appliedAt }),
       appliedPath,
     };
   } catch (operationError) {
@@ -4616,12 +4753,12 @@ export async function applyFoundationChangeSet({
       );
       if (recovery === 'applied') {
         throw new Error(
-          `Foundation Design Change Set apply failed after terminal installation: ${operationError.message} Recovery finalized the exact Approved result and cleaned its operation state.`,
+          `Foundation Design Change Set apply failed after terminal installation: ${operationError.message} Recovery finalized the exact policy-accepted result and cleaned its operation state.`,
           { cause: operationError },
         );
       }
       throw new Error(
-        `Foundation Design Change Set apply failed: ${operationError.message} Recovery succeeded; the exact Approved base Foundation and Draft Design Spec were restored.`,
+        `Foundation Design Change Set apply failed: ${operationError.message} Recovery succeeded; the exact policy-accepted base Foundation and Draft Design Spec were restored.`,
         { cause: operationError },
       );
     } catch (recoveryError) {
@@ -4633,3 +4770,10 @@ export async function applyFoundationChangeSet({
     }
   }
 }
+
+export function draftFoundation(args) { return withFoundationWriterLock(args.root, args.manifestPath, () => draftFoundationUnlocked(args)); }
+export function refreshFoundationRevision(args) { return withFoundationWriterLock(args.root, args.manifestPath, () => refreshFoundationRevisionUnlocked(args)); }
+export function readyFoundation(args) { return withFoundationWriterLock(args.root, args.manifestPath, () => readyFoundationUnlocked(args)); }
+export function approveFoundation(args) { return withFoundationWriterLock(args.root, args.manifestPath, () => approveFoundationUnlocked(args)); }
+export function previewFoundationChangeSet(args) { return withFoundationWriterLock(args.root, args.manifestPath, () => previewFoundationChangeSetUnlocked(args)); }
+export function applyFoundationChangeSet(args, adapters) { return withFoundationWriterLock(args.root, args.manifestPath, () => applyFoundationChangeSetUnlocked(args, adapters)); }

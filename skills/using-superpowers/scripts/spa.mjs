@@ -112,6 +112,7 @@ async function runFoundation(command, args) {
     draftFoundation,
     previewFoundationChangeSet,
     refreshFoundationRevision,
+    readyFoundation,
     validateApprovedFoundation,
   } = operations;
   const options = parseOptions(args);
@@ -128,6 +129,11 @@ async function runFoundation(command, args) {
       root: options['--root'],
       manifestPath: options['--manifest'],
     });
+  }
+  if (command === 'ready') {
+    requireOnly(options, ['--root', '--manifest', '--expected-revision']);
+    requireCompleteRevision(options['--expected-revision']);
+    return readyFoundation({root:options['--root'],manifestPath:options['--manifest'],expectedRevision:options['--expected-revision']});
   }
   if (command === 'approve') {
     requireOnly(options, ['--root', '--manifest', '--expected-revision']);
@@ -160,7 +166,7 @@ async function runFoundation(command, args) {
     requireOnly(
       options,
       ['--root', '--manifest', '--expected-revision'],
-      receiptOptionNames,
+      [...receiptOptionNames, '--policy'],
     );
     requireCompleteRevision(options['--expected-revision']);
     if (receiptMode) {
@@ -181,6 +187,7 @@ async function runFoundation(command, args) {
       specPath: options['--spec-path'],
       expectedSpecRevision: options['--expected-spec-revision'],
       expectedBaseRevision: options['--expected-base-revision'],
+      policy: options['--policy'],
     });
   }
   if (command === 'preview') {
@@ -191,7 +198,7 @@ async function runFoundation(command, args) {
       '--spec-path',
       '--expected-spec-revision',
       '--expected-base-revision',
-    ]);
+    ], ['--policy']);
     requireCompleteRevision(
       options['--expected-spec-revision'],
       '--expected-spec-revision',
@@ -207,6 +214,7 @@ async function runFoundation(command, args) {
       specPath: options['--spec-path'],
       expectedSpecRevision: options['--expected-spec-revision'],
       expectedBaseRevision: options['--expected-base-revision'],
+      policy: options['--policy'],
     });
   }
   if (command === 'apply') {
@@ -218,7 +226,7 @@ async function runFoundation(command, args) {
       '--expected-spec-revision',
       '--expected-base-revision',
       '--expected-result-revision',
-    ]);
+    ], ['--policy']);
     requireCompleteRevision(
       options['--expected-spec-revision'],
       '--expected-spec-revision',
@@ -239,6 +247,7 @@ async function runFoundation(command, args) {
       expectedSpecRevision: options['--expected-spec-revision'],
       expectedBaseRevision: options['--expected-base-revision'],
       expectedResultRevision: options['--expected-result-revision'],
+      policy: options['--policy'],
     });
   }
   fail(`Unknown foundation command ${command ?? '(missing)'}.`);

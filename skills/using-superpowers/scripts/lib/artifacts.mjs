@@ -343,7 +343,7 @@ export async function validateDraftArtifact({ path, artifactType, expectedRevisi
 
   const actualRevision = computeArtifactRevision(bytes);
   if (actualRevision !== expectedRevision) {
-    throw artifactError(path, `Draft payload digest ${expectedRevision}`, actualRevision);
+    throw artifactError(path, `Draft Revision payload digest ${expectedRevision}`, actualRevision);
   }
 
   return { path, ...current };

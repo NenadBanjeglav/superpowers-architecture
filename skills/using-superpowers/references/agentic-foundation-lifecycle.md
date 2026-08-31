@@ -18,6 +18,16 @@ lifecycle metadata:
 **Approved At:** none
 ```
 
+Ready after applicable internal review:
+
+```markdown
+**Artifact Type:** Agentic Foundation
+**Status:** Ready
+**Revision:** sha256:<canonical bundle digest>
+**Approved Revision:** none
+**Approved At:** none
+```
+
 An Approved Foundation uses:
 
 ```markdown
@@ -105,44 +115,55 @@ unambiguous. The deterministic examples are stored in
 
 ## Command Interface
 
-The shared command adapter exposes six Foundation operations:
+The shared command adapter exposes lifecycle, candidate, and receipt operations:
 
 ```text
 spa foundation draft --root ROOT --manifest PATH
 spa foundation refresh --root ROOT --manifest PATH
+spa foundation ready --root ROOT --manifest PATH --expected-revision sha256:DIGEST
 spa foundation approve --root ROOT --manifest PATH --expected-revision sha256:DIGEST
-spa foundation validate --root ROOT --manifest PATH --expected-revision sha256:DIGEST
-spa foundation validate --root ROOT --manifest PATH --expected-revision RESULT --receipt APPLIED_JSON --spec-path SPEC --expected-spec-revision SPEC_REVISION --expected-base-revision BASE_REVISION
-spa foundation preview --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST
-spa foundation apply --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST --expected-result-revision sha256:DIGEST
+spa foundation validate --root ROOT --manifest PATH --expected-revision sha256:DIGEST --policy Autonomous
+spa foundation validate --root ROOT --manifest PATH --expected-revision RESULT --receipt APPLIED_JSON --spec-path SPEC --expected-spec-revision SPEC_REVISION --expected-base-revision BASE_REVISION --policy Autonomous
+spa foundation preview --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST --policy Autonomous
+spa foundation apply --root ROOT --manifest PATH --candidate-root PATH --spec-path PATH --expected-spec-revision sha256:DIGEST --expected-base-revision sha256:DIGEST --expected-result-revision sha256:DIGEST --policy Autonomous
 ```
 
 Commands emit one JSON success object. Errors emit one JSON error object and
 exit nonzero. Revisions supplied for approval or validation must be complete
 lowercase SHA-256 identities; abbreviated revisions are rejected.
 
+Lifecycle writes, preview, and apply share one exact temporary-directory
+cooperative writer lock derived from the physical checkout and manifest identities; it never creates tracked recovery state. Controlled failures release a known-empty lock while
+preserving their diagnostic; process termination and cleanup anomalies remain
+visible for inspection. Apply additionally retains the candidate-parent lock
+and recoverable journal. Uncooperative external replacement remains outside the
+portable Node guarantee and causes later exact validation to fail.
+
 `draft` computes current canonical bytes and writes Draft metadata.
 
-`refresh` recomputes the revision after managed edits. It preserves Approved
-state only when the bundle revision and all approval metadata remain valid and
-unchanged. Otherwise it writes Draft state with `Approved Revision: none` and
-`Approved At: none`.
+`refresh` recomputes the revision after managed edits. It preserves Ready or
+Approved state only when the bundle revision and the state's provenance
+metadata remain valid and unchanged. Otherwise it writes Draft state with
+`Approved Revision: none` and `Approved At: none`.
+
+`ready` requires exact refreshed Draft state and matching recomputed bundle
+revision. It records Ready with both approval fields none.
 
 `approve` requires Draft state, the exact refreshed metadata revision, the same
 recomputed bundle revision, and a valid approval timestamp. It records Approved
 state only in `WAYFINDING.md`.
 
-`validate` requires Approved state, exact expected/recorded revision equality,
-a valid approval timestamp, and equality with the freshly recomputed bundle.
-It performs no write. Result-only validation keeps the original three required
-arguments. Receipt-backed validation uses `--receipt`, `--spec-path`,
+`validate` requires exact expected/recorded revision equality and equality with
+the freshly recomputed bundle. Explicit Autonomous accepts truthful Ready or
+Approved state; explicit Review-gated and omitted-policy legacy callers require
+Approved with valid approval provenance. It performs no write. Receipt-backed validation uses `--receipt`, `--spec-path`,
 `--expected-spec-revision`, and `--expected-base-revision` as one all-or-none
 option group on the same read-only operation.
 
 ## Foundation Candidate Contract
 
 A Foundation Candidate is an ignored, non-authoritative set of complete file
-proposals bound to one exact Approved Foundation and one exact Draft Design
+proposals bound to one exact policy-accepted Foundation and one exact Draft Design
 Spec. Its root is exactly:
 
 ```text
@@ -251,14 +272,14 @@ non-empty declaration requires that sentence to be absent.
 ## Preview and Review Report
 
 `foundation preview` rejects an applied candidate or an incomplete transaction,
-validates the exact Approved base and exact Draft Design Spec, validates every
+validates the exact policy-accepted base and exact Draft Design Spec, validates every
 candidate binding, and materializes the prospective Foundation in memory. It
 does not change Design Spec or authoritative Foundation bytes.
 
 Preview writes `DESIGN-CHANGE-SET.md` and returns JSON containing:
 
 - exact Design Spec path and revision;
-- exact manifest path and Approved base revision;
+- exact manifest path and base revision;
 - exact prospective Foundation revision;
 - exact candidate root and review path;
 - changed-file actions sorted by unsigned UTF-8 path bytes.
@@ -272,8 +293,9 @@ never follows a link into user-owned bytes.
 
 An empty `changes` array is valid only with an empty `files/` tree. Preview then
 reports no durable Foundation file changes and the prospective revision equals
-the Approved base revision. Apply still approves the exact Design Spec and
-records the Foundation as Approved with the same approval timestamp.
+the base revision. Explicit-policy apply leaves every Foundation byte and its
+lifecycle provenance unchanged; only the exact Design Spec and v2 receipt make
+a new transition. Legacy omitted-policy apply retains v1 behavior.
 
 ## Recoverable Apply and Candidate Invalidation
 
@@ -286,12 +308,14 @@ candidate parent and stored at:
 docs/superpowers/foundation-candidates/.foundation-operation.lock.json
 ```
 
-Its exact schema is
-`superpowers-architecture-foundation-operation-lock-v1`. The record contains
+Legacy omitted-policy apply uses the exact schema
+`superpowers-architecture-foundation-operation-lock-v1`. Its record contains
 only `schema`, `operationNonce`, `ownerPid`, `root`, `manifestPath`, `specPath`,
 `candidateRoot`, `expectedBaseRevision`, `expectedSpecRevision`,
-`expectedResultRevision`, and `acquiredAt`. Acquisition uses exclusive create
-with mode `0o600`, writes and syncs the complete record, then closes it.
+`expectedResultRevision`, and `acquiredAt`. Explicit-policy apply uses
+`superpowers-architecture-foundation-operation-lock-v2` with the same fields
+plus mandatory `policy`. Acquisition uses exclusive create with mode `0o600`,
+writes and syncs the complete record, then closes it.
 
 A lock owner is live when `process.kill(ownerPid, 0)` succeeds or reports
 `EPERM`. Only `ESRCH` proves a dead owner. A live owner is always a conflict,
@@ -301,16 +325,22 @@ create transaction state or mutate authoritative bytes. Invalid, partial, or
 unreadable lock state fails closed instead of being guessed stale.
 
 A dead owner authorizes recovery only when every lock binding matches the exact
-retry and its nonce matches the exact transaction journal. A dead lock with no
-prepared journal may remove only its fixed candidate transaction directory and
-exact nonce-derived journal temporary file after the Approved base Foundation
-and Draft Design Spec revalidate unchanged. Before release, the operation
-re-reads the exact regular lock and revalidates nonce, owner, timestamp, and all
-bindings. Release occurs only after successful apply cleanup, successful
-rollback cleanup, or validated terminal recovery.
+retry and its nonce matches the exact transaction journal. For v2, this includes
+the effective policy; a retry under another policy fails closed. A dead lock
+with no prepared journal may remove only its fixed candidate transaction
+directory and exact nonce-derived journal temporary file after the base
+Foundation validates under the bound policy and the Draft Design Spec
+revalidates unchanged. Before release, the operation re-reads the exact regular
+lock and revalidates nonce, owner, timestamp, and all bindings. Release occurs
+only after successful apply cleanup, successful rollback cleanup, or validated
+terminal recovery.
 
-The `.transaction/journal.json` schema is
-`superpowers-architecture-foundation-transaction-v1` and contains exactly:
+Legacy omitted-policy apply uses
+`superpowers-architecture-foundation-transaction-v1` for
+`.transaction/journal.json`. Explicit-policy apply uses
+`superpowers-architecture-foundation-transaction-v2`; it contains the same
+exact fields plus mandatory `policy` after `expectedResultRevision`. The v1
+fields are:
 
 ```text
 schema
@@ -390,18 +420,18 @@ Apply and recovery preserve this order:
 5. Write, sync, identify, and validate exact backups; mark `prepared`.
 6. Reserve and write exact staged siblings while recording exact created
    directories; mark `staged`.
-7. Revalidate the Approved base, Draft Design Spec, candidate, and result.
+7. Revalidate the policy-accepted base, Draft Design Spec, candidate, and result.
 8. Journal each replacement or deletion before mutation.
-9. Validate the exact Approved result; mark `recording-applied`.
+9. Validate the exact Ready or Approved result required by policy; mark `recording-applied`.
 10. Atomically install exact `APPLIED.json`, including `operationNonce`.
-11. Validate marker nonce, sorted actions, artifact revisions, and the common
-    approval timestamp.
+11. Validate marker nonce, policy, sorted actions, artifact revisions, and exact
+    lifecycle provenance.
 12. Clean exact staged and transaction state, then release the exact lock.
 
 On an error after `prepared`, recovery first revalidates the lock, journal,
 target set, backup identities, modes, staged records, and directory ledger.
 Only then may it restore exact bytes, modes, and present/missing state. It cleans
-only exact operation-owned state, validates the restored Approved base and
+only exact operation-owned state, validates the restored policy-accepted base and
 Draft Design Spec, removes `.transaction/` only after proving physical
 containment and terminal-or-restored ownership, and finally releases the lock.
 Before recursive transaction removal, every whitelisted top-level journal,
@@ -447,13 +477,26 @@ receipt or lifecycle artifact exists. Its exact schema is:
 }
 ```
 
+Explicit-policy apply writes schema
+`superpowers-architecture-foundation-application-v2`. It records `appliedAt`,
+effective `policy`, exact spec/base/result identities and actions, plus separate
+`specState` and `foundationState` lifecycle snapshots. Application time is not
+human approval provenance. Autonomous changed results are Ready; an empty
+change preserves an existing Ready or Approved Foundation state. V2 validation
+binds exact content, policy, and lifecycle states without approval-timestamp
+equality. V1 receipts retain their original common-timestamp checks.
+
 Receipt-backed `foundation validate` requires the physical absolute
-deterministic receipt path, exact Approved Design Spec and result, the spec's
-exact Foundation Manifest and Base Agentic Foundation traceability, exact
-schema and operation nonce, sorted actions equal to the Approved declaration,
-and one common receipt/spec/result approval timestamp. A non-empty candidate
-normally has different base and result revisions. An empty candidate uses the
-same receipt flow with base equal to result.
+deterministic receipt path, the spec's exact Foundation Manifest and Base
+Agentic Foundation traceability, exact schema and operation nonce, and sorted
+actions equal to the reviewed declaration. Omitted-policy v1 validation
+requires exact Approved Design Spec and result plus one common receipt,
+spec, and result approval timestamp. Explicit-policy v2 validation requires
+the policy-accepted Ready or Approved spec and result, the matching policy,
+and exact lifecycle snapshots; it does not equate application time with
+approval provenance. A non-empty candidate normally has different base and
+result revisions. An empty candidate uses the same receipt flow with base
+equal to result.
 
 Receipt validation never reads `candidate.json`, `files/`, or prospective
 proposal metadata. Apply already proved declaration/candidate equality before
@@ -467,18 +510,19 @@ bytes.
 V1 rejects hazards present or observable at its validation boundaries and
 serializes cooperating Foundation writers. It does not protect against a
 malicious or uncooperative same-machine process racing path replacement after
-validation. Supporting that adversary requires a newly Approved design that
-selects platform-specific secure mutation primitives or a different runtime
+validation. Supporting that adversary requires a newly Ready or Approved design
+under the effective policy that selects platform-specific secure mutation
+primitives or a different runtime
 capability contract.
 
 ## Combined Design Change Set Authority
 
-The user approves one combined authority boundary: the exact Draft Design Spec
-revision and the exact prospective Foundation revision shown by preview. That
-approval authorizes only the bound candidate actions against the named Approved
-base. Apply records both artifacts as Approved with one timestamp. It does not
-create a second normal Foundation review gate, and Planning may begin only
-after both exact post-apply validations succeed.
+Preview binds one combined change set: the exact Draft Design Spec revision,
+prospective Foundation revision, candidate actions, base, and policy. Under
+Autonomous, internal review resolves findings and apply records changed content
+as Ready. Under Review-gated, clear human approval of the readable combined
+package authorizes only those bindings and apply records Approved provenance.
+Planning may begin only after exact policy-aware post-apply validation.
 
 ## Managed Edit Sequence
 
@@ -488,15 +532,17 @@ Use this sequence for every authoritative Foundation change:
 2. Edit only declared authoritative documents and update the manifest if the
    authoritative file set changes.
 3. Run `foundation refresh`.
-4. Present the complete refreshed revision and readable document changes for
-   user review.
-5. After the user approves that exact revision, run `foundation approve`.
-6. Before a downstream phase consumes the Foundation, run
-   `foundation validate` with the exact Approved revision.
+4. Review the complete refreshed revision and readable document changes.
+5. Under Autonomous, resolve findings and run `foundation ready`. Under
+   Review-gated, present the readable package and after clear user approval run
+   `foundation approve`.
+6. Before a downstream phase consumes the Foundation, run `foundation
+   validate` with explicit policy and the exact current revision.
 
-An edit after approval is unmanaged until the Foundation returns through Draft,
-refresh, review, and approval. `refresh` safely clears stale approval metadata;
-`validate` never repairs drift.
+An edit after Ready or Approved is unmanaged until the Foundation returns
+through Draft, refresh, review, and the policy-selected Ready or Approved state.
+`refresh` safely clears stale lifecycle metadata; `validate` never repairs
+drift.
 
 ## Fail-Closed Policy and Recovery
 
@@ -510,7 +556,8 @@ stop the operation.
 Install or restore Node.js and the shared operation core before retrying a
 correctness transition. For content or metadata drift, run `foundation draft`,
 make or repair the authoritative edits, run `foundation refresh`, obtain renewed
-review of the exact refreshed revision, and run `foundation approve`. Restore
-missing core files; remove invalid optional entries or restore them as regular
-UTF-8 files inside the checkout. Never copy a revision from conversation memory,
-another checkout, or another worktree.
+review of the exact refreshed revision, then run `foundation ready` under
+Autonomous or obtain explicit user approval and run `foundation approve` under
+Review-gated. Restore missing core files; remove invalid optional entries or
+restore them as regular UTF-8 files inside the checkout. Never copy a revision
+from conversation memory, another checkout, or another worktree.
