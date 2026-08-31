@@ -10,7 +10,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
   "contextPolicy": "isolated",
   "capabilityTier": "[CAPABILITY_TIER]",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[BRIEF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
+  "artifactPaths": ["[BRIEF_FILE]", "[SDD_BINDING_FILE]", "[CURRENT_SPEC_FILE]", "[CURRENT_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "shared-checkout"
 }
 ```
@@ -29,19 +29,25 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
-    ## Approved Architecture Inputs
+    ## Policy-Accepted Architecture Inputs
 
-    Read the Approved Design Spec at [APPROVED_SPEC_FILE] revision
-    [APPROVED_SPEC_REVISION], the Approved Implementation Plan at
-    [APPROVED_PLAN_FILE] revision [APPROVED_PLAN_REVISION], and the shared
-    rubric at [CONFORMANCE_RUBRIC_FILE].
+    Read the SDD binding at [SDD_BINDING_FILE]. It records Approval Policy
+    [APPROVAL_POLICY] and the exact current Design Spec at [CURRENT_SPEC_FILE]
+    revision [CURRENT_SPEC_REVISION] and Implementation Plan at
+    [CURRENT_PLAN_FILE] revision [CURRENT_PLAN_REVISION]. Read those artifacts
+    and the shared rubric at [CONFORMANCE_RUBRIC_FILE]. The generated task brief
+    carries the same binding and was produced only after shared lifecycle and
+    dependency validation.
 
     This task must preserve:
     [ARCHITECTURE_BINDING]
 
-    If implementation requires changing an Approved module, interface, seam,
-    adapter, data flow, or test surface, stop. Report BLOCKED so the controller
-    can return the controlling artifact to Draft and user review.
+    If implementation requires changing a bound module, interface, seam,
+    adapter, data flow, or test surface, stop and report BLOCKED with the exact
+    needed correction. The controller returns the controlling artifact to Draft,
+    repairs and reviews it, then progresses it according to [APPROVAL_POLICY].
+    Autonomous returns internally reviewed work to Ready; Review-gated requires
+    new user approval for the changed revision.
 
     ## Before You Begin
 
@@ -90,7 +96,7 @@ The runtime adapter must verify the actual context policy and disclose any reduc
       behind that interface
     - Preserve depth, locality, and leverage; do not create pass-through modules or
       split files merely to make each independently testable
-    - Put production and test adapters only at the Approved seams
+    - Put production and test adapters only at the bound seams
     - If implementation is growing beyond the plan's module/interface intent, stop
       and report it as DONE_WITH_CONCERNS — do not redesign on your own
     - If an existing file you're modifying is already large or tangled, work carefully
@@ -145,7 +151,7 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     **Architecture Conformance:** Complete every line of
     [CONFORMANCE_RUBRIC_FILE]. Any `violation` is blocking. A changed design is
-    conformant only when the cited newly Approved artifact revision records it.
+    conformant only when the cited newly policy-accepted artifact revision records it.
 
     ## After Review Findings
 
@@ -163,7 +169,7 @@ The runtime adapter must verify the actual context policy and disclose any reduc
       - GREEN: command run and relevant passing output after implementation
     - Files changed
     - **Architecture Conformance** result using the complete shared rubric shape,
-      with the Approved spec/plan paths and revisions
+      with the policy, exact spec/plan paths, and revisions
     - Self-review findings (if any)
     - Any issues or concerns
 
@@ -185,7 +191,9 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
 Required architecture placeholders:
 
-- `[APPROVED_SPEC_FILE]` and `[APPROVED_SPEC_REVISION]` — exact Approved Design Spec identity
-- `[APPROVED_PLAN_FILE]` and `[APPROVED_PLAN_REVISION]` — exact Approved Implementation Plan identity
+- `[SDD_BINDING_FILE]` — exact v2 SDD binding supplied to the shared task-brief and review-package operations
+- `[APPROVAL_POLICY]` — exact effective `Autonomous` or `Review-gated` policy
+- `[CURRENT_SPEC_FILE]` and `[CURRENT_SPEC_REVISION]` — exact policy-accepted Design Spec identity
+- `[CURRENT_PLAN_FILE]` and `[CURRENT_PLAN_REVISION]` — exact policy-accepted Implementation Plan identity
 - `[CONFORMANCE_RUBRIC_FILE]` — absolute path to `codebase-design/ARCHITECTURE-CONFORMANCE.md`
-- `[ARCHITECTURE_BINDING]` — task-specific modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface copied from the Approved artifacts
+- `[ARCHITECTURE_BINDING]` — task-specific modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface copied from the policy-accepted artifacts

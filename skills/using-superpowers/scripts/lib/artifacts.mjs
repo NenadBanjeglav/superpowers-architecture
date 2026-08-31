@@ -383,7 +383,7 @@ export async function validateDraftArtifact({ path, artifactType, expectedRevisi
   return { path, ...current };
 }
 
-export async function validateArtifact({ path, artifactType, expectedRevision, policy }) {
+export async function readValidatedArtifactSnapshot({ path, artifactType, expectedRevision, policy }) {
   assertRevisionArgument(path, expectedRevision);
   const resolvedPolicy = resolveApprovalPolicy(policy);
   const { bytes, normalized } = await readArtifact(path);
@@ -398,7 +398,7 @@ export async function validateArtifact({ path, artifactType, expectedRevision, p
     if (current.approvedRevision !== 'none' || current.approvedAt !== 'none') {
       throw artifactError(path, 'Ready with Approved Revision none and Approved At none', `Approved Revision ${current.approvedRevision}; Approved At ${current.approvedAt}`);
     }
-    return { path, ...current, policy: resolvedPolicy };
+    return { path, ...current, policy: resolvedPolicy, bytes: Buffer.from(bytes), text: normalized };
   }
   if (current.status !== 'Approved') {
     throw artifactError(path, `status Approved under ${resolvedPolicy}`, current.status || 'missing status');
@@ -409,7 +409,12 @@ export async function validateArtifact({ path, artifactType, expectedRevision, p
   if (!isIso8601Timestamp(current.approvedAt)) {
     throw artifactError(path, 'a valid ISO-8601 Approved At value', current.approvedAt || 'missing Approved At');
   }
-  return { path, ...current, policy: resolvedPolicy };
+  return { path, ...current, policy: resolvedPolicy, bytes: Buffer.from(bytes), text: normalized };
+}
+
+export async function validateArtifact(args) {
+  const { bytes: omittedBytes, text: omittedText, ...result } = await readValidatedArtifactSnapshot(args);
+  return result;
 }
 
 export async function validateApprovedArtifact(args) {

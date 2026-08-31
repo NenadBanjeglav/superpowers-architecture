@@ -3,16 +3,34 @@ import { randomUUID } from 'node:crypto';
 import {
   mkdir,
   readFile,
+  realpath,
   rename,
   rm,
+  stat,
   writeFile,
 } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
+
+import { readValidatedArtifactSnapshot } from './artifacts.mjs';
+import { resolveApprovalPolicy } from './policy.mjs';
 
 const TASK_NUMBER = /^[1-9][0-9]*$/;
 const PROGRESS_LINE = /^Task ([1-9][0-9]*): complete \(commits ([0-9a-f]{4,64})\.\.([0-9a-f]{4,64}), review (clean)\)$/;
 const LOCK_RETRY_MS = 10;
 const LOCK_TIMEOUT_MS = 5000;
+const REVISION = /^sha256:[0-9a-f]{64}$/;
+const SDD_BINDING_KEYS = Object.freeze([
+  'schema',
+  'policy',
+  'planPath',
+  'planRevision',
+  'specPath',
+  'specRevision',
+  'foundationManifestPath',
+  'foundationBaseRevision',
+  'foundationResultRevision',
+  'foundationApplicationReceipt',
+]);
 
 function fail(message) {
   throw new Error(message);
@@ -64,6 +82,146 @@ function resolveCommit(cwd, revision, label) {
 
 function trimSection(text) {
   return normalizeLf(text).replace(/\n+$/g, '');
+}
+
+function maskMarkdownFences(text) {
+  const lines = normalizeLf(text).split('\n');
+  let fence = null;
+  return lines.map((line) => {
+    if (fence) {
+      const close = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
+      return '';
+    }
+    const open = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (open) {
+      fence = { character: open[1][0], length: open[1].length };
+      return '';
+    }
+    return line;
+  }).join('\n');
+}
+
+function exactField(text, label, subject) {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = [...maskMarkdownFences(text).matchAll(new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'))];
+  if (matches.length !== 1 || matches[0][1].length === 0) fail(`${subject} must contain exactly one nonempty ${label} field outside fenced blocks.`);
+  return matches[0][1].replace(/^`|`$/g, '');
+}
+
+function assertExactKeys(value, keys, subject) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) fail(`${subject} must be an object.`);
+  const actual = Object.keys(value);
+  if (actual.length !== keys.length || actual.some((key, index) => key !== keys[index])) {
+    fail(`${subject} must contain exactly these fields in this order: ${keys.join(', ')}.`);
+  }
+}
+
+function assertRevision(value, subject) {
+  if (!REVISION.test(value ?? '')) fail(`${subject} must be a complete lowercase sha256 revision.`);
+}
+
+async function physicalFile(root, path, subject) {
+  if (typeof path !== 'string' || !isAbsolute(path)) fail(`${subject} must be an absolute path.`);
+  let physical;
+  try {
+    physical = await realpath(path);
+    if (!(await stat(physical)).isFile()) fail(`${subject} must be a regular file: ${path}.`);
+  } catch (error) {
+    if (error.message?.startsWith(`${subject} must`)) throw error;
+    fail(`Unable to read ${subject} ${path}: ${error.message}`);
+  }
+  if (physical !== resolve(path)) fail(`${subject} must use its physical path; received ${path}, resolved ${physical}.`);
+  const relativePath = physical.slice(root.length);
+  if (physical !== root && !relativePath.startsWith('\\') && !relativePath.startsWith('/')) fail(`${subject} must stay inside checkout ${root}.`);
+  return physical;
+}
+
+async function readBinding(bindingPath) {
+  let binding;
+  try {
+    binding = JSON.parse(await readFile(bindingPath, 'utf8'));
+  } catch (error) {
+    fail(`Unable to read SDD binding ${bindingPath}: ${error.message}`);
+  }
+  assertExactKeys(binding, SDD_BINDING_KEYS, 'SDD binding');
+  if (binding.schema !== 'superpowers-architecture-sdd-binding-v2') fail(`Unsupported SDD binding schema ${binding.schema ?? 'missing'}.`);
+  return binding;
+}
+
+async function validateSddBinding({ cwd, bindingPath, expectedPlanPath }) {
+  if (!bindingPath) return null;
+  const root = resolve(runGit(cwd, ['rev-parse', '--show-toplevel']).trim());
+  const physicalBinding = await physicalFile(root, resolveFrom(cwd, bindingPath), 'SDD binding');
+  const binding = await readBinding(physicalBinding);
+  const policy = resolveApprovalPolicy(binding.policy);
+  assertRevision(binding.planRevision, 'SDD planRevision');
+  assertRevision(binding.specRevision, 'SDD specRevision');
+  const planPath = await physicalFile(root, binding.planPath, 'SDD Implementation Plan');
+  const specPath = await physicalFile(root, binding.specPath, 'SDD Design Spec');
+  if (expectedPlanPath && planPath !== expectedPlanPath) fail(`SDD binding planPath ${planPath} differs from requested plan ${expectedPlanPath}.`);
+  const plan = await readValidatedArtifactSnapshot({ path: planPath, artifactType: 'Implementation Plan', expectedRevision: binding.planRevision, policy });
+  const spec = await readValidatedArtifactSnapshot({ path: specPath, artifactType: 'Design Spec', expectedRevision: binding.specRevision, policy });
+  const planText = plan.text;
+  if (exactField(planText, 'Spec', 'bound Implementation Plan') !== specPath) fail('Bound Implementation Plan Spec path differs from the SDD binding.');
+  if (exactField(planText, 'Spec Revision', 'bound Implementation Plan') !== binding.specRevision) fail('Bound Implementation Plan Spec Revision differs from the SDD binding.');
+
+  const foundationValues = [
+    binding.foundationManifestPath,
+    binding.foundationBaseRevision,
+    binding.foundationResultRevision,
+    binding.foundationApplicationReceipt,
+  ];
+  const foundationNone = foundationValues.every((value) => value === 'none');
+  const foundationAll = foundationValues.every((value) => value !== 'none');
+  if (!foundationNone && !foundationAll) fail('SDD Foundation binding must provide all four exact values or literal none for all four.');
+  const expected = foundationNone ? {
+    'Foundation Manifest': 'none',
+    'Foundation Base Revision': 'none',
+    'Foundation Result Revision': 'none',
+    'Foundation Application Receipt': 'none',
+  } : {
+    'Foundation Manifest': binding.foundationManifestPath,
+    'Foundation Base Revision': binding.foundationBaseRevision,
+    'Foundation Result Revision': binding.foundationResultRevision,
+    'Foundation Application Receipt': binding.foundationApplicationReceipt,
+  };
+  for (const [label, value] of Object.entries(expected)) {
+    if (exactField(planText, label, 'bound Implementation Plan') !== value) fail(`Bound Implementation Plan ${label} differs from the SDD binding.`);
+  }
+  let foundation = null;
+  if (foundationAll) {
+    assertRevision(binding.foundationBaseRevision, 'SDD foundationBaseRevision');
+    assertRevision(binding.foundationResultRevision, 'SDD foundationResultRevision');
+    const manifestPath = await physicalFile(root, binding.foundationManifestPath, 'SDD Foundation manifest');
+    const receiptPath = await physicalFile(root, binding.foundationApplicationReceipt, 'SDD Foundation Application Receipt');
+    const { validateApprovedFoundation } = await import('./foundations.mjs');
+    foundation = await validateApprovedFoundation({
+      root,
+      manifestPath,
+      expectedRevision: binding.foundationResultRevision,
+      receiptPath,
+      specPath,
+      expectedSpecRevision: binding.specRevision,
+      expectedBaseRevision: binding.foundationBaseRevision,
+      policy,
+    });
+  }
+  return { path: physicalBinding, binding, policy, plan, planText, spec, foundation };
+}
+
+function renderBindingContext(validated) {
+  if (!validated) return '';
+  return [
+    '## Bound Workflow Context',
+    '',
+    `Approval Policy: ${validated.policy}`,
+    '',
+    '```json',
+    JSON.stringify(validated.binding, null, 2),
+    '```',
+    '',
+  ].join('\n');
 }
 
 function findTaskLines(text, taskNumber) {
@@ -167,17 +325,21 @@ export async function extractTaskBrief({
   planFile,
   taskNumber,
   outFile,
+  bindingPath,
 }) {
   const task = requireTaskNumber(taskNumber);
   if (typeof planFile !== 'string' || planFile.length === 0) {
     fail('Plan file is required.');
   }
   const planPath = resolveFrom(cwd, planFile);
-  let planText;
-  try {
-    planText = await readFile(planPath, 'utf8');
-  } catch (error) {
-    fail(`Unable to read plan file ${planPath}: ${error.message}`);
+  const validatedBinding = await validateSddBinding({ cwd, bindingPath, expectedPlanPath: planPath });
+  let planText = validatedBinding?.planText;
+  if (planText === undefined) {
+    try {
+      planText = await readFile(planPath, 'utf8');
+    } catch (error) {
+      fail(`Unable to read plan file ${planPath}: ${error.message}`);
+    }
   }
 
   const lines = findTaskLines(planText, task);
@@ -189,10 +351,12 @@ export async function extractTaskBrief({
     ? resolveFrom(cwd, outFile)
     : join(await resolveSddWorkspace({ cwd }), `task-${task}-brief.md`);
   if (outputPath === planPath) fail('Task brief output must not overwrite the implementation plan.');
+  if (validatedBinding && outputPath === validatedBinding.path) fail('Task brief output must not overwrite the SDD binding.');
   await mkdir(dirname(outputPath), { recursive: true });
-  const output = lines.join('\n').endsWith('\n') ? lines.join('\n') : `${lines.join('\n')}\n`;
+  const taskText = lines.join('\n').endsWith('\n') ? lines.join('\n') : `${lines.join('\n')}\n`;
+  const output = `${renderBindingContext(validatedBinding)}${taskText}`;
   await writeFile(outputPath, output, 'utf8');
-  return { path: outputPath, lineCount: lines.length };
+  return { path: outputPath, lineCount: lines.length, bound: Boolean(validatedBinding), policy: validatedBinding?.policy ?? null };
 }
 
 export async function createReviewPackage({
@@ -200,7 +364,9 @@ export async function createReviewPackage({
   baseRevision,
   headRevision,
   outFile,
+  bindingPath,
 }) {
+  const validatedBinding = await validateSddBinding({ cwd, bindingPath });
   const base = resolveCommit(cwd, baseRevision, 'Base revision');
   const head = resolveCommit(cwd, headRevision, 'Head revision');
   const range = `${base}..${head}`;
@@ -213,9 +379,11 @@ export async function createReviewPackage({
   const outputPath = outFile
     ? resolveFrom(cwd, outFile)
     : join(await resolveSddWorkspace({ cwd }), `review-${baseShort}..${headShort}.diff`);
+  if (validatedBinding && outputPath === validatedBinding.path) fail('Review-package output must not overwrite the SDD binding.');
   const output = [
     `# Review package: ${base}..${head}`,
     '',
+    ...(validatedBinding ? [renderBindingContext(validatedBinding).trimEnd(), ''] : []),
     '## Commits',
     commitText,
     '',
@@ -229,7 +397,7 @@ export async function createReviewPackage({
 
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, output, 'utf8');
-  return { path: outputPath, commitCount, byteCount: Buffer.byteLength(output, 'utf8') };
+  return { path: outputPath, commitCount, byteCount: Buffer.byteLength(output, 'utf8'), bound: Boolean(validatedBinding), policy: validatedBinding?.policy ?? null };
 }
 
 export async function readProgress({ cwd = process.cwd() } = {}) {

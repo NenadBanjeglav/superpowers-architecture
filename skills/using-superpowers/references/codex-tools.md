@@ -29,9 +29,10 @@ User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`)
 
 Invoke `wayfinder` natively for greenfield project inception or project-wide
 reorientation. The shared skill owns discovery and Foundation policy; this
-adapter only maps Codex capabilities. After exact Foundation approval, use the
-phase-handoff record for `phase: brainstorming` rather than carrying Wayfinder
-conversation history into the new task.
+adapter only maps Codex capabilities. When the effective Approval Policy accepts
+the current Foundation state, use the v2 phase-handoff envelope for
+`phase: brainstorming` rather than carrying Wayfinder conversation history into
+the new task.
 
 ## Host-Neutral Dispatch Adapter
 
@@ -77,12 +78,14 @@ See `using-git-worktrees` Step 0 for how that skill uses these signals.
 
 ## Automated Phase Handoff In Codex App
 
-When automated fresh-session mode is selected and an artifact has been
-explicitly approved, Codex may start the next phase in a fresh user-owned task.
-First run `prepare handoff` from [phase-handoff.md](phase-handoff.md) and build
-the canonical prompt from the complete verified record. For Foundation-backed
-Planning and implementation, that prompt carries `Foundation Application
-Receipt` as an external binding outside the unchanged record.
+When automated fresh-session mode is selected and the effective Approval Policy
+accepts the artifact's Ready or Approved state, Codex may start the next phase
+in a fresh user-owned task if the user's request or durable Phase Mode authorizes
+task creation. First run `spa handoff prepare` from
+[phase-handoff.md](phase-handoff.md). Build the canonical prompt from the
+complete v2 envelope and returned `envelopeRevision`. Policy, goal, constraint
+source, Foundation receipt, and Brainstorming bindings remain outside the exact
+fifteen-field record.
 
 Use `create_thread` only. Never use `fork_thread` for phase handoff because a
 fork inherits conversation state and is not a fresh phase session.
@@ -95,20 +98,15 @@ Before launch:
    exactly. Require the selected environment to guarantee that same existing
    path. A generic request for a new worktree does not preserve an existing
    linked or Codex-managed worktree and cannot satisfy `same-checkout`.
-3. Verify `installed` or `skills-install` plugin affinity is available to a new
-   task. For `local-plugin-dir`, launch only if the active app API or saved
-   project configuration proves it will load the exact `pluginRoot`; otherwise
-   use fallback.
-4. Re-run `foundation validate` for a recorded `foundationManifestPath` and
-   `foundationRevision`. For `phase: brainstorming`, require those values to
-   equal the phase artifact path and revision. For Planning or implementation,
-   require the external Foundation Application Receipt path, prove it is
-   readable and ignored in the exact checkout, and use receipt-backed
-   `foundation validate` to revalidate the source-spec base, receipt, and
-   resulting `foundationRevision`.
-5. Pass the complete canonical prompt, including all fifteen handoff fields,
-   to a new user-owned task. Omit model overrides unless the user explicitly
-   selected one and the active schema advertises it.
+3. Satisfy every item returned in `hostEvidenceRequired` through the active host.
+   Installed or skills-install inventory and local-plugin runtime binding cannot
+   be asserted through a CLI option. For `local-plugin-dir`, launch only if the
+   app or saved project configuration proves it will load the exact `pluginRoot`.
+4. Treat shared `handoff prepare` validation as current mechanical evidence;
+   never rewrite the envelope after it returns `envelopeRevision`.
+5. Pass the complete canonical prompt, including the v2 envelope, revision, and
+   receiver gate, to a new user-owned task. Omit model overrides unless the user
+   explicitly selected one and the active schema advertises it.
 
 When the current schema proves that a local project target resolves to the
 exact saved `checkoutRoot`, the request has this shape:
@@ -127,21 +125,22 @@ exact saved `checkoutRoot`, the request has this shape:
 ```
 
 After `create_thread` succeeds, use the active task-wait/read surface to inspect
-the target's first output. It must acknowledge all fifteen handoff fields and
-separately acknowledge the external receipt binding, re-run `foundation
-validate` when the Foundation pair is present, and show the exact
-`checkoutRoot`, `branch`, `artifactPath`, `approvedRevision`,
-`foundationManifestPath`, `foundationRevision`, and receipt before
-`brainstorming`, `writing-plans`, `executing-plans`, or
-`subagent-driven-development` begins.
+the target's first output. It must acknowledge the v2 envelope and all fifteen
+record fields, run `spa handoff receive` against the unchanged
+`envelopeRevision`, satisfy receiver-side host evidence, and show the exact
+policy, goal/constraint binding, `checkoutRoot`, `branch`, `artifactPath`,
+`artifactRevision`, `foundationManifestPath`, `foundationRevision`, receipt,
+and envelope revision before `brainstorming`, `writing-plans`,
+`executing-plans`, or `subagent-driven-development` begins.
 If acknowledgement or target-side validation reports a mismatch, do not ask
 that task to continue. Report the failed handoff.
 
-If no project path equals `checkoutRoot`, an exact linked/managed/detached
+If the installed receiver supports only v1 and the current artifact is Ready,
+do not launch: v1 accepts only genuinely Approved inputs. If no project path equals `checkoutRoot`, an exact linked/managed/detached
 workspace cannot be addressed, receipt affinity or local plugin affinity is not
 guaranteed, or the active API has no exact-path guarantee, use the safe fallback:
 decline automatic launch, print the complete canonical prompt and
-handoff record unchanged, tell the user to open a new task in the exact
+handoff envelope unchanged, tell the user to open a new task in the exact
 checkout, and stop. Never copy an ignored `docs/superpowers/**` artifact or
 receipt to make another checkout appear equivalent.
 

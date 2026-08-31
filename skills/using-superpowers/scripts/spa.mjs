@@ -266,12 +266,12 @@ async function runSdd(command, args) {
     return resolveSddWorkspace();
   }
   if (command === 'task-brief') {
-    requireArgumentCount('sdd task-brief', args, 2, 3);
-    return extractTaskBrief({ planFile: args[0], taskNumber: args[1], outFile: args[2] });
+    requireArgumentCount('sdd task-brief', args, 2, 4);
+    return extractTaskBrief({ planFile: args[0], taskNumber: args[1], outFile: args[2], bindingPath: args[3] });
   }
   if (command === 'review-package') {
-    requireArgumentCount('sdd review-package', args, 2, 3);
-    return createReviewPackage({ baseRevision: args[0], headRevision: args[1], outFile: args[2] });
+    requireArgumentCount('sdd review-package', args, 2, 4);
+    return createReviewPackage({ baseRevision: args[0], headRevision: args[1], outFile: args[2], bindingPath: args[3] });
   }
   if (command === 'progress') {
     const [operation, ...operationArgs] = args;
@@ -330,6 +330,40 @@ async function runWorkflow(command, args) {
   });
 }
 
+async function runHandoff(command, args) {
+  if (!['prepare', 'receive'].includes(command)) fail(`Unknown handoff command ${command ?? '(missing)'}.`);
+  let validatePhaseHandoff;
+  try {
+    ({ validatePhaseHandoff } = await import('./lib/handoff.mjs'));
+  } catch (error) {
+    const detail = error?.code ? `${error.code}: ${error.message}` : error?.message ?? String(error);
+    fail(`Phase-handoff operation module unavailable (${detail}). Recovery: restore the complete shared Node operation package before retrying handoff.`);
+  }
+  const options = parseOptions(args);
+  requireOnly(
+    options,
+    ['--root', '--envelope'],
+    [
+      ...(command === 'receive' ? ['--expected-envelope-revision'] : []),
+      '--foundation-application-receipt',
+      '--selected-roadmap-outcome',
+      '--canonical-brainstorming-prompt',
+    ],
+  );
+  if (command === 'receive') {
+    requireCompleteRevision(options['--expected-envelope-revision'], '--expected-envelope-revision');
+  }
+  return validatePhaseHandoff({
+    root: options['--root'],
+    envelopePath: options['--envelope'],
+    mode: command,
+    expectedEnvelopeRevision: options['--expected-envelope-revision'],
+    legacyFoundationApplicationReceipt: options['--foundation-application-receipt'],
+    legacySelectedRoadmapOutcome: options['--selected-roadmap-outcome'],
+    legacyCanonicalBrainstormingPrompt: options['--canonical-brainstorming-prompt'],
+  });
+}
+
 export async function runSpa(argv) {
   const [group, command, ...args] = argv;
   if (group === 'artifact') return runArtifact(command, args);
@@ -338,6 +372,7 @@ export async function runSpa(argv) {
   if (group === 'startup') return runStartup(command, args);
   if (group === 'workspace') return runWorkspace(command, args);
   if (group === 'workflow') return runWorkflow(command, args);
+  if (group === 'handoff') return runHandoff(command, args);
   fail(`Unknown command group ${group ?? '(missing)'}.`);
 }
 

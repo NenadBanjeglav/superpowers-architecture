@@ -15,7 +15,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
   "contextPolicy": "isolated",
   "capabilityTier": "[CAPABILITY_TIER]",
   "promptPath": "[PROMPT_FILE]",
-  "artifactPaths": ["[BRIEF_FILE]", "[REPORT_FILE]", "[DIFF_FILE]", "[APPROVED_SPEC_FILE]", "[APPROVED_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
+  "artifactPaths": ["[BRIEF_FILE]", "[SDD_BINDING_FILE]", "[REPORT_FILE]", "[DIFF_FILE]", "[CURRENT_SPEC_FILE]", "[CURRENT_PLAN_FILE]", "[CONFORMANCE_RUBRIC_FILE]"],
   "workspacePolicy": "read-only-review"
 }
 ```
@@ -35,11 +35,13 @@ The adapter must verify isolation and read-only realization or disclose the redu
     Global constraints from the spec/design that bind this task:
     [GLOBAL_CONSTRAINTS]
 
-    ## Approved Architecture Inputs
+    ## Policy-Accepted Architecture Inputs
 
-    Read [APPROVED_SPEC_FILE] at [APPROVED_SPEC_REVISION],
-    [APPROVED_PLAN_FILE] at [APPROVED_PLAN_REVISION], and
-    [CONFORMANCE_RUBRIC_FILE]. The task-specific Approved architecture binding is:
+    Read [SDD_BINDING_FILE], [CURRENT_SPEC_FILE] at [CURRENT_SPEC_REVISION],
+    [CURRENT_PLAN_FILE] at [CURRENT_PLAN_REVISION], and
+    [CONFORMANCE_RUBRIC_FILE]. The binding records Approval Policy
+    [APPROVAL_POLICY] and the exact Foundation dependencies. The task-specific
+    policy-accepted architecture binding is:
 
     [ARCHITECTURE_BINDING]
 
@@ -111,9 +113,9 @@ The adapter must verify isolation and read-only realization or disclose the redu
     ## Part 2: Architecture Conformance
 
     Complete every line of the shared Architecture Conformance rubric against
-    the Approved spec, plan, task binding, and diff. Any `violation` is
-    blocking. A changed design is conformant only when a newly Approved
-    artifact revision records it; an implementation rationale cannot approve a
+    the policy-accepted spec, plan, task binding, and diff. Any `violation` is
+    blocking. A changed design is conformant only when a newly policy-accepted
+    artifact revision records it; an implementation rationale cannot progress a
     design change.
 
     ## Part 3: Code Quality
@@ -132,7 +134,7 @@ The adapter must verify isolation and read-only realization or disclose the redu
     - Are the task's edge cases covered?
 
     **Structure:**
-    - Does the implementation preserve the Approved module interface and keep
+    - Does the implementation preserve the bound module interface and keep
       cohesive behavior together behind it?
     - Does decomposition increase depth, locality, or leverage rather than
       creating pass-through files for test convenience?
@@ -201,7 +203,7 @@ The adapter must verify isolation and read-only realization or disclose the redu
 
     ### Assessment
 
-    **Task quality:** [Approved | Needs fixes]
+    **Task quality:** [Ready | Issues found]
 
     **Reasoning:** [1-2 sentence technical assessment]
 ```
@@ -222,10 +224,12 @@ The adapter must verify isolation and read-only realization or disclose the redu
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package BASE HEAD` prints the unique path it
   wrote; the package never enters the controller's context)
-- `[APPROVED_SPEC_FILE]` and `[APPROVED_SPEC_REVISION]` — REQUIRED: exact Approved Design Spec identity
-- `[APPROVED_PLAN_FILE]` and `[APPROVED_PLAN_REVISION]` — REQUIRED: exact Approved Implementation Plan identity
+- `[SDD_BINDING_FILE]` — REQUIRED: exact v2 SDD binding supplied to both shared SDD operations
+- `[APPROVAL_POLICY]` — REQUIRED: exact effective `Autonomous` or `Review-gated` policy
+- `[CURRENT_SPEC_FILE]` and `[CURRENT_SPEC_REVISION]` — REQUIRED: exact policy-accepted Design Spec identity
+- `[CURRENT_PLAN_FILE]` and `[CURRENT_PLAN_REVISION]` — REQUIRED: exact policy-accepted Implementation Plan identity
 - `[CONFORMANCE_RUBRIC_FILE]` — REQUIRED: absolute shared Architecture Conformance rubric path
-- `[ARCHITECTURE_BINDING]` — REQUIRED: task-specific Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
+- `[ARCHITECTURE_BINDING]` — REQUIRED: task-specific policy-accepted modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Architecture
 Conformance, Strengths, Issues (Critical/Important/Minor), Task quality verdict.

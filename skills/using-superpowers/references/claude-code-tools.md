@@ -53,13 +53,13 @@ A subagent remains part of one Claude session. It is never a substitute for the 
 
 ## Automated Phase Handoff In Claude Code
 
-When automated fresh-session mode is selected and an artifact has been
-explicitly approved, Claude Code may start the next phase in a named background
-session. First run `prepare handoff` from
-[phase-handoff.md](phase-handoff.md) and build the canonical prompt from the
-complete verified record. For Foundation-backed Planning and implementation,
-that prompt carries `Foundation Application Receipt` as an external binding
-outside the unchanged record.
+When automated fresh-session mode is selected and the effective Approval Policy
+accepts an artifact's Ready or Approved state, the deferred Claude adapter may
+start the next phase only when the user request or durable Phase Mode authorizes
+it and the installed host proves a genuinely fresh named session. First run
+`spa handoff prepare` from [phase-handoff.md](phase-handoff.md) and build the
+canonical prompt from the complete v2 envelope and returned
+`envelopeRevision`.
 
 Do not use `/bg` to background the current conversation. The fresh session must
 start from the canonical prompt without current conversation history.
@@ -81,18 +81,13 @@ Before launch:
    `--plugin-dir <pluginRoot>` in the launch. For `skills-install`, verify the
    exact installed skill root on both sides. These checks are the required
    plugin affinity proof; inventory by name alone does not prove a local root.
-5. Re-run `foundation validate` for a recorded `foundationManifestPath` and
-   `foundationRevision`. For `phase: brainstorming`, require those values to
-   equal the phase artifact path and revision. For Planning or implementation,
-   require the external Foundation Application Receipt path, prove it is
-   readable and ignored in the exact checkout, and use receipt-backed
-   `foundation validate` to revalidate the source-spec base, receipt, and
-   resulting `foundationRevision`.
-6. Require the new session's first output to acknowledge all fifteen handoff
-   fields and separately acknowledge the external receipt binding. It shows the
-   exact `checkoutRoot`, `branch`, `artifactPath`, `approvedRevision`,
-   `foundationManifestPath`, `foundationRevision`, and receipt before invoking
-   `/superpowers-architecture:brainstorming` or another next phase skill.
+5. Satisfy every `hostEvidenceRequired` item through installed host inventory
+   and launch behavior. A CLI assertion is not evidence.
+6. Require the new session's first output to acknowledge the complete v2
+   envelope and `envelopeRevision`, run `spa handoff receive`, and show the
+   exact policy, goal/constraint binding, `checkoutRoot`, `branch`,
+   `artifactPath`, `artifactRevision`, `foundationManifestPath`,
+   `foundationRevision`, and receipt before invoking the next phase skill.
 
 Only after every check passes, launch from the verified checkout. For an
 installed plugin:
@@ -139,7 +134,7 @@ claude --plugin-dir '<verified-plugin-root>' --bg --name 'spa-<phase>-<artifact-
 For `installed` or `skills-install`, omit `--plugin-dir` from those fallback
 templates. The canonical prompt names the next skill as
 `/superpowers-architecture:<skill>` when plugin namespacing is required and
-contains all fifteen handoff fields from
+contains the complete envelope and all fifteen record fields from
 [phase-handoff.md](phase-handoff.md).
 
 If `claude` is unavailable, authentication or background agents are disabled,
@@ -150,6 +145,10 @@ do not launch. Print the applicable quoting-safe command, the
 complete canonical prompt, and the failed preflight field. Missing
 installed-host evidence remains a release blocker; a printed fallback is not
 successful phase-handoff evidence.
+
+An installed v1-only receiver cannot receive Ready work. Do not fabricate
+approval or change checkout to work around that capability limit. Claude remains
+deferred and unadvertised for this release boundary.
 
 ## Finishing
 
