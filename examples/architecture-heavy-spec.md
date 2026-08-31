@@ -4,9 +4,12 @@
 **Date:** 2026-06-19
 **Artifact Type:** Design Spec
 **Status:** Draft
-**Revision:** sha256:ed297d10b9b5eeb8f56736b07d8dfbc80274d7e1f236250fc0f9fea452244085
+**Revision:** sha256:8effcb728e1fa8be072506b768cd5ae6c68586f10b29664c2e7112c2b93dce29
 **Approved Revision:** none
 **Approved At:** none
+**Approval Policy:** Autonomous
+**Workflow Policy Version:** 2
+**Phase Mode:** Same-session mode
 
 ## Problem
 
@@ -27,7 +30,7 @@ Create a deeper renewal retry module that owns retry scheduling, retry state tra
 ### Phase Mode
 
 **Selected Mode:** Same-session mode
-**Reason:** The example demonstrates an explicitly selected same-session continuation with mandatory disk rereads after approval.
+**Reason:** The example demonstrates a selected same-session continuation with disk rereads after policy-aware progression.
 **Durability:** Workflow-chain-local example
 
 ### Language

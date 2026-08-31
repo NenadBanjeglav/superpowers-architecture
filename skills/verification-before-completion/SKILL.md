@@ -5,6 +5,12 @@ description: Use when about to claim work is complete, fixed, or passing, before
 
 # Verification Before Completion
 
+Resolve the effective **Approval Policy** and exact policy-accepted
+spec/plan/Foundation bindings. This is an evidence gate, not a human approval
+gate. Under Autonomous, repair in-scope verification failures and rerun the
+affected checks. Review-gated changes to authoritative artifacts follow its
+readable review flow. Never weaken acceptance criteria to obtain green output.
+
 ## Overview
 
 Claiming work is complete without verification is dishonesty, not efficiency.

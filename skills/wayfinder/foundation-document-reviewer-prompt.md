@@ -24,6 +24,8 @@ Read every input fresh from disk:
   selected optional document;
 - the readable Foundation changes and the ready roadmap outcome identified by
   Wayfinder.
+- the exact effective **Approval Policy** (`Autonomous` or `Review-gated`) and
+  Workflow Policy Version 2 owner.
 
 If an input is missing, unreadable, outside the checkout, or inconsistent with
 the manifest, report an issue. Do not infer missing content from the dispatch
@@ -40,7 +42,7 @@ Check:
 1. lifecycle metadata and Foundation file manifest grammar;
 2. every Wayfinder readiness item;
 3. non-overlapping ownership with one owner for every current-truth category;
-4. Root Router reading links, workflow gates, permissions, and Child DOX
+4. Root Router reading links, Approval Policy, Phase Mode, permissions, and Child DOX
    indexes;
 5. compact dashboard behavior and absence of copied lifecycle revision;
 6. Project Blueprint identities, project-wide scope, release boundaries, and
@@ -61,16 +63,18 @@ Check:
     PRDs, issue or triage flows, visual companions, and lowercase `context.md`.
 
 Report every issue with a file path, the violated contract, and the smallest
-required correction. Do not redesign an Approved module, interface, seam,
-adapter, data flow, depth/locality/leverage intent, or test surface. A necessary
-design change is an issue that returns the controlling artifact to Draft and
-user review.
+required correction. Do not silently redesign a bound module, interface, seam,
+adapter, data flow, depth/locality/leverage intent, or test surface. Under
+Autonomous, an in-scope correction returns through Draft and internal review to
+Ready. Review-gated changes return to readable user review.
 
 Return exactly one of these terminal statuses:
 
+- `Ready for progression`
 - `Ready for user review`
 - `Issues found`
 
-Use `Ready for user review` only when every check passes. With `Issues found`,
-list the actionable findings after that status and use no other verdict or
-approval wording. This advisory reviewer never approves a Foundation.
+Use `Ready for progression` only when every check passes under Autonomous. Use
+`Ready for user review` only when every check passes under Review-gated. With
+`Issues found`, list actionable findings after that status. This advisory
+reviewer never approves a Foundation or changes lifecycle metadata.

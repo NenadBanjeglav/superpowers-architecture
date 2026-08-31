@@ -4,9 +4,10 @@ Superpowers Architecture supports two distribution channels: GitHub/skills.sh
 for Codex and the Codex plugin package. npm is not a
 supported channel; the repository `package.json` is private tooling metadata.
 
-Node.js 20 or newer is required for artifact lifecycle, portable SDD workspace,
-Agentic Foundation lifecycle/candidate/receipt operations, and compact
-startup-context operations. Missing Node is visible at startup and causes
+Node.js 20 or newer is required for policy-aware artifact lifecycle, portable
+bound SDD operations, Agentic Foundation lifecycle/candidate/receipt,
+transactional existing-project migration, v2 handoff, and compact startup
+operations. Missing Node is visible at startup and causes
 correctness-critical operations to fail closed.
 
 ## Skills CLI
@@ -70,7 +71,7 @@ This repository also includes Codex plugin packaging:
 
 Use Codex's plugin install or marketplace flow when you need the complete Codex
 adapter. A release claim requires evidence from the installed plugin: load,
-startup/resume/clear/compaction behavior, Wayfinder discovery, the six
+  startup/resume/clear/compaction behavior, Wayfinder discovery, the seven
 Foundation operations, receipt-backed validation, isolated dispatch,
 fresh-task handoff, same-checkout/plugin affinity, and safe fallback.
 
@@ -94,17 +95,19 @@ Automated fresh-session mode depends on runtime support.
 
 - Codex App uses only a genuinely new project task that can target the exact
   saved checkout; it never uses a conversation fork.
-- The target must echo and independently revalidate the complete
-  fifteen-field handoff record before phase work.
-- Foundation-backed Planning and implementation keep the receipt outside that
-  fixed record as `Foundation Application Receipt: <absolute APPLIED.json
-  path>` and acknowledge it separately.
+- The target must echo and independently revalidate the complete v2 envelope,
+  its revision, and the fifteen-field record before phase work.
+- The envelope carries Approval Policy, bounded goal, constraint source,
+  Foundation receipt, and Brainstorming bindings outside the fixed record. The
+  record uses `artifactRevision`.
 - Ignored specs, plans, Foundation candidates, and receipts remain valid only
   in the exact checkout that owns them. A copied artifact, nearby worktree, or
   different local plugin root is not equivalent.
 - `pluginSource` and `pluginRoot` must identify the installed package,
   local-plugin directory, or complete skills install available to the target
   session. Uncertain affinity falls back without automatic launch.
+- Installed v1-only receivers accept genuinely Approved artifacts and reject
+  Ready. They cannot be used to fabricate approval for an Autonomous handoff.
 
 If the runtime cannot launch a fresh session automatically, Superpowers Architecture prints the exact next-phase prompt or command and stops.
 

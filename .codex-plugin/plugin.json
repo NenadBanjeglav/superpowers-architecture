@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Superpowers Architecture",
     "shortDescription": "Architecture-first Superpowers workflow for Codex",
-    "longDescription": "Use Superpowers Architecture to establish a Wayfinder Agentic Foundation and Blueprint-traceable roadmap, design one outcome as a stable DDI/FCA Design Change Set, apply the reviewed Foundation candidate, verify the resulting Foundation, install APPLIED.json as the sole Application Receipt, and carry exact Approved artifacts through verified phase handoffs, TDD, reviews, and final verification.",
+    "longDescription": "Use Superpowers Architecture to establish a Wayfinder Agentic Foundation and Blueprint-traceable roadmap, design one outcome as a stable DDI/FCA Design Change Set, apply the reviewed Foundation candidate, verify the resulting Foundation, install APPLIED.json as the sole Application Receipt, and carry exact policy-accepted artifacts through verified phase handoffs, TDD, reviews, and final verification. Autonomous is the default for new and existing workflows; Review-gated requires a new explicit opt-in.",
     "developerName": "Nenad Banjeglav",
     "category": "Coding",
     "capabilities": [
@@ -32,7 +32,7 @@
     "defaultPrompt": [
       "Use Wayfinder to establish the Agentic Foundation and a Blueprint-traceable roadmap for my project.",
       "Design one ready roadmap outcome as a single exact Design Change Set before implementation.",
-      "Carry the Approved spec, resulting Agentic Foundation, and Foundation Application Receipt through exact phase handoffs."
+      "Carry the policy-accepted spec, resulting Agentic Foundation, and Foundation Application Receipt through exact phase handoffs."
     ],
     "websiteURL": "https://github.com/NenadBanjeglav/superpowers-architecture",
     "brandColor": "#2563EB",

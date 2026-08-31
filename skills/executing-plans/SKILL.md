@@ -1,137 +1,89 @@
 ---
 name: executing-plans
-description: Use when executing written implementation plans linearly after written plan approval
+description: Use when executing a policy-accepted written Implementation Plan linearly in the current or fresh phase session
 ---
 
 # Executing Plans
 
-## Required Input
+Execute one exact plan task at a time. Do not pause for routine approval or
+progress check-ins.
 
-Start only from an Approved written Implementation Plan path and its exact
-expected `sha256:` revision. Resolve the sibling `using-superpowers` operation
-module and validate the plan as `Implementation Plan` at that revision before
-reading it for instructions.
+## Entry
 
-After plan validation, parse only these header bindings:
+1. Resolve **Approval Policy** and Phase Mode from the received v2 envelope or
+   authoritative same-session instructions.
+2. Validate the Implementation Plan with `artifact validate --policy
+   <Autonomous|Review-gated>`. Autonomous accepts Ready or Approved;
+   Review-gated accepts Approved. Draft never executes.
+3. Validate the source Design Spec at the plan's exact `Spec` and `Spec
+   Revision` with the same policy.
+4. Require all four Foundation fields to be exact values or all literal `none`.
+   For Foundation-backed work, run receipt-backed policy-aware `foundation
+   validate` before codebase inspection.
+5. Require plan/spec/Foundation/receipt paths to be physical, readable, ignored
+   when under `docs/superpowers/`, and inside this exact checkout.
+6. Read applicable AGENTS.md files, the complete plan, the exact spec,
+   Architecture Conformance, relevant source/tests, and ignored progress state.
+7. Use `using-git-worktrees` only when the existing workspace policy permits
+   it. A same-checkout handoff must remain in the recorded checkout.
 
-- `Spec` and `Spec Revision`;
-- `Foundation Manifest`;
-- `Foundation Base Revision`;
-- `Foundation Result Revision`; and
-- `Foundation Application Receipt`.
+Missing or stale evidence stops the affected operation with expected/actual
+values. Do not fabricate approval, use conversation memory, or switch checkout.
 
-Validate the source artifact as an Approved `Design Spec` at the recorded exact
-revision. Parse its `Foundation Manifest` and `Base Agentic Foundation`
-traceability fields. Compare the source-spec base to the plan base, then bind
-the plan's distinct result revision and receipt supplied by the phase handoff.
-All four Foundation fields must be literal `none` for a generic workflow.
-Otherwise require the same absolute physical `WAYFINDING.md`, complete
-lowercase base and result `sha256:` identities, and the absolute physical
-candidate-root `APPLIED.json`. Reject a half-none or otherwise inconsistent
-Foundation binding before further inspection.
+## Execution Loop
 
-Never require base and result revisions to be equal. A non-empty candidate
-normally changes the revision; an empty candidate may preserve it when the
-receipt proves that exact result.
+For each incomplete task in order:
 
-For a non-none Foundation, verify the receipt is ignored and run the sibling
-shared operation:
+1. Re-read its exact task text, global constraints, and architecture binding.
+2. Confirm its plan/spec/Foundation identities still match entry evidence.
+3. Implement through `test-driven-development` when code behavior changes:
+   establish a meaningful red check, make the smallest coherent change, then
+   refactor with tests green.
+4. Keep modules, interfaces, seams/adapters, data flow, depth, locality,
+   leverage, and test surface aligned with the policy-accepted artifacts.
+5. Run focused verification, then the task's broader checks.
+6. Inspect the diff and staged paths. Keep `docs/superpowers/**` and local root
+   instructions unstaged unless the user explicitly requested them.
+7. Run a task-scoped advisory review. Resolve Critical/Important and
+   Architecture Conformance findings before moving on.
+8. Commit the coherent task when repository instructions and the authorized
+   workflow call for commits. Record its base/head/review result in ignored
+   progress.
 
-```text
-git check-ignore --quiet <absolute-candidate-root-APPLIED.json>
-foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-result-sha256> --receipt <absolute-candidate-root-APPLIED.json> --spec-path <absolute-approved-spec-path> --expected-spec-revision <exact-approved-spec-sha256> --expected-base-revision <exact-base-sha256>
-```
+Continue through all tasks. Under Autonomous, in-scope code, test,
+documentation, design, plan, and review repairs are agent-owned. Do not ask
+whether to continue.
 
-Only after plan, source-spec, and non-none receipt-backed Foundation validation
-pass may you read the plan, referenced spec, Foundation, and codebase from disk.
-Do not rely on prior conversation context, even in same-session mode after plan
-approval.
+## Design Discoveries
 
-If either artifact is Draft, has missing or duplicated lifecycle metadata, has
-the wrong type, was edited after approval, or is at a different revision, stop
-and report expected and actual values. Also stop on a missing, non-ignored,
-inconsistent, or drifted Foundation base/result/receipt binding. Missing Node.js
-or a missing operation module fails closed with the full-package installation
-guidance.
+If implementation reveals a necessary change to a bound module, interface,
+seam, adapter, data flow, or test surface:
 
-## Local Superpowers Docs Guard
+1. stop only the divergent work;
+2. run the controlling spec and dependent plan through Draft;
+3. record the in-scope design correction and any durable documentation impact;
+4. refresh and run advisory review;
+5. under Autonomous, resolve findings, return artifacts to Ready, validate, and
+   resume;
+6. under Review-gated, present the changed readable package and resume only
+   after clear approval of the new revision.
 
-Before each task commit, inspect staged files. If any path under `docs/superpowers/` is staged, unstage it unless the user explicitly requested committing local Superpowers docs.
+Ask the user only when the discovery changes the authorized goal, acceptance
+criteria, safety boundary, consequential product behavior, or external-action
+authority. Never weaken constraints to make implementation fit the old plan.
 
-Use:
+## Blockers
 
-```bash
-git diff --cached --name-only
-git restore --staged docs/superpowers 2>/dev/null || true
-```
+Investigate and repair ordinary failures with `systematic-debugging`. Stop the
+affected task only for a blocker you cannot resolve safely, missing access/input,
+an unresolved consequential choice, or an unauthorized external/destructive
+action. Complete independent tasks that do not depend on the blocker.
 
-## Overview
+Do not turn repeated technical failure into an automatic human approval gate.
 
-Load plan, review critically, execute all tasks, report when complete.
+## Completion
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
-
-**Note:** If subagents are available and the plan's tasks are mostly independent, use `subagent-driven-development` instead of this skill. Use this skill for linear plans, no-subagent runtimes, or tasks that require tight sequential control.
-
-## The Process
-
-### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with the user before starting
-4. If no concerns: Create todos for the plan items and proceed
-
-### Step 2: Execute Tasks
-
-Carry the exact Approved source spec path/revision and the plan's Foundation
-Manifest, Foundation Base Revision, Foundation Result Revision, and Foundation
-Application Receipt into every task context. All four Foundation values remain
-literal `none` for a generic workflow.
-
-For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
-
-If implementation reveals that the approved modules, interfaces, seams, adapters, data flow, or test surface must change, stop before diverging. Run `artifact draft` on the controlling spec (and the dependent plan when applicable), return the artifact to user review, and resume only from newly Approved revisions.
-
-### Step 3: Complete Development
-
-After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use `finishing-a-development-branch`
-- Follow that skill to run final verification, confirm local Superpowers docs are not staged, summarize commits, changed files, tests, and risks, then stop unless the user explicitly asks to push, merge, open a PR, or discard work.
-
-## When to Stop and Ask for Help
-
-**STOP executing immediately when:**
-- Hit a blocker (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
-
-**Ask for clarification rather than guessing.**
-
-## When to Revisit Earlier Steps
-
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
-
-**Don't force through blockers** - stop and ask.
-
-## Remember
-- Review plan critically first
-- Follow plan steps exactly
-- Don't skip verifications
-- Reference skills when plan says to
-- Stop when blocked, don't guess
-- Never start implementation on main/master branch without explicit user consent
-
-## Integration
-
-**Required workflow skills:**
-- **using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **writing-plans** - Creates the plan this skill executes
-- **finishing-a-development-branch** - Complete development after all tasks
+After all tasks and reviews are clean, use
+`finishing-a-development-branch`. Run final verification and whole-branch
+review, report actual evidence and installed-runtime limits, and keep external
+push/merge/PR/deploy/publish/discard actions separate unless already authorized.

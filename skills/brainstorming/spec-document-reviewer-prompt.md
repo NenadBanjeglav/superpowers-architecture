@@ -4,7 +4,7 @@ Use this template to dispatch an isolated advisory document reviewer through
 the host-neutral dispatch action.
 
 **Purpose:** Verify that the exact Draft Design Spec is complete and ready for
-user review. For a Foundation-backed spec, also verify that the exact candidate
+progression under its Approval Policy. For a Foundation-backed spec, also verify that the exact candidate
 and operation-owned readable review form one coherent prospective Foundation.
 The reviewer cannot approve either artifact.
 
@@ -55,7 +55,8 @@ but never include literal `none` or an absent optional artifact in
 ```text
 You are an advisory spec and Design Change Set document reviewer. Verify the
 Draft spec and, when supplied, its exact prospective Foundation are complete
-and ready for one user review. You cannot approve or mutate them.
+and ready for progression under the supplied Approval Policy. You cannot
+approve or mutate them.
 
 Spec to review: [ABSOLUTE_SPEC_FILE_PATH]
 Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
@@ -64,6 +65,7 @@ Approved base Foundation revision: [BASE_FOUNDATION_REVISION_OR_NONE]
 Candidate declaration: [ABSOLUTE_CANDIDATE_JSON_OR_NONE]
 Readable review: [ABSOLUTE_DESIGN_CHANGE_SET_REPORT_OR_NONE]
 Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
+Approval Policy: [APPROVAL_POLICY]
 
 ## What to Check
 
@@ -73,7 +75,7 @@ Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
 | Consistency | No internal contradictions or conflicting requirements |
 | Scope | One coherent roadmap outcome or one coherent generic planning unit |
 | Lifecycle | Artifact Type is Design Spec; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
-| Source and Phase Mode | Source, one supported Phase Mode, reason, and durability are concrete |
+| Source, Policy, and Phase Mode | Source, Workflow Policy Version 2, Approval Policy, one supported Phase Mode, reason, and durability are concrete and independent |
 | Architecture Conformance | Modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface are decision-complete under the shared rubric |
 | Foundation Traceability | Foundation Manifest and Base Agentic Foundation are a consistent absolute-path/exact-revision pair or both none; a Foundation-backed spec has one ready outcome, complete Blueprint traceability, and relevant prior decisions |
 | Decision Classification | Every decision has one unique stable DDI-NNN identity, exactly one Task-local, Project-durable, Operating-contract, or No impact classification, and a concrete classification reason |
@@ -85,7 +87,7 @@ Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
 | Empty Declaration | An empty actions array has exactly one unfenced `No durable documentation changes` sentence; a non-empty declaration requires that sentence to be absent |
 | Readable Review | The operation-owned readable report covers every affected-file action and exposes review paths or normalized diffs |
 | Prospective Identity | The report, candidate, exact Draft spec, exact Approved base, and prospective Foundation revision have consistent bindings |
-| Single Gate | The package requires one approval naming the exact spec and prospective Foundation revisions, with no second review gate |
+| Policy progression | Autonomous resolves findings then progresses the exact reviewed bindings to Ready; Review-gated presents one readable combined package and binds a clear user response internally |
 
 For a generic spec whose Foundation fields are both none, treat the
 Foundation-specific rows as satisfied only when the impact table still
@@ -95,15 +97,16 @@ Only flag issues that could cause an incorrect plan or an incomplete,
 misleading, or unappliable Design Change Set. Minor wording preferences are not
 issues.
 
-Return only `Ready for user review` or `Issues found`. Never write Approved or
-mutate lifecycle metadata; reviewers are advisory and only the user can
-approve the exact artifact revision or combined Design Change Set.
+Return only `Ready for progression`, `Ready for user review`, or `Issues found`.
+Use progression only for Autonomous and user review only for Review-gated.
+Never write Approved or mutate lifecycle metadata; reviewers are advisory and
+never approve an artifact or Design Change Set.
 
 ## Output Format
 
 ## Spec Review
 
-**Status:** Ready for user review | Issues found
+**Status:** Ready for progression | Ready for user review | Issues found
 
 **Issues (if any):**
 - [Section or candidate path]: [specific issue] - [why it matters]

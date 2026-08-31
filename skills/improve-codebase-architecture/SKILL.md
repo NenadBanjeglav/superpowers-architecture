@@ -1,51 +1,44 @@
 ---
 name: improve-codebase-architecture
-description: Use when scanning a codebase for shallow modules, unclear interfaces, weak seams, poor adapters, poor locality, low leverage, or weak test surfaces
+description: Use when scanning a codebase for shallow modules, unclear interfaces, weak seams, poor adapters, low locality, or weak leverage and writing a local architecture review
 ---
 
 # Improve Codebase Architecture
 
-Use Matt Pocock's `codebase-design` vocabulary to find architecture deepening opportunities. Produce markdown-only local architecture reviews.
+Produce a read-only architecture review. Do not refactor code while using this
+skill.
 
-## Inputs
-
-Start from the user's selected repo area or the current repo. Inspect the codebase directly. Do not require browser output, Tailwind, Mermaid, temporary HTML files, `context.md`, or ADRs.
-
-## Review Criteria
+Read applicable instructions, resolve the effective **Approval Policy**, inspect
+the repository's public module behavior and tests, and apply
+`codebase-design` vocabulary consistently: module, interface, seam, adapter,
+depth, leverage, locality, and test surface.
 
 Look for:
 
-- shallow modules with large interfaces and thin implementation
-- unclear module ownership
-- seams in the wrong place
-- adapters mixed into core logic
-- tests crossing past the intended interface
-- repeated caller complexity that should move behind a deeper interface
-- poor locality, where one behavior change spreads across many files
+- shallow modules that expose implementation detail;
+- responsibilities split across unrelated callers;
+- unstable or duplicated interfaces;
+- seams in the wrong place and runtime concerns leaked into shared policy;
+- adapters that do not isolate external systems;
+- low locality that forces one change across many files;
+- tests coupled to private helpers instead of public behavior; and
+- repeated complexity a deeper module could hide.
 
-## Present Candidates As Markdown
-
-Write a markdown review to:
+Write the ignored local report under:
 
 `docs/superpowers/architecture-reviews/YYYY-MM-DD-<topic>.md`
 
-The review is local developer working state. Do not commit it unless explicitly requested.
+For each candidate include files/modules, evidence, current problem, proposed
+deepening, interface/seam/adapter effects, data flow, test-surface effect,
+benefits in locality and leverage, migration risks, and recommendation strength:
 
-Each candidate must include:
+- **Strong:** current structure causes repeated cost or fragility.
+- **Worth exploring:** likely benefit needs bounded design work.
+- **Speculative:** plausible idea that must not block current work.
 
-- Files/modules involved
-- Problem
-- Proposed deepening
-- Interface/seam impact
-- Adapter impact
-- Test-surface impact
-- Benefits in locality and leverage
-- Recommendation strength: Strong, Worth exploring, or Speculative
-
-End with a top recommendation.
-
-## Conversation
-
-After writing the review, ask which candidate the user wants to pursue. If they choose one, use `brainstorming` for a feature-level design spec before planning or implementation.
-
-Do not create `context.md`. Do not create ADRs.
+The report is advisory. It never approves design, implementation, or release.
+If a candidate becomes authorized work, route one bounded outcome to
+`brainstorming`. Under Autonomous, that spec can progress through internal
+review to Ready; Review-gated uses a readable user package after a new explicit
+opt-in. Do not treat the architecture review itself as an artifact approval or
+expand into unrelated refactoring.

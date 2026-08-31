@@ -30,7 +30,8 @@ The matrix must cover:
 2. Canonical Design Spec and Implementation Plan artifact vectors plus
    canonical multi-file Agentic Foundation vectors. Cover strict UTF-8,
    optional BOM, CRLF/LF normalization, bytewise path ordering, unambiguous
-   length framing, Draft/refresh/approve/validate transitions, and drift.
+   length framing, Draft/refresh/ready/approve/policy-aware validate
+   transitions, writer exclusion, and drift.
 3. The stable DDI/FCA declaration matrix: JSON-escaped paths containing spaces,
    semicolons, and Markdown delimiters; exact declaration/candidate equality;
    shared actions; owner, Decision Ledger, parent DOX index, router, and
@@ -40,23 +41,32 @@ The matrix must cover:
    exact `spec -> base -> receipt -> result` with base and result different. An
    empty candidate must use the same receipt flow with base equal to result.
    Corrupt each schema, nonce, spec, base, result, action, path, and common
-   approval-timestamp binding and require read-only failure.
+   v1 approval-timestamp and v2 policy/lifecycle-snapshot bindings and require
+   read-only failure. Prove an empty explicit-policy apply changes no Foundation
+   bytes or lifecycle timestamps.
 5. Candidate preview/apply and recovery: readable complete diffs, base and
    candidate drift, the checkout-scoped cooperative lock, interrupted durable
    states, backup and mode integrity, exact staged/created-directory cleanup,
    terminal completion, and restored-or-applied end state. Evidence must state
    the V1 quiescent-application boundary: hostile same-machine mutation inside
    the bounded window is not covered.
-6. Portable SDD operations, workspace-manager fixtures, serialization, paths
+6. Transactional generic and Foundation-backed existing-project migration:
+   narrow complete-byte changes, Ready reconciliation, immutable history,
+   concurrent writers, interruption/recovery, idempotence, and preservation of
+   business/safety constraints and prior human approval facts.
+7. Portable SDD operations, exact policy/spec/plan/Foundation binding, stale
+   dependency rejection, workspace-manager fixtures, serialization, paths
    containing spaces, and missing-Node failure behavior.
-7. Startup hooks through PowerShell/cmd, Git Bash, WSL Bash, and an actual Unix
+8. Startup hooks through PowerShell/cmd, Git Bash, WSL Bash, and an actual Unix
    checkout, including startup/resume/clear/compaction reinjection and the
    4,000-character envelope limit.
-8. Installed Codex plugin load, Wayfinder and six Foundation operations,
-   isolated dispatch, receipt-backed validation, fixed fifteen-field
-   fresh-task handoff plus external receipt acknowledgement, exact
-   same-checkout/plugin affinity, and fallback behavior.
-9. A smoke pass through each supported distribution channel.
+9. Installed Codex plugin load, Wayfinder and policy-aware operation discovery,
+   isolated dispatch, receipt-backed validation, v2 envelope plus exact
+   fifteen-field acknowledgement, Ready-to-v1 rejection, genuine user-owned
+   fresh-task identity, exact same-checkout/plugin affinity, and fallback.
+10. Representative new and existing Autonomous flows, a new explicit
+    Review-gated opt-in, and a smoke pass through each supported distribution
+    channel.
 
 A failed or unavailable mandatory row remains a failure and blocks release. It
 must not be rewritten as a limitation, waived by source inspection, or hidden

@@ -1,255 +1,150 @@
 ---
 name: wayfinder
-description: Use for greenfield project inception or project-wide reorientation to establish or resume an exact Agentic Foundation and Blueprint-traceable roadmap before feature Brainstorming
-metadata:
-  priority: 110
+description: Use for greenfield project inception or project-wide reorientation to establish or resume the Agentic Foundation, Project Blueprint, traceable roadmap, Approval Policy, and Phase Mode before bounded design
 ---
 
 # Wayfinder
 
-<HARD-GATE>
-Wayfinder is documentation-only. Do not scaffold production code, framework or
-package-manager files, source directories, databases, CI, deployment
-configuration, implementation plans, feature Design Specs, ADRs, PRDs, issue
-or triage flows, visual companions, or lowercase context.md.
-</HARD-GATE>
+Wayfinder owns project-level direction and the documentation-only Agentic
+Foundation. It does not design one feature, write an implementation plan, or
+scaffold production code.
 
-Wayfinder is the sole project-inception and project-wide reorientation module.
-Its interface is one-question-at-a-time discovery, a resumable `WAYFINDING.md`,
-exact Agentic Foundation review, and a Blueprint-traceable roadmap-outcome
-handoff to `brainstorming`.
+Read `using-superpowers`, the applicable instruction chain, the complete
+[Agentic Foundation contract](references/agentic-foundation-contract.md), the
+[Foundation lifecycle](../using-superpowers/references/agentic-foundation-lifecycle.md),
+the [workflow policy](../using-superpowers/references/workflow-policy.md), and
+the shared Architecture Conformance rubric before editing.
 
-Use Wayfinder for a deliberate greenfield downstream project, a missing project
-foundation, or uncertainty broad enough to change the project destination,
-release boundary, project-wide architecture, or several roadmap outcomes.
-Bounded feature design and ordinary durable decisions for one roadmap outcome
-remain in `brainstorming`.
+## Entry
 
-## Architecture Boundaries
+1. Resolve the physical repository root, branch/worktree identity, applicable
+   instructions, and ignored local working-state rules.
+2. Resolve **Approval Policy**. Workflow Policy Version 2 defaults new and
+   existing projects to Autonomous. Review-gated requires a new explicit user
+   opt-in. If active legacy gate clauses exist, migrate them narrowly through
+   the shared `workflow migrate` operation before they block this phase.
+3. Discover an existing root `CONTEXT.md`, `docs/agentic/WAYFINDING.md`, and
+   every manifest-selected Foundation document. Never create these inside the
+   Superpowers Architecture plugin repository itself.
+4. Determine whether this is new inception, Foundation resumption, or
+   project-wide reorientation. If the request is one bounded outcome in an
+   established project, route to `brainstorming`.
+5. Preserve a durable **Phase Mode** already recorded in the Root Router. Ask
+   about it only when no preference exists and the difference materially
+   affects progression. Recommend automated fresh-session mode when the runtime
+   can prove exact same-checkout affinity; otherwise recommend same-session
+   mode and say why.
 
-Keep these seams explicit:
+## Discovery
 
-- the **project-inception seam** from Wayfinder's exact Approved Foundation to
-  one bounded Brainstorming outcome;
-- the **root-routing seam** from root `AGENTS.md` to the minimum authoritative
-  document set;
-- the **current-truth/ledger seam** between replace-in-place current truth and
-  immutable decision evidence;
-- the **Blueprint/spec seam** between project-wide requirements and later
-  feature Design Understanding;
-- the **lifecycle seam** between human-readable Foundation documents and the
-  shared canonical operation core; and
-- the **runtime seam** between this host-neutral policy and concrete fresh
-  session capabilities.
+Ask one concise question at a time. Put the question first, then give one
+concrete recommendation and a short reason. Prefer targeted repository
+inspection over asking for facts available on disk.
 
-Foundation document, primary-source research, roadmap, lifecycle, and runtime
-adapters sit only at those seams. Data flows from inspected downstream state
-and explicit user decisions through Draft current-truth owners, immutable
-ledger entries, the Project Blueprint, and traceable roadmap outcomes to one
-exact Approved Agentic Foundation and one same-checkout Brainstorming phase.
-Do not add a parallel truth store, lifecycle implementation, or host-specific
-branch inside Wayfinder.
+Resolve enough to make these project-wide facts coherent:
 
-## Repository Boundary
+- destination and observable success;
+- users, journeys, scope, and explicit out-of-scope boundaries;
+- release boundary and non-negotiable business, privacy, security, data, and
+  external-action constraints;
+- modules, interfaces, seams, adapters, data flow, depth, locality, leverage,
+  and test surface;
+- current facts, assumptions, sources, Frontier, Fog, and Out of Scope;
+- stable Project Blueprint requirements and roadmap outcomes;
+- one bounded outcome whose prerequisites are met and whose readiness is
+  `Ready for Brainstorming`.
 
-Wayfinder writes only in the user's deliberate downstream project checkout. The
-Superpowers Architecture plugin repository is a skill source, not a downstream
-target: do not create its root `CONTEXT.md` or a `docs/agentic/` Foundation
-there. If the current checkout is this plugin repository and the user is
-maintaining the plugin, follow its local instructions instead of running
-Wayfinder as project inception.
+Do not turn discovery into a questionnaire. Do not invent decisions to eliminate
+uncertainty. A consequential unresolved direction choice is a valid user
+question; ordinary documentation and architecture repairs are agent-owned under
+Autonomous.
 
-Before asking a question or writing:
+## Foundation Shape
 
-Read root `AGENTS.md` and every applicable child instruction file before
-editing.
+Follow the Foundation contract exactly. The minimum Foundation is:
 
-1. Resolve the exact checkout root and read the applicable instruction chain,
-   beginning with root `AGENTS.md` and continuing through every child
-   `AGENTS.md` that owns an inspected or proposed path.
-2. Inspect existing project files, current documentation, source and test
-   boundaries, Git state, and verification commands without mutating them.
-3. Confirm that the user intends this checkout to be the downstream project.
-4. Read
-   [agentic-foundation-contract.md](references/agentic-foundation-contract.md)
-   and use it as the only detailed downstream document-shape contract.
-5. Read
-   [agentic-foundation-lifecycle.md](../using-superpowers/references/agentic-foundation-lifecycle.md)
-   before any Foundation lifecycle transition.
+- root `CONTEXT.md` as the concise Root Router;
+- `docs/agentic/WAYFINDING.md` as the only lifecycle manifest;
+- the compact dashboard and manifest-selected current-truth documents;
+- `PROJECT-BLUEPRINT.md` with stable requirement identities;
+- `ROADMAP.md` with stable `OUT-NNN` identities, prerequisites,
+  dependencies, readiness, state, and exact Brainstorming prompts;
+- `DECISIONS.md` with an append-only immutable Decision Ledger and a mutable
+  Current Decision Index; and
+- verification and evidence owners required by the contract.
 
-## Establish Or Resume The Foundation
+Use optional documents only when they have durable ownership. Current truth has
+one owner. Durable decision changes append a new ledger entry naming
+`Supersedes`; never edit an earlier entry. Update parent and child AGENTS.md
+Child DOX indexes when ownership changes.
 
-Treat `docs/agentic/WAYFINDING.md` as the resumable map and lifecycle manifest.
-Do not depend on conversation memory.
+The Foundation remains documentation-only. Do not create framework files,
+package-manager files, production source, feature specs, implementation plans,
+ADRs, PRDs, issue/triage flows, visual companions, or lowercase `context.md`.
 
-- If no manifest exists, create the lean core document set from the Foundation
-  contract, initialize all lifecycle metadata as Draft, and run `foundation draft`.
-- If an Approved manifest exists, run `foundation validate` with its exact
-  recorded revision before reading it as current truth. For project-wide
-  reorientation, run `foundation draft` on the exact validated bundle before
-  editing.
-- If a Draft manifest exists, verify its managed file set and run `foundation
-  refresh` to establish the exact current Draft revision before resuming.
-- If lifecycle metadata, managed paths, checkout identity, or canonical bytes
-  are invalid or ambiguous, stop and repair the Foundation contract state. Do
-  not guess a revision or copy one from chat.
+## Managed Edit and Review
 
-The lean core is root `AGENTS.md`, root `CONTEXT.md`, and the required
-`docs/agentic/` files named by the Foundation contract. Create an optional
-security, data, style, or operations document only when the project has a
-durable concern that needs that owner. Record the justification in
-`WAYFINDING.md`; absence of a concern is not a reason to create an empty file.
+Use the shared Foundation operations; never calculate or rewrite a bundle
+revision manually.
 
-## Wayfinding State
+1. Run `foundation draft` before managed edits. For a new Foundation, create
+   the exact contract shape and initialize Draft metadata through the operation.
+2. Edit complete current-truth documents, Root Router, manifest, Blueprint,
+   roadmap, decision evidence, and affected AGENTS.md owners.
+3. Run `foundation refresh` and record its exact revision.
+4. Render a readable Foundation review package covering the changed owners,
+   Blueprint/roadmap traceability, Architecture Conformance, policy, Phase Mode,
+   and remaining uncertainty.
+5. Dispatch the isolated
+   [Foundation reviewer](foundation-document-reviewer-prompt.md) when the runtime
+   can realize read-only isolation. Otherwise run the same deterministic checks
+   yourself.
+6. Resolve every `Issues found` result. In-scope corrections return through
+   Draft and refresh, then review again. Do not ask the user to approve technical
+   repairs or migration.
+7. Under Autonomous, run `foundation ready` on the exact internally reviewed
+   revision and validate with `--policy Autonomous`.
+8. Under Review-gated, present one readable package. After a clear user response
+   approving that displayed revision, bind it internally and run
+   `foundation approve`; never ask the user to type a hash.
 
-Keep these navigation fields current in `WAYFINDING.md`:
+Reviewer output is advisory and never changes lifecycle state.
 
-- **Destination:** the observable Agentic Foundation state this effort must
-  reach.
-- **Readiness:** the checklist that must pass before exact Foundation review.
-- **Frontier:** precise in-scope decisions that are answerable now.
-- **Fog:** in-scope areas known to matter but not yet precise enough to ask.
-- **Out of Scope:** explicit exclusions from this inception or reorientation.
-- **Decision Pointers:** identities and links to the immutable Decision Ledger,
-  never copied decision detail.
+## Readiness Checks
 
-Advance only the current Frontier. When an answer makes fog precise, promote it
-to the Frontier. When a decision exposes a prerequisite, order that prerequisite
-first. A simple project may reach readiness in one session; a larger one resumes
-from these fields and the authoritative documents.
+Before progression confirm:
 
-## One-Question Discovery
+- the manifest selects every owned Foundation document and no unrelated file;
+- lifecycle metadata and computed bundle revision agree;
+- one destination, release boundary, and success definition are concrete;
+- Blueprint requirements and roadmap traceability are complete;
+- at least one outcome is `Ready for Brainstorming`;
+- the selected outcome's canonical prompt names its identity, physical
+  `WAYFINDING.md` path, and exact policy-accepted Foundation revision;
+- Frontier, Fog, Out of Scope, permissions, and external-action limits are
+  visible;
+- module/interface/seam/adapter/data-flow/test-surface decisions conform;
+- current truth and immutable decision history have correct owners;
+- Approval Policy Version 2 and Phase Mode are durable and independent; and
+- local generated files are ignored and unstaged.
 
-Ask one concise question at a time. Put the question first and immediately
-follow it with a concrete recommendation and a short reason:
+## Progress to Brainstorming
 
-```text
-<one concise question>
+Choose one ready roadmap outcome. Do not widen it.
 
-Recommendation: <one concrete choice and the short reason it fits the current
-project evidence.>
-```
+For automated fresh-session mode, create the exact v2 envelope from
+[phase-handoff.md](../using-superpowers/references/phase-handoff.md). Use the
+policy-accepted Foundation as both phase artifact and Foundation; bind the
+selected outcome identity and exact canonical prompt outside the fifteen-field
+record. Run `handoff prepare`, require runtime proof of same-checkout,
+plugin, ignored-state, and genuinely fresh user-owned session identity, then
+inspect target acknowledgement and `handoff receive`. A v1 receiver cannot
+receive a Ready Foundation.
 
-Wait for the user's answer before treating the decision as resolved. Cover only
-what the Destination and current readiness gaps require: project identity,
-users, journeys, goals, non-goals, success, scope, domain language, project-wide
-requirements, release boundaries, technology, architecture, style,
-authentication, security, data, integrations, deployment, operations,
-verification, risks, and roadmap orientation.
+For same-session mode, validate the exact Foundation with explicit policy and
+re-read Root Router, manifest-selected documents, the chosen roadmap section,
+applicable instructions, and relevant repository files. Then invoke
+`brainstorming` directly with the exact outcome identity and canonical prompt.
 
-Use `codebase-design` vocabulary consistently: module, interface, seam, adapter,
-depth, leverage, locality, and test surface.
-
-## Research And Decision Persistence
-
-Before recommending a version-sensitive, security-sensitive, costly, or
-difficult-to-reverse choice, research current primary sources. Prefer official
-documentation, standards, vendor security material, and original research over
-aggregators. Record the source URLs, the verification date, and any material
-version or scope limits in the immutable decision ledger entry.
-
-Every resolved durable decision performs one atomic documentation update:
-
-1. Update exactly one current-truth owner and remove stale contradictory truth
-   there.
-2. Append one immutable decision ledger entry with its stable identity,
-   decision, area, rationale, alternatives, evidence, current-truth link,
-   Blueprint or roadmap links, and supersession link when applicable.
-3. Regenerate only the replaceable current-decision index.
-4. Update Wayfinding navigation pointers and Frontier/Fog state without copying
-   the decision detail.
-
-Never rewrite or delete an immutable decision ledger entry to erase history.
-Supersede it with a new entry. Do not duplicate current truth in the Root
-Router, dashboard, Wayfinding Map, Blueprint, or ledger.
-
-Create stable Blueprint requirement identities and stable roadmap outcome
-identities using the Foundation contract. Never renumber or reuse an identity.
-Every roadmap outcome links the requirements it advances, its decision
-prerequisites and dependencies, its readiness, and one canonical
-`brainstorming` prompt.
-
-## Phase Mode
-
-Ask once which progression mode the project should use after exact artifact
-approval. Recommend Automated fresh-session mode for clean context from exact
-Approved artifacts, unless the runtime cannot prove same-checkout and plugin
-affinity.
-
-Record the selected Phase Mode durably in root `AGENTS.md` using the exact
-Foundation contract shape:
-
-- **Automated fresh-session mode:** approval prepares a verified fifteen-field
-  same-checkout handoff to a genuinely new user-owned session.
-- **Same-session mode:** approval continues only after exact validation and a
-  same-session disk re-read.
-
-Follow this durable selection at later gates. Do not silently change it because
-a runtime adapter is unavailable; use the canonical fallback required by the
-phase-handoff contract.
-
-## Readiness, Refresh, And Advisory Review
-
-Before presenting the Foundation:
-
-1. Complete every item in the Foundation contract's Readiness Checklist.
-2. Verify Root Router links, Child DOX indexes, Foundation file selection,
-   Blueprint requirement links, decision evidence, roadmap dependencies, and
-   at least one outcome marked Ready for Brainstorming.
-3. Confirm no Frontier decision or Fog blocks that ready outcome and all
-   remaining non-blocking uncertainty is visible.
-4. Run `foundation refresh` and capture the exact Draft Foundation revision.
-5. Dispatch the host-neutral Foundation document reviewer defined in
-   [foundation-document-reviewer-prompt.md](foundation-document-reviewer-prompt.md)
-   with the contract, shared Architecture Conformance rubric, manifest, and
-   every selected Foundation file.
-6. If it reports `Issues found`, repair the Draft documents, refresh the
-   revision, and review again. Continue only when it reports `Ready for user review`.
-
-## Exact Foundation Review Gate
-
-Present the exact absolute manifest path, exact Draft Foundation revision,
-managed file list, readable changes, ready roadmap outcome, and Phase Mode.
-Then stop for user review.
-
-Do not run `foundation approve`, start `brainstorming`, create a feature Design
-Spec, write an implementation plan, or scaffold production files before the
-user explicitly approves that exact Foundation revision. Advisory review is not
-approval. Any edit changes the reviewed bundle and requires refresh and renewed
-review.
-
-## After Exact Approval
-
-After explicit approval of the exact revision, run `foundation approve` only
-after the refresh check below succeeds.
-
-After the user explicitly approves the exact Draft Foundation revision:
-
-1. Re-run `foundation refresh` and require the same revision.
-2. Run `foundation approve` with that exact revision.
-3. Run `foundation validate` from disk with that exact Approved revision.
-4. Re-read the Approved `ROADMAP.md` from disk. Record the selected `OUT-NNN`
-   only after confirming that the identity exists, its readiness is
-   `Ready for Brainstorming`, and its exact canonical `Brainstorming Prompt`
-   is present.
-5. Recheck checkout, manifest, and durable Phase Mode.
-
-For Automated fresh-session mode, prepare the immutable fifteen-field
-same-checkout `brainstorming` record from
-[phase-handoff.md](../using-superpowers/references/phase-handoff.md). The
-Approved `WAYFINDING.md` is both the handoff artifact and Foundation manifest;
-the same exact Foundation revision fills both revision fields. After the
-unchanged record, bind the selected outcome identity and exact canonical
-Brainstorming prompt as required by the shared handoff contract. Use the
-runtime-specific adapter only after shared preflight succeeds. If exact checkout
-or plugin affinity is uncertain, print the complete canonical fallback with
-that same outcome identity and prompt, then stop.
-
-For Same-session mode, revalidate the exact Approved Foundation, then re-read
-root `AGENTS.md`, root `CONTEXT.md`, the manifest-selected Foundation documents,
-the ready roadmap outcome, and relevant downstream files from disk. Only then
-invoke `brainstorming` for that one bounded roadmap outcome in the same session.
-
-Wayfinder is complete when one exact Agentic Foundation is Approved and the
-selected handoff or safe fallback has been prepared. It does not perform
-feature design, planning, or implementation.
+If a fresh-session capability is missing, follow the durable fallback rather
+than inventing a substitute. Never describe a fork or subagent as a fresh phase.

@@ -128,11 +128,12 @@ Use this skill during:
 - implementation review to detect shallow modules, leaky seams, weak adapters, poor locality, and tests that cross the wrong interface.
 - architecture review to produce markdown-only local reviews under `docs/superpowers/architecture-reviews/`.
 
-For plan, implementation, TDD, task-review, and final-review gates, use the
-shared [Architecture Conformance rubric](ARCHITECTURE-CONFORMANCE.md). Any
-reported violation blocks completion. An implementation-discovered design
-change is conformant only after the controlling artifact returns to Draft and a
-new exact revision is Approved.
+For plan, implementation, TDD, task review, and final review, use the shared
+[Architecture Conformance rubric](ARCHITECTURE-CONFORMANCE.md). Any reported
+violation blocks completion. An implementation-discovered design change is
+conformant only after the controlling artifact returns to Draft, receives the
+applicable review, and reaches a state accepted by the effective Approval
+Policy: Ready or Approved under Autonomous, and Approved under Review-gated.
 
 Do not create `context.md` or ADRs from this skill in this plugin. Wayfinder
 owns project-wide architecture current truth; put feature-specific architecture

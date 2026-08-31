@@ -2,15 +2,34 @@
 
 ## Unreleased
 
+- **Breaking workflow change:** defaults new and existing projects to Autonomous
+  under Workflow Policy Version 2; Review-gated now requires a new explicit
+  opt-in.
+- Adds truthful Draft/Ready/Approved lifecycle states. Autonomous consumes
+  Ready or Approved; Review-gated and omitted-policy v1 callers require
+  Approved and preserve real human provenance.
+- Adds narrow transactional migration of active legacy Superpowers gates,
+  including affected current artifacts and Foundation state, without a
+  migration-approval prompt or global dormant-project scan.
+- Adds policy-bound Foundation v2 receipts and lifecycle snapshots, preserves
+  v1 receipt evidence, and prevents Foundation byte/timestamp churn for an
+  empty change set.
+- Adds the v2 phase envelope: policy, bounded goal, constraint source, receipt,
+  and Brainstorming bindings surround an exact fifteen-field record using
+  `artifactRevision`. V1 receivers reject Ready.
+- Adds exact policy/spec/plan/Foundation bindings to new SDD task briefs and
+  review packages and rejects stale dependencies.
+- Makes advisory document review policy-aware: `Ready for progression`,
+  `Ready for user review`, or `Issues found`; reviewers never approve.
 - Sets the current release boundary to `Codex supported; Claude deferred/unadvertised`.
 - Supports exactly two distribution channels: GitHub/skills.sh for Codex and the Codex plugin package; removes the Claude marketplace catalog and defers the retained thin adapter source.
 - Requires genuine installed-Codex startup-context evidence as the remaining runtime gate before clean closeout and merge readiness.
 - **Breaking:** removes `project-setup` without an alias and makes `wayfinder` the sole documentation-only skill for project inception and project-wide reorientation.
 - Adds the deterministic Agentic Foundation lifecycle, Root Router, compact dashboard, Project Blueprint, immutable Decision Ledger, and Blueprint-traceable roadmap outcomes.
 - Adds stable DDI/FCA identities and an escape-safe JSON Foundation Candidate Declaration with deterministic owner, ledger, DOX-index, router, manifest, and candidate-equality obligations.
-- Adds one combined Design Change Set approval and reuses the operation-owned candidate-root `APPLIED.json` as the sole Foundation Application Receipt.
+- Adds one combined Design Change Set review and reuses the operation-owned candidate-root `APPLIED.json` as the sole Foundation Application Receipt.
 - Carries exact Design Spec, base Foundation, receipt, and resulting Foundation identities into Planning and implementation without requiring base/result equality for non-empty candidates.
-- Keeps the phase-handoff record fixed at fifteen fields and carries the receipt as an external prompt binding after exact artifact approval.
+- Keeps the phase-handoff record fixed at fifteen fields and carries policy and external bindings in the v2 envelope after policy-aware readiness.
 
 ## 0.5.0
 

@@ -47,11 +47,16 @@ Record the resolved identity for later phase handoff:
 
 For a submodule, use the submodule root and remote as the repository boundary and do not infer `linked-worktree` from the relocated Git directory.
 
-Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
+Resolve the effective **Approval Policy**, but keep it independent from workspace
+choice. Honor any durable worktree or Phase Mode preference without asking. A
+recorded `same-checkout` handoff forbids moving this phase to another worktree.
 
-> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
-
-Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
+When no preference exists, choose an isolated worktree for substantial feature
+work when it can be created safely and no ignored same-checkout artifact would
+be lost; explain the chosen path before creation. Ask one concise workspace
+question only when no safe default exists and the location materially affects
+user state. Reversible worktree creation within the authorized goal is not a
+document-approval gate.
 
 ## Step 1: Create Isolated Workspace
 
@@ -59,7 +64,9 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
+Do you already have a native way to create a worktree? It might be a host
+worktree operation or advertised worktree flag. If you do, use it and skip to
+Step 2.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
@@ -88,7 +95,8 @@ Follow this priority order. Explicit user preference always beats observed files
 
 Before creating a project-local worktree directory, verify it is ignored.
 
-If it is not ignored, stop and ask the user whether to:
+If it is not ignored, do not edit `.gitignore`. Ask only when no safe external
+or in-place choice follows from existing instructions. The material choices are:
 
 1. add the ignore rule themselves,
 2. allow you to edit `.gitignore`, or
@@ -161,10 +169,13 @@ full-package installation guidance. Do not fall back to filename guessing.
    test command.
 2. Run the resolved verification after preparation, or explain why preparation
    was not needed.
-3. If no verification command is documented, report that evidence gap and ask
-   the user which baseline command governs before implementation.
-4. If the baseline fails, report the failure and ask whether to investigate or
-   proceed. Do not reinterpret a preparation command as a test.
+3. If no verification command is documented after inspecting the project's
+   declared scripts and test configuration, report that evidence gap and
+   continue with task-specific checks; do not invent a command.
+4. If the baseline fails, report it and use `systematic-debugging` to determine
+   whether the failure is pre-existing or task-relevant. Under Autonomous,
+   investigate and repair in-scope failures without a routine permission prompt.
+   Do not reinterpret a preparation command as a test.
 
 **If tests pass:** Report ready.
 
@@ -201,9 +212,9 @@ Ready to implement <feature-name>
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Stop and ask user how to proceed |
+| Directory not ignored | Use a safe external fallback; ask only if no safe placement remains |
 | Permission error on create | Sandbox fallback, work in place |
-| Tests fail during baseline | Report failures + ask |
+| Tests fail during baseline | Diagnose; repair in-scope failures under Autonomous and record unrelated pre-existing failures |
 | Detection returns `none` | Explain no evidence; run no installer |
 | Detection returns `ambiguous` | Show evidence and ask; run nothing |
 
@@ -232,7 +243,9 @@ Ready to implement <feature-name>
 ### Proceeding with failing tests
 
 - **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
+- **Fix:** Diagnose and classify the failures. Under Autonomous, repair in-scope
+  failures; continue only when evidence isolates and records an unrelated
+  pre-existing failure alongside task-specific checks.
 
 ### Guessing from shallow filenames
 
@@ -247,7 +260,7 @@ Ready to implement <feature-name>
 - Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
-- Proceed with failing tests without asking
+- Proceed with failing tests without diagnosing, classifying, and recording them
 - Run a preparation command when evidence is ambiguous or absent
 - Infer Poetry from `pyproject.toml` alone
 - Mutate lockfiles during manager detection

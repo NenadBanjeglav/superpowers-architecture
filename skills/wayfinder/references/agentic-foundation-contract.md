@@ -35,7 +35,7 @@ justification in `WAYFINDING.md`. An empty placeholder is not justified.
 
 | Document | Sole authoritative responsibility |
 | --- | --- |
-| Root `AGENTS.md` | Entry point, reading router, operating rules, permissions, workflow gates, verification summary, durable Phase Mode, Child DOX Index |
+| Root `AGENTS.md` | Entry point, reading router, operating rules, Approval Policy and version, permissions, verification summary, durable Phase Mode, Child DOX Index |
 | Root `CONTEXT.md` | Compact project identity and current-state dashboard |
 | `docs/agentic/AGENTS.md` | Local maintenance, reconciliation, verification, and ownership contract |
 | `WAYFINDING.md` | Foundation lifecycle manifest and resumable navigation state |
@@ -83,16 +83,17 @@ All references use the literal identity, not only a title.
 
 ```markdown
 **Artifact Type:** Agentic Foundation
-**Status:** Draft | Approved
+**Status:** Draft | Ready | Approved
 **Revision:** sha256:<64 lowercase hexadecimal characters>
 **Approved Revision:** none | sha256:<64 lowercase hexadecimal characters>
 **Approved At:** none | ISO-8601 timestamp
 ```
 
 These five unfenced lines occur exactly once. No other Foundation document
-repeats the active revision. Draft uses `Approved Revision: none` and `Approved
-At: none`; Approved uses one identical complete lowercase SHA-256 revision in
-both revision fields.
+repeats the active revision. Draft and Ready use `Approved Revision: none` and
+`Approved At: none`; Approved uses one identical complete lowercase SHA-256
+revision in both revision fields. Ready means exact internal checks passed; it
+never claims human approval.
 
 All lifecycle transitions and canonical bytes are owned by the shared
 Foundation operation described in the lifecycle reference. Do not implement or
@@ -141,7 +142,10 @@ Root `AGENTS.md` remains concise and operational:
 
 ## Work Guidance
 
-## Workflow Gates
+## Workflow Policy
+
+**Workflow Policy Version:** 2
+**Approval Policy:** Autonomous | Review-gated
 
 ## Phase Mode
 
@@ -157,9 +161,11 @@ Root `AGENTS.md` remains concise and operational:
 
 `Reading Order` begins with the Root Router and compact dashboard, then routes
 by task to the minimum owning documents. `Ownership` names each direct child
-contract. `Workflow Gates` requires Wayfinder for project-wide reorientation,
-Brainstorming for one bounded roadmap outcome, exact artifact approval, and
-Foundation reconciliation. `Permissions` states allowed mutations and
+contract. `Workflow Policy` records version 2, defaults new and existing work
+to Autonomous, treats Review-gated as a new explicit opt-in, and routes
+Wayfinder for project-wide reorientation and Brainstorming for one bounded
+outcome. It requires Foundation reconciliation and rejects Draft progression.
+`Permissions` states allowed mutations and
 publication limits. `Verification` summarizes where exact commands are owned
 without copying the full command catalog.
 
@@ -217,7 +223,7 @@ It does not copy project content.
 # <Project Name> Wayfinding
 
 **Artifact Type:** Agentic Foundation
-**Status:** Draft | Approved
+**Status:** Draft | Ready | Approved
 **Revision:** sha256:<64 lowercase hexadecimal characters>
 **Approved Revision:** none | sha256:<64 lowercase hexadecimal characters>
 **Approved At:** none | ISO-8601 timestamp
@@ -423,7 +429,7 @@ The earlier entry remains byte-for-byte unchanged.
 **State:** Proposed | Ready | Designing | Planned | Implementing | Complete | Superseded
 **Brainstorming Prompt:** Use the brainstorming skill to design roadmap outcome
 OUT-001 from <absolute WAYFINDING.md path> at Agentic Foundation revision
-<exact Approved revision>.
+<exact policy-accepted revision>.
 ```
 
 Outcome order expresses dependency order, not implementation steps. Each
@@ -550,8 +556,8 @@ or maintenance needs a focused owner:
 
 ## Readiness Checklist
 
-Wayfinder may present the Foundation for exact user review only when all are
-true:
+Wayfinder may progress the Foundation according to Approval Policy only when
+all are true:
 
 - [ ] Destination and project identity are clear.
 - [ ] Users, goals, non-goals, primary journeys, and success measures are
@@ -576,12 +582,14 @@ true:
 - [ ] Optional documents have explicit justification and appear in the
       manifest; unjustified optional documents are absent.
 - [ ] Phase Mode is recorded durably in root `AGENTS.md`.
-- [ ] Advisory Foundation review reports `Ready for user review`.
+- [ ] Workflow Policy Version 2 and Approval Policy are recorded durably in root `AGENTS.md`.
+- [ ] Advisory Foundation review reports `Ready for progression` under Autonomous or `Ready for user review` under Review-gated.
 
 ## Managed Edit And Application Rules
 
-Wayfinder edits an authoritative Foundation only through Draft, refresh, exact
-review, explicit approval, approve, and validate. Later Brainstorming writes
+Wayfinder edits an authoritative Foundation only through Draft, refresh,
+advisory review, policy-selected Ready or Approved progression, and validate.
+Later Brainstorming writes
 complete non-authoritative candidates and applies them only through the shared
 combined Design Change Set operation.
 

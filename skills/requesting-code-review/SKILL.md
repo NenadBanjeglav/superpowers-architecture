@@ -7,6 +7,10 @@ description: Use when completing tasks, implementing major features, or before m
 
 Dispatch a code reviewer through the host-neutral dispatch contract to catch issues before they cascade. Request `contextPolicy: isolated`, a bounded prompt path, the requirements and diff artifacts, and `workspacePolicy: read-only-review`. The runtime adapter must verify that parent conversation turns were not inherited or disclose reduced isolation before review.
 
+Resolve **Approval Policy** and give the reviewer exact policy-accepted
+spec/plan/Foundation identities. Autonomous accepts Ready or Approved;
+Review-gated accepts Approved. Review is advisory and never creates approval.
+
 **Core principle:** Review early, review often.
 
 ## When to Request Review
@@ -35,19 +39,21 @@ Render [code-reviewer.md](code-reviewer.md) to a bounded prompt file, then dispa
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
-- `{REQUIREMENTS_FILE}` - Absolute path to the approved plan or bounded requirements file
+- `{REQUIREMENTS_FILE}` - Absolute path to the policy-accepted plan or bounded requirements file
 - `{DIFF_FILE}` - Absolute path to the review package
-- `{APPROVED_SPEC_FILE}` / `{APPROVED_SPEC_REVISION}` - Exact Approved Design Spec identity
-- `{APPROVED_PLAN_FILE}` / `{APPROVED_PLAN_REVISION}` - Exact Approved Implementation Plan identity
+- `{CURRENT_SPEC_FILE}` / `{CURRENT_SPEC_REVISION}` - Exact policy-accepted Design Spec identity
+- `{CURRENT_PLAN_FILE}` / `{CURRENT_PLAN_REVISION}` - Exact policy-accepted Implementation Plan identity
 - `{CONFORMANCE_RUBRIC_FILE}` - Absolute shared Architecture Conformance rubric path
-- `{ARCHITECTURE_BINDING}` - Approved modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
+- `{ARCHITECTURE_BINDING}` - Bound modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
-- Treat any Architecture Conformance `violation` as blocking; unapproved design changes return the controlling artifact to Draft and user review
+- Treat any Architecture Conformance `violation` as blocking. Under Autonomous,
+  repair in-scope design changes through Draft and internal review to Ready;
+  Review-gated returns changed artifacts to readable user review.
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 

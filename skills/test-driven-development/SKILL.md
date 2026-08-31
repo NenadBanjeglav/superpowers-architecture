@@ -5,6 +5,14 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 # Test-Driven Development (TDD)
 
+## Workflow Binding
+
+Resolve the effective **Approval Policy** and exact policy-accepted spec/plan
+before writing tests. Autonomous accepts Ready or Approved and owns in-scope
+test/design repairs; Review-gated accepts Approved. Draft never authorizes
+implementation. TDD preserves the bound goal, acceptance criteria, modules,
+interfaces, seams/adapters, data flow, and public test surface.
+
 ## Overview
 
 Write the test first. Watch it fail. Write minimal code to pass.
@@ -21,10 +29,17 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Refactoring
 - Behavior changes
 
-**Exceptions (ask the user):**
+**Controller-judged exceptions:**
 - Throwaway prototypes
 - Generated code
 - Configuration files
+
+Under Autonomous, choose and document an exception only when a failing
+behavioral test would not provide meaningful evidence, then use the strongest
+available replacement verification. Ask the user only if the choice changes the
+authorized goal, acceptance criteria, safety constraints, or external-action
+authority. Review-gated does not turn routine test-strategy selection into a
+separate approval gate.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -326,7 +341,7 @@ Extract validation for multiple fields if needed.
 
 ## Verification Checklist
 
-Before marking work complete, read the Approved architecture inputs and the shared `codebase-design/ARCHITECTURE-CONFORMANCE.md` rubric:
+Before marking work complete, read the policy-accepted architecture inputs and the shared `codebase-design/ARCHITECTURE-CONFORMANCE.md` rubric:
 
 - [ ] Every new externally observable behavior has a failing test through the intended module interface; internal helpers need direct tests only when they expose an independent behavioral contract.
 - [ ] Watched each test fail before implementing
@@ -343,9 +358,9 @@ Can't check all boxes? You skipped TDD. Start over.
 
 | Problem | Solution |
 |---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask the user. |
+| Don't know how to test | Write the wished-for API and assertion first; inspect the bound interface and existing test patterns, then document any unresolved consequential constraint. |
 | Test too complicated | Design too complicated. Simplify interface. |
-| Must replace every collaborator | Recheck the approved seams. Use dependency injection and substitute only justified remote/external adapters. |
+| Must replace every collaborator | Recheck the bound seams. Use dependency injection and substitute only justified remote/external adapters. |
 | Test setup huge | Extract helpers. Still complex? Simplify design. |
 
 ## Debugging Integration
@@ -368,4 +383,5 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without the user's permission.
+Any exception must state why no meaningful failing test exists and what
+observable verification replaces it.

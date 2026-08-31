@@ -1,39 +1,44 @@
 # Architecture Review
 
-The `improve-codebase-architecture` skill scans a repo for module deepening opportunities and writes markdown-only local reviews under:
+The `improve-codebase-architecture` skill performs a read-only repository scan
+and writes ignored Markdown reviews under:
 
 ```text
 docs/superpowers/architecture-reviews/
 ```
 
-These reviews are local working state and should not be committed unless explicitly requested.
-
-An architecture review is advisory. It identifies candidates but does not
-approve a design, implementation plan, or release.
+Reviews are local working state and are not committed unless explicitly
+requested. They identify opportunities; they never approve design,
+implementation, or release.
 
 ## Candidate Shape
 
 Each candidate includes:
 
-- files/modules involved
-- problem
-- proposed deepening
-- interface/seam impact
-- adapter impact
-- test-surface impact
-- benefits in locality and leverage
-- recommendation strength
+- files and modules involved;
+- evidence and current problem;
+- proposed deepening;
+- interface, seam, adapter, and data-flow effects;
+- test-surface effect;
+- expected gains in depth, locality, and leverage;
+- migration risk; and
+- recommendation strength.
 
 ## Recommendation Strength
 
-- **Strong**: The current design is actively causing complexity, fragility, or repeated implementation cost.
-- **Worth exploring**: The design may improve locality or leverage, but the tradeoff needs project context.
-- **Speculative**: The idea is plausible but should not block current work.
+- **Strong:** current structure causes repeated cost, fragility, or scattered
+  changes.
+- **Worth exploring:** likely improvement needs bounded design work.
+- **Speculative:** plausible idea that must not block current work.
 
 ## After Review
 
-If a candidate should become work, use `brainstorming` to create a Draft local
-spec, refresh its canonical revision, and obtain explicit user approval of that
-exact revision before planning or implementation. The resulting plan and every
-implementation/review phase must preserve its Design Understanding through the
-shared Architecture Conformance rubric.
+If a candidate becomes authorized work, route one bounded outcome to
+`brainstorming`. **Approval Policy** applies to the resulting artifacts:
+Autonomous resolves internal review and progresses the exact spec to Ready;
+Review-gated uses a readable user package after a new explicit opt-in. Phase
+Mode independently controls fresh-task or same-session progression.
+
+The resulting plan and implementation must preserve Design Understanding and
+Architecture Conformance. Do not turn an advisory architecture review into an
+approval token or use it to expand unrelated scope.

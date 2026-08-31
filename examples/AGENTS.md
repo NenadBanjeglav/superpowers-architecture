@@ -11,11 +11,14 @@ Committed examples that show expected Superpowers Architecture working-doc shape
 
 ## Local Contracts
 
-- Examples must reinforce written review gates and selected Phase Mode handoffs.
+- Examples must reinforce Approval Policy Version 2, advisory review, truthful
+  Draft/Ready/Approved states, and selected Phase Mode handoffs.
 - Examples must not imply fresh sessions are mandatory when same-session mode is selected.
 - Examples must not instruct users to commit generated `docs/superpowers/**` files by default.
 - Examples must use current architecture vocabulary consistently.
-- Example specs use the Draft artifact lifecycle metadata, record one selected Phase Mode, and contain the literal exact revision produced by the shared `artifact refresh` operation.
+- Example specs use the Draft artifact lifecycle metadata, record Autonomous as
+  the example Approval Policy, record one selected Phase Mode, and contain the
+  literal exact revision produced by the shared `artifact refresh` operation.
 
 ## Work Guidance
 

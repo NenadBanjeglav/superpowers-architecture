@@ -184,13 +184,13 @@ The adapter must verify isolation and read-only realization or disclose the redu
 
     ### Architecture Conformance
 
-    - **Modules:** preserved | changed with approved revision | violation
-    - **Interfaces:** preserved | changed with approved revision | violation
-    - **Seams and adapters:** justified production/test adapters at approved seams; no leaked host/runtime policy
-    - **Data flow:** matches the approved source-to-sink sequence
+    - **Modules:** preserved | changed with policy-accepted revision | violation
+    - **Interfaces:** preserved | changed with policy-accepted revision | violation
+    - **Seams and adapters:** justified production/test adapters at policy-accepted seams; no leaked host/runtime policy
+    - **Data flow:** matches the policy-accepted source-to-sink sequence
     - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
     - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
-    - **Design escalation:** implementation-discovered design changes returned the controlling artifact to Draft and user review
+    - **Design progression:** implementation-discovered design changes returned the controlling artifact to Draft and then to internal review/Ready under Autonomous or readable user review/Approved under Review-gated
 
     ### Issues
 

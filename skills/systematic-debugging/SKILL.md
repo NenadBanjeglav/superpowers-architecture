@@ -5,6 +5,17 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 # Systematic Debugging
 
+## Workflow Binding
+
+Resolve the effective **Approval Policy** and the exact policy-accepted
+spec/plan constraints before repair. Under Autonomous, investigate and fix
+in-scope root causes, tests, code, and documentation without a routine human
+gate. Review-gated changes to authoritative artifacts return through its
+readable review flow. Ask only when the root cause requires a goal/constraint
+change, missing access/input, or an external/destructive action outside current
+authority. Repeated failed hypotheses are evidence to revisit the model, not an
+automatic approval escalation.
+
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
@@ -190,11 +201,11 @@ You MUST complete each phase before proceeding to the next.
    - Issue actually resolved?
 
 4. **If Fix Doesn't Work**
-   - STOP
-   - Count: How many fixes have you tried?
-   - If < 3: Return to Phase 1, re-analyze with new information
-   - **If ≥ 3: STOP and question the architecture (step 5 below)**
-   - DON'T attempt Fix #4 without architectural discussion
+   - Stop the current fix attempt
+   - Record the new evidence and reject the failed hypothesis
+   - Return to Phase 1 and rebuild the causal model before changing code again
+   - After three failed hypotheses, perform the architecture check in step 5
+     instead of trying another local patch
 
 5. **If 3+ Fixes Failed: Question Architecture**
 
@@ -203,14 +214,22 @@ You MUST complete each phase before proceeding to the next.
    - Fixes require "massive refactoring" to implement
    - Each fix creates new symptoms elsewhere
 
-   **STOP and question fundamentals:**
+   **Stop the local patch loop and question fundamentals:**
    - Is this pattern fundamentally sound?
    - Are we "sticking with it through sheer inertia"?
    - Should we refactor architecture vs. continue fixing symptoms?
 
-   **Discuss with the user before attempting more fixes**
+   Under Autonomous, compare the discovered architecture against the exact
+   policy-accepted artifacts. If an in-scope module, interface, seam, adapter,
+   data flow, or test surface must change, return the controlling artifact to
+   Draft, correct and review it, restore Ready, then continue from the revised
+   model. Under Review-gated, route the changed artifact through its readable
+   review flow. Ask the user only when the evidence changes the authorized goal,
+   acceptance criteria, safety constraints, required access, or external-action
+   authority.
 
-   This is NOT a failed hypothesis - this is a wrong architecture.
+   Three failed hypotheses do not prove a specific replacement architecture;
+   they prove the current causal model is insufficient.
 
 ## Red Flags - STOP and Follow Process
 

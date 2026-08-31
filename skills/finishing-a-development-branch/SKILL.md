@@ -1,28 +1,33 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation tasks are complete and final verification, commit summary, changed-file summary, and residual risk summary are needed
+description: Use when implementation tasks are complete and final verification, review evidence, commit summary, changed-file summary, and local closeout are needed
 ---
 
-# Finishing A Development Branch
+# Finishing a Development Branch
 
-Verify the work and summarize it. Do not push, merge, open a PR, or discard work unless the user explicitly asks.
+Resolve the effective **Approval Policy** and exact policy-accepted spec, plan,
+and optional Foundation bindings. Approval Policy controls artifact progression;
+it does not authorize push, merge, PR creation, deployment, publication,
+spending, communication with others, destructive cleanup, or discarding work.
 
-## Process
+1. Read applicable instructions and the exact current plan/spec/Foundation
+   evidence from disk.
+2. Confirm every planned task is complete, its review findings are resolved,
+   and its recorded commit range matches Git history.
+3. Run `verification-before-completion` against the bounded goal, acceptance
+   criteria, Architecture Conformance, and applicable full test/build checks.
+4. Run the final isolated whole-branch review when available. Under Autonomous,
+   repair in-scope findings and rerun affected checks without a human gate.
+   Under Review-gated, only an actual changed artifact revision returns to the
+   readable user-review flow.
+5. Inspect working tree, index, branch/worktree identity, and commits. Confirm
+   root/local instructions and `docs/superpowers/**` are not staged unless the
+   user explicitly requested them.
+6. Report commits, changed files, tests and exact results, satisfied acceptance
+   criteria, residual risks, ignored local artifacts, installed-runtime evidence
+   limits, and any separately authorized action still pending.
 
-1. Read the implementation plan and referenced spec.
-2. Run the final verification commands required by the plan.
-3. Run `git status --short`.
-4. Confirm `docs/superpowers/**` is not staged.
-5. Summarize:
-   - commits created
-   - changed files
-   - tests and manual checks run
-   - requirements satisfied
-   - remaining risks
-6. Stop.
-
-## Explicit Requests
-
-If the user explicitly asks to push, merge, open a PR, or discard work, handle that request directly with normal git safety checks.
-
-Never force-push or rewrite remote history unless the user explicitly asks and confirms.
+Default closeout is local and summary-only. Do not offer or perform a merge,
+push, PR, release, deployment, publication, discard, stash, branch deletion, or
+cleanup menu unless the user explicitly asks for that action. Preserve untracked
+and ignored user work.

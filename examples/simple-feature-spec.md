@@ -4,9 +4,12 @@
 **Date:** 2026-06-19
 **Artifact Type:** Design Spec
 **Status:** Draft
-**Revision:** sha256:bfa6c08893a926b3d65095655501cf6ec21a216da266c5ac4c8eb070ff08a8ce
+**Revision:** sha256:24c7fb43f769b2c20b9db54f6e5f7716aec84daba1a92e714ca8c0231b545b7a
 **Approved Revision:** none
 **Approved At:** none
+**Approval Policy:** Autonomous
+**Workflow Policy Version:** 2
+**Phase Mode:** Automated fresh-session mode
 
 ## Problem
 
@@ -27,7 +30,7 @@ Let users opt in or out of product updates and security alerts from an account s
 ### Phase Mode
 
 **Selected Mode:** Automated fresh-session mode
-**Reason:** The example demonstrates clean planning and implementation contexts from exact Approved artifacts.
+**Reason:** The example demonstrates clean planning and implementation contexts from exact policy-accepted artifacts.
 **Durability:** Workflow-chain-local example
 
 ### Language

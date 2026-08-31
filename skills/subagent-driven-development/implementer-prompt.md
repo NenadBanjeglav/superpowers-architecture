@@ -51,13 +51,11 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     ## Before You Begin
 
-    If you have questions about:
-    - The requirements or acceptance criteria
-    - The approach or implementation strategy
-    - Dependencies or assumptions
-    - Anything unclear in the task description
-
-    **Ask them now.** Raise any concerns before starting work.
+    Read the bound inputs and resolve routine implementation choices from the
+    task, repository instructions, and existing interfaces. Under Autonomous,
+    make and document in-scope technical choices. Ask only when missing context
+    changes the authorized goal, acceptance criteria, safety constraints, or an
+    externally visible action boundary.
 
     ## Your Job
 
@@ -71,8 +69,10 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     Work from: [directory]
 
-    **While you work:** If you encounter something unexpected or unclear, **ask questions**.
-    It's always OK to pause and clarify. Don't guess or make assumptions.
+    **While you work:** Investigate unexpected behavior and repair in-scope
+    technical issues. Use NEEDS_CONTEXT only for a consequential unresolved
+    product or authority decision; do not convert ordinary uncertainty into an
+    approval request.
 
     While iterating, run the focused test for what you're changing; run the
     full suite once before committing, not after every edit.

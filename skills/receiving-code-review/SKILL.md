@@ -5,6 +5,12 @@ description: Use when receiving code review feedback, before implementing sugges
 
 # Code Review Reception
 
+Resolve the effective **Approval Policy** and exact policy-accepted artifacts.
+Under Autonomous, verify and implement valid in-scope review repairs, including
+necessary spec/plan corrections through Draft and internal review to Ready.
+Under Review-gated, changed authoritative artifacts return to readable user
+review. A reviewer is advisory and never approves lifecycle state.
+
 ## Overview
 
 Code review requires technical evaluation, not emotional performance.
@@ -41,10 +47,12 @@ WHEN receiving code review feedback:
 
 ```
 IF any item is unclear:
-  STOP - do not implement anything yet
-  ASK for clarification on unclear items
+  Inspect the cited code, tests, requirements, and surrounding diff first.
+  Implement independent clear items when doing so cannot conflict.
+  Ask one focused question only if the ambiguity still blocks safe repair.
 
-WHY: Items may be related. Partial understanding = wrong implementation.
+WHY: Items may be related, but repository evidence often resolves ambiguity
+without a human interruption.
 ```
 
 **Example:**
@@ -52,8 +60,8 @@ WHY: Items may be related. Partial understanding = wrong implementation.
 the user: "Fix 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 
-❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
-✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
+Proceed with independent 1,2,3,6 when they cannot conflict. Investigate 4 and
+5, then ask only if a concrete unresolved dependency remains.
 ```
 
 ## Source-Specific Handling
@@ -76,11 +84,14 @@ BEFORE implementing:
 IF suggestion seems wrong:
   Push back with technical reasoning
 
-IF can't easily verify:
-  Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
+IF verification needs more work:
+  Investigate it. Report the exact missing input only when local evidence and
+  available tools cannot resolve it.
 
-IF conflicts with the user's prior decisions:
-  Stop and discuss with the user first
+IF it conflicts with a bound decision:
+  Under Autonomous, repair an in-scope technical decision through the artifact
+  lifecycle. Ask the user only if choosing which decision governs changes the
+  goal, acceptance criteria, safety boundary, or consequential behavior.
 ```
 
 **the user's rule:** "External feedback - be skeptical, but check carefully"

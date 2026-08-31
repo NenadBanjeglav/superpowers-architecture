@@ -1,16 +1,17 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with mostly independent tasks in a fresh or same session after written plan approval
+description: Use when executing a policy-accepted implementation plan with mostly independent sequential writer tasks and isolated advisory review
 ---
 
 # Subagent-Driven Development
 
 ## Required Input
 
-Start only from an Approved written Implementation Plan path and its exact
-expected `sha256:` revision. Resolve the sibling `using-superpowers` operation
-module and validate the plan as `Implementation Plan` at that revision before
-reading it for instructions.
+Resolve the effective **Approval Policy** and start only from a policy-accepted
+Implementation Plan path and exact `sha256:` revision. Autonomous accepts Ready
+or Approved; Review-gated accepts Approved. Resolve the sibling
+`using-superpowers` operation module and validate the plan with explicit policy
+before reading it for instructions. Draft never executes.
 
 After plan validation, parse only these header bindings:
 
@@ -20,8 +21,8 @@ After plan validation, parse only these header bindings:
 - `Foundation Result Revision`; and
 - `Foundation Application Receipt`.
 
-Validate the source artifact as an Approved `Design Spec` at the recorded exact
-revision. Parse its `Foundation Manifest` and `Base Agentic Foundation`
+Validate the source artifact as a policy-accepted `Design Spec` at the recorded
+exact revision and same policy. Parse its `Foundation Manifest` and `Base Agentic Foundation`
 traceability fields. Compare the source-spec base to the plan base, then bind
 the plan's distinct result revision and receipt supplied by the phase handoff.
 All four Foundation fields must be literal `none` for a generic workflow.
@@ -39,16 +40,16 @@ shared operation:
 
 ```text
 git check-ignore --quiet <absolute-candidate-root-APPLIED.json>
-foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-result-sha256> --receipt <absolute-candidate-root-APPLIED.json> --spec-path <absolute-approved-spec-path> --expected-spec-revision <exact-approved-spec-sha256> --expected-base-revision <exact-base-sha256>
+foundation validate --root <checkout-root> --manifest <absolute-WAYFINDING.md> --expected-revision <exact-result-sha256> --receipt <absolute-candidate-root-APPLIED.json> --spec-path <absolute-spec-path> --expected-spec-revision <exact-spec-sha256> --expected-base-revision <exact-base-sha256> --policy <Autonomous|Review-gated>
 ```
 
 Only after plan, source-spec, and non-none receipt-backed Foundation validation
 pass may you read the plan, referenced spec, Foundation, and codebase from disk.
 Do not rely on prior conversation context, even in same-session mode after plan
-approval.
+progression.
 
 If either artifact is Draft, has missing or duplicated lifecycle metadata, has
-the wrong type, was edited after approval, or is at a different revision, stop
+the wrong type, was edited after lifecycle progression, or is at a different revision, stop
 and report expected and actual values. Also stop on a missing, non-ignored,
 inconsistent, or drifted Foundation base/result/receipt binding. Missing Node.js
 or a missing operation module fails closed with the full-package installation
@@ -77,8 +78,8 @@ shell redirection, `cat`, or ad hoc Git command strings.
 | Operation | Bash/Git Bash/WSL/Unix | Windows cmd/PowerShell |
 | --- | --- | --- |
 | Resolve workspace | `scripts/sdd-workspace` | `scripts/sdd-workspace.cmd` |
-| Extract task | `scripts/task-brief PLAN_FILE N [OUTFILE]` | `scripts/task-brief.cmd PLAN_FILE N [OUTFILE]` |
-| Build review package | `scripts/review-package BASE HEAD [OUTFILE]` | `scripts/review-package.cmd BASE HEAD [OUTFILE]` |
+| Extract bound task | `scripts/task-brief PLAN_FILE N OUTFILE BINDING_FILE` | `scripts/task-brief.cmd PLAN_FILE N OUTFILE BINDING_FILE` |
+| Build bound review package | `scripts/review-package BASE HEAD OUTFILE BINDING_FILE` | `scripts/review-package.cmd BASE HEAD OUTFILE BINDING_FILE` |
 | Read progress | `scripts/progress read` | `scripts/progress.cmd read` |
 | Mark complete | `scripts/progress complete --task N --base BASE --head HEAD --review clean` | `scripts/progress.cmd complete --task N --base BASE --head HEAD --review clean` |
 
@@ -93,6 +94,12 @@ Superpowers Architecture requires Node.js 20 or newer. Install Node.js, then ret
 
 Stop when this happens. Do not create a brief, review package, or progress file
 through a manual fallback.
+
+New controllers always pass the exact v2 SDD binding from `writing-plans`. The
+shared operation validates policy, plan, spec, and optional Foundation/receipt
+before it renders a brief or review package, and extracts task text from the one
+validated plan snapshot. Legacy positional calls remain only for legacy
+controllers; do not omit the binding in a new workflow.
 
 **Why subagents:** You delegate tasks to specialized agents with a requested isolated context. Precisely craft the bounded prompt and artifact paths so the runtime adapter can verify that parent conversation turns were not inherited. If the host cannot prove isolation, report the reduced guarantee instead of promising it. This also preserves your own context for coordination work.
 
@@ -115,7 +122,7 @@ digraph when_to_use {
     "brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "brainstorm first" [label="no - no approved plan yet"];
+    "Have implementation plan?" -> "brainstorm first" [label="no policy-accepted plan yet"];
     "Tasks mostly independent?" -> "Subagents available?" [label="yes"];
     "Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or linear"];
     "Subagents available?" -> "subagent-driven-development" [label="yes"];
@@ -143,7 +150,7 @@ digraph process {
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
         "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
-        "Task reviewer reports spec ✅, architecture conformant, and quality approved?" [shape=diamond];
+        "Task reviewer reports spec ✅, architecture conformant, and task Ready?" [shape=diamond];
         "Dispatch fix subagent for Critical/Important findings" [shape=box];
         "Mark task complete in todo list and progress ledger" [shape=box];
     }
@@ -159,10 +166,10 @@ digraph process {
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
     "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅, architecture conformant, and quality approved?";
-    "Task reviewer reports spec ✅, architecture conformant, and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
+    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅, architecture conformant, and task Ready?";
+    "Task reviewer reports spec ✅, architecture conformant, and task Ready?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
     "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review"];
-    "Task reviewer reports spec ✅, architecture conformant, and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
+    "Task reviewer reports spec ✅, architecture conformant, and task Ready?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
@@ -178,13 +185,17 @@ Before dispatching Task 1, scan the plan once for conflicts:
 - anything the plan explicitly mandates that the review rubric treats as a
   defect (a test that asserts nothing, verbatim duplication of a logic block)
 
-Present everything you find to the user as one batched question —
-each finding beside the plan text that mandates it, asking which governs —
-before execution begins, not one interrupt per discovery mid-plan. If the
-scan is clean, proceed without comment. The review loop remains the net for
-conflicts that only emerge from implementation.
+Under Autonomous, repair in-scope plan contradictions, refresh, review, return
+the plan to Ready, and continue. Ask the user only when the conflict changes the
+authorized goal, acceptance criteria, safety boundary, or consequential product
+behavior. Under Review-gated, a changed plan returns to its readable review
+flow. If the scan is clean, proceed without comment.
 
-If implementation reveals that the approved modules, interfaces, seams, adapters, data flow, or test surface must change, stop before dispatching divergent work. Run `artifact draft` on the controlling spec (and the dependent plan when applicable), return the artifact to user review, and resume only from newly Approved revisions.
+If implementation reveals that the bound modules, interfaces, seams, adapters,
+data flow, or test surface must change, stop only the divergent work. Run
+`artifact draft` on the controlling spec and dependent plan, record and review
+the correction, then return to Ready under Autonomous or the readable user
+review flow under Review-gated. Resume only from newly policy-accepted revisions.
 
 ## Dispatch Contract and Capability Selection
 
@@ -212,7 +223,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 1. If it's a context problem, provide more context and re-dispatch with the same model
 2. If the task requires more reasoning, re-dispatch with a more capable model
 3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, escalate to the human
+4. If the plan itself is wrong, correct and re-review it under Approval Policy;
+   ask the user only for a goal/constraint decision
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
@@ -247,15 +259,15 @@ final whole-branch review. When you fill a reviewer template:
   Y"). The reviewer's template already carries the process rules (YAGNI,
   test hygiene, review method) — the constraints block is for what THIS
   project's spec demands.
-- Give every implementer, task reviewer, and final reviewer the exact Approved
+- Give every implementer, task reviewer, and final reviewer the exact policy-accepted
   spec/plan paths and revisions, the plan's exact Foundation Manifest,
   Foundation Base Revision, Foundation Result Revision, and Foundation
   Application Receipt, plus the shared
   `codebase-design/ARCHITECTURE-CONFORMANCE.md` path. Copy the task-specific
-  Approved modules, interfaces, seams/adapters, data flow,
+  bound modules, interfaces, seams/adapters, data flow,
   depth/locality/leverage intent, and test surface into the bounded prompt.
-  Any `violation` blocks completion; a design change requires a newly Approved
-  artifact revision before work continues.
+  Any `violation` blocks completion; a design change requires a newly
+  policy-accepted artifact revision before work continues.
 - Hand the reviewer its diff as a file: run this skill's portable
   review-package operation through the active host launcher and pass the
   reviewer the `path` in its JSON result. The output never enters your own
@@ -272,11 +284,11 @@ final whole-branch review. When you fill a reviewer template:
   findings in the progress ledger as you go, and point the final
   whole-branch review at that list so it can triage which must be fixed
   before merge. A roll-up nobody reads is a silent discard.
-- A finding labeled plan-mandated — or any finding that conflicts with
-  what the plan's text requires — is the human's decision, like any plan
-  contradiction: present the finding and the plan text, ask which governs.
-  Do not dismiss the finding because the plan mandates it, and do not
-  dispatch a fix that contradicts the plan without asking.
+- A finding labeled plan-mandated, or any finding that conflicts with the plan,
+  returns through the same policy-aware correction flow. Under Autonomous,
+  repair an in-scope technical conflict and re-review. Ask the user only when
+  deciding which side governs changes the goal, constraints, or consequential
+  product behavior.
 - The final whole-branch review gets a package too: run
   `scripts/review-package MERGE_BASE HEAD` (MERGE_BASE = the commit the
   branch started from, e.g. `git merge-base main HEAD`) and include the
@@ -315,7 +327,7 @@ and is re-read on every later turn. Hand artifacts over as files:
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets the same brief, report, review
-  package, exact Approved spec, exact Approved plan, shared Architecture
+  package, exact policy-accepted spec, exact policy-accepted plan, shared Architecture
   Conformance rubric, and exact Foundation Manifest, Foundation Base Revision,
   Foundation Result Revision, and Foundation Application Receipt — plus the
   global constraints and task-specific architecture binding. All four use
@@ -376,7 +388,7 @@ Implementer: "Got it. Implementing now..."
 
 [Run review-package, dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
-  Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
+  Strengths: Good test coverage, clean. Issues: None. Task quality: Ready.
 
 [Mark Task 1 complete]
 
@@ -401,7 +413,7 @@ Task reviewer: Spec ❌:
 Fixer: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVAL constant
 
 [Task reviewer reviews again]
-Task reviewer: Spec ✅. Task quality: Approved.
+Task reviewer: Spec ✅. Task quality: Ready.
 
 [Mark Task 2 complete]
 
@@ -478,7 +490,7 @@ Done!
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
 - Reviewer reviews again
-- Repeat until approved
+- Repeat until Ready
 - Don't skip the re-review
 
 **If subagent fails task:**

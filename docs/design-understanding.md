@@ -1,18 +1,20 @@
 # Design Understanding
 
-Every spec must include Design Understanding before planning.
+Every Design Spec establishes Design Understanding before Planning. The exact
+spec is Draft while being authored, then progresses according to **Approval
+Policy**: Autonomous resolves advisory findings and records Ready; Review-gated
+records Approved only after a clear user response.
 
-For a Foundation-backed project, Design Understanding is feature-level and
-bounded by the Approved Agentic Foundation. The Project Blueprint owns
-project-wide purpose, users, journeys, scope, stable requirements, release
-boundaries, and roadmap traceability. A Design Spec traces one ready roadmap
-outcome back to those requirements; it does not replace or copy the Blueprint.
+For Foundation-backed work, the spec is one bounded roadmap outcome under the
+policy-accepted Agentic Foundation. The Project Blueprint owns project-wide
+purpose, users, journeys, scope, stable requirements, release boundaries, and
+roadmap traceability. A feature spec links those identities without copying
+project-wide truth.
 
 ## Language
 
-Name important concepts explicitly. Define preferred terms and rejected synonyms when language is overloaded.
-
-Example:
+Name important concepts and rejected synonyms when ambiguity would spread across
+modules or user behavior.
 
 ```markdown
 **Renewal Attempt**:
@@ -22,64 +24,60 @@ _Avoid_: retry job, billing retry, payment loop
 
 ## Architecture
 
-Capture:
+Record:
 
-- modules involved
-- interfaces
-- seams
-- adapters
-- data flow
-- intended depth, locality, and leverage
-- test surface through public module behavior and justified external seams
+- modules and their responsibilities;
+- public interfaces;
+- seams and production/test adapters;
+- source-to-sink data flow;
+- intended depth, locality, and leverage;
+- observable test surface through public module behavior;
+- compatibility and migration boundaries; and
+- business, safety, privacy, security, data, and external-action constraints.
 
-Current project truth is updated in place in the focused owning Foundation
-document. Decision history lives separately in the append-only Decision Ledger:
-each durable decision has a stable identity, rationale, alternatives, sources
-when required, current-truth owner, and any `Supersedes` link. Only the Current
-Decision Index records which immutable entries are current or superseded.
+The shared Architecture Conformance rubric binds these decisions through
+Planning, TDD, implementation, task review, and whole-branch review.
 
 ## Durable Documentation Impact
 
-Every Foundation-backed Design Spec classifies each design decision as
-Task-local, Project-durable, Operating-contract, or No impact. Each table row:
+Every Foundation-backed decision receives a stable `DDI-NNN` identity,
+concrete classification reason, exact current-truth owner, and candidate action
+identity or `none`:
 
-- begins with a stable `DDI-NNN` identity;
-- includes a concrete classification reason;
-- names the exact current-truth owner;
-- uses `none` for Task-local or No impact candidate actions; and
-- references stable `FCA-NNN` actions for durable or operating-contract
-  consequences.
+- Task-local;
+- Project-durable;
+- Operating-contract; or
+- No impact.
 
-Paths occur only in the fenced JSON Foundation Candidate Declaration. Its
-sorted path/action projection must equal `candidate.json`. Project-durable
-decisions declare both their current-truth owner action and a
-`docs/agentic/DECISIONS.md` upsert. Operating-contract decisions declare their
-exact `AGENTS.md` owner and every affected parent Child DOX Index. Managed-file
-or reading-order changes also declare the applicable manifest/router action.
+Task-local and No impact rows use `none`. Project-durable decisions include
+their current-truth owner and an append-only `DECISIONS.md` entry.
+Operating-contract decisions include the exact AGENTS.md owner and affected
+parent Child DOX indexes. Managed file or reading-order changes also include the
+manifest or Root Router consequence.
 
-Several decisions may share one action. Duplicate or conflicting paths,
-missing owner or ledger consequences, unreferenced actions, and action-bearing
-Task-local or No impact rows fail review. An empty declaration requires the
-literal sentence `No durable documentation changes`.
+Paths appear only in the exact fenced JSON Foundation Candidate Declaration.
+Its sorted path/action projection must equal operation-owned
+`candidate.json`. Duplicate/conflicting paths, missing owner/ledger/index
+effects, unreferenced actions, and no-op candidates fail review. An empty
+declaration uses the exact unfenced sentence
+`No durable documentation changes`.
 
-## Test Surface
+Current truth is updated in one focused owner. Decision evidence is immutable:
+a changed decision appends a new ledger entry naming `Supersedes`; only the
+Current Decision Index changes prior status.
 
-Tests should verify behavior through the correct interface. If a test must reach past the interface, the module shape is probably wrong.
+## Review and Correction
 
-## Planning Impact
+Advisory reviewers return Ready for progression under Autonomous, Ready for user
+review under Review-gated, or Issues found. They never approve content.
 
-Implementation plans bind each task to the modules, interfaces, seams/adapters,
-data flow, depth/locality/leverage intent, test surface, and applicable
-Foundation base/receipt/result identities in the exact Approved spec revision.
-TDD, implementer, task-reviewer, and final-reviewer prompts use the same
-[Architecture Conformance rubric](../skills/codebase-design/ARCHITECTURE-CONFORMANCE.md),
-so a generic passing test suite does not excuse a violated seam, shallow
-module boundary, or missing durable-document obligation.
+Implementation-discovered in-scope design corrections return the spec and
+dependent plan through Draft. Under Autonomous, the controller records the
+change, refreshes, reviews, marks Ready, and resumes. Under Review-gated, the
+changed readable artifact requires new clear human approval. A reviewer report,
+conversation statement, or passing test does not create lifecycle evidence.
 
-This is true whether later phases run in automated fresh-session mode or
-same-session mode: the Approved artifact is the source of truth, and the next phase
-must validate and re-read it from disk. If implementation reveals that the
-design is wrong, return the controlling artifact to Draft, refresh its revision,
-and obtain new user approval rather than silently changing architecture. If
-the discovery invalidates project direction or affects several roadmap
-outcomes, return to Wayfinder instead of widening one feature Design Spec.
+Ask the user only when a discovery changes the authorized goal, acceptance
+criteria, safety boundary, consequential product behavior, or external-action
+authority. If it changes project direction or several roadmap outcomes, return
+to Wayfinder instead of widening one feature spec.

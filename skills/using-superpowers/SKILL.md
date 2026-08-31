@@ -1,241 +1,183 @@
 ---
 name: using-superpowers
-description: Use when starting a conversation to route greenfield inception or project-wide reorientation to wayfinder and bounded feature, app, site, tool, component, UI, API, workflow, behavior, or architecture work to brainstorming before planning or implementation
+description: Use when starting a conversation to resolve workflow policy, migrate legacy Superpowers gates at a safe boundary, and route project-wide work to wayfinder or bounded work to brainstorming before planning or implementation
 metadata:
   priority: 100
 ---
 
 # Using Superpowers Architecture
 
-Superpowers Architecture is an architecture-first software development workflow
-for agentic coding runtimes.
+Superpowers Architecture is an architecture-first workflow. Apply this skill
+before choosing another workflow skill.
 
-Before selecting any other skill, apply these priority rules:
+## Route the Work
 
-- For deliberate greenfield project inception, a missing Agentic Foundation, or
-  project-wide reorientation that changes the destination, release boundary,
-  project-wide architecture, or several roadmap outcomes, use `wayfinder`
-  before `brainstorming`, frontend, app-builder, design, framework,
-  implementation, or coding skills.
-- For one bounded roadmap outcome or a request to make, build, create,
-  implement, add, change, or design a feature, app, site, tool, component,
-  workflow, UI, API, behavior, or feature architecture in an established
-  project, use `brainstorming` before frontend, app-builder, design, framework,
-  implementation, or coding skills unless the user explicitly provides an
-  Approved implementation plan path or explicitly asks to bypass design/spec
-  work.
-- When feature discovery invalidates the project destination, affects several
-  roadmap outcomes, or exposes project-wide architecture or release fog, return
-  to `wayfinder`.
+- Use `wayfinder` for greenfield inception, a missing Agentic Foundation,
+  project-wide reorientation, destination or release-boundary changes,
+  project-wide architecture, or fog spanning several roadmap outcomes.
+- Use `brainstorming` for one bounded roadmap outcome, feature, app, site,
+  tool, component, UI, API, workflow, behavior, or bounded architecture change.
+- Return from bounded discovery to `wayfinder` when it invalidates the project
+  destination or affects several roadmap outcomes.
+- Use `systematic-debugging` before proposing a fix for a bug, failing test,
+  regression, broken build, or unexpected behavior.
+- Use `writing-plans` only from an exact policy-accepted Design Spec.
+- Use `subagent-driven-development` for mostly independent plan tasks or
+  `executing-plans` for linear execution, only from an exact policy-accepted
+  Implementation Plan.
+- Use `verification-before-completion` before a completion claim unless
+  `finishing-a-development-branch` supplies the stricter closeout.
 
-Host-specific tool names live in `references/`. Use `codex-tools.md` on Codex
-and `claude-code-tools.md` on Claude Code. Keep shared workflow policy
-runtime-neutral.
+Host-specific tool names and runtime capabilities live in `references/`.
+Shared skills use the host-neutral dispatch request in
+`references/dispatch-contract.md`. Fresh phase sessions use
+`references/phase-handoff.md`; they are never subagent dispatches.
 
-Subagent workflows use the request in `references/dispatch-contract.md`: role,
-context policy, capability tier, bounded prompt path, artifact paths, and
-workspace policy. Shared skills never name host tools or concrete models. Phase
-handoff uses the separate `prepare handoff` preflight in
-`references/phase-handoff.md` and must create a genuinely new user-owned
-session rather than a subagent.
+## Resolve Workflow Policy on Entry
 
-If a Superpowers Architecture skill applies to the task, use it before acting.
-The selected phase flow is:
+Read the applicable instruction chain before phase checks.
 
-1. For a new downstream project or project-wide reorientation, `wayfinder`
-   establishes or resumes the exact Agentic Foundation, creates a
-   Blueprint-traceable roadmap, records the durable Phase Mode, and stops at
-   exact Foundation review without scaffolding production work.
-2. After exact Foundation approval, the selected Phase Mode starts
-   `brainstorming` for one ready bounded roadmap outcome:
-   - Automated fresh-session mode prepares a verified fifteen-field
-     same-checkout handoff to a fresh Codex or Claude session.
-   - Same-session mode continues only after revalidating the Foundation and
-     re-reading the Root Router, manifest-selected documents, roadmap outcome,
-     and relevant checkout files from disk.
-3. Generic established-project `brainstorming` establishes the Phase Mode when
-   no durable preference exists. It writes and reviews one local
-   architecture-aware Design Spec and stops at the written-spec review gate.
-4. After written spec approval, the selected Phase Mode controls planning:
-   - Automated fresh-session mode starts `writing-plans` in a fresh session
-     from the Approved spec path, resulting Foundation, and physical application
-     receipt when a runtime adapter is available.
-   - Same-session mode invokes `writing-plans` in the current conversation
-     after receipt-backed validation of the Approved spec base and resulting
-     Foundation, then re-reading the Approved spec, applicable Foundation, and
-     codebase from disk.
-5. `writing-plans` writes and reviews an exact implementation plan from the
-   Approved spec, then stops at the written-plan review gate.
-6. After written plan approval, the selected Phase Mode controls implementation:
-   - Automated fresh-session mode starts `subagent-driven-development` or
-     `executing-plans` in a fresh session from the Approved plan path when a
-     runtime adapter is available.
-   - Same-session mode invokes the selected implementation controller after
-     receipt-backed validation of the Approved plan, referenced spec base, and
-     resulting Foundation, then re-reading those artifacts and the codebase from
-     disk.
-7. `finishing-a-development-branch` verifies and summarizes the completed
-   branch without pushing, merging, opening PRs, discarding work, or publishing
-   unless the user explicitly asks.
+**Approval Policy** defaults to `Autonomous` for new and existing projects.
+`Review-gated` applies only after a new explicit user instruction under
+Workflow Policy Version 2. Legacy gate prose, old Approved artifacts, and Phase
+Mode do not opt into Review-gated.
 
-Generated downstream files under `docs/superpowers/**` are local developer
-working state. Do not stage or commit them unless the user explicitly asks.
+If an existing project's active Superpowers instructions still require legacy
+document approval:
 
-## Phase Modes
+1. identify only the active workflow-gate clauses and affected current
+   Foundation/spec/plan bindings;
+2. preserve the goal, acceptance criteria, business and safety constraints,
+   external-action authority, Phase Mode, user work, and immutable decision
+   history;
+3. prepare complete replacement document bytes and review the narrow diff;
+4. at a safe boundary with no competing writer, invoke `workflow migrate`
+   from `references/workflow-policy.md`; and
+5. validate the migrated policy and affected artifacts, then resume useful work.
 
-**Phase Mode** is the workflow progression rule stored durably during
-Wayfinder, or selected during the first generic `brainstorming` session when no
-durable preference exists.
+Do not ask for migration approval or scan unrelated dormant projects. Startup
+only directs this entry check; it never runs a broad migration itself.
 
-**Automated fresh-session mode** means exact artifact approval starts the next
-phase in a genuinely fresh user-owned session using a self-contained prompt. If
-the runtime adapter is unavailable, disabled, or unsafe, print the exact
-fallback prompt or command and stop.
+## Lifecycle and Progression
 
-**Same-session mode** means exact artifact approval continues to the next phase
-in the current conversation. Before producing the next artifact or
-implementation, re-read `AGENTS.md`, optional root `CONTEXT.md`, every
-applicable Approved artifact, and relevant codebase files from disk. Ignore
-prior design conclusions unless present in Approved artifacts or authoritative
-project docs.
+Design Specs, Implementation Plans, and Agentic Foundations use truthful states:
 
-Approval must be explicit in both modes. Never infer approval from silence,
-artifact creation, an advisory reviewer, or a request to continue that does not
-identify the exact artifact revision.
+- **Draft:** incomplete or changed content; never executable.
+- **Ready:** applicable checks and blocking advisory findings are resolved for
+  the exact revision; human approval fields remain `none`.
+- **Approved:** a human explicitly approved the exact revision.
 
-Before an automated fresh-session launch, run `prepare handoff` and bind the
-prompt to all fifteen immutable fields: exact repository remote, checkout root,
-branch or detached commit, worktree identity, phase artifact, source spec when
-applicable, Agentic Foundation when applicable, plugin source/root, and
-`same-checkout` policy. For Foundation-backed Planning and implementation, bind
-the absolute Foundation Application Receipt outside the unchanged record and
-carry the result revision in `foundationRevision`. The receiving session must
-acknowledge all fifteen fields and the receipt separately, then independently
-revalidate them before the next skill begins. If the runtime cannot address the
-exact checkout or prove plugin, ignored-artifact, and receipt affinity, print
-the complete canonical fallback and do not launch.
+Always pass the effective Approval Policy to shared lifecycle consumers.
+Autonomous accepts Ready or Approved. Review-gated accepts Approved only.
+Omitted-policy operations retain strict v1 compatibility.
+
+Managed changes return the artifact through Draft, refresh, advisory review, and
+then Ready or Approved according to policy. Under Autonomous, the controller
+owns in-scope design, plan, review, test, and documentation repairs and
+continues when Ready. Under Review-gated, present one readable package and bind
+a clear user response internally; never ask the user to type a digest.
+
+Ask the user only for an unresolved consequential product choice, a goal or
+constraint change, missing input/access that blocks further safe work, or an
+external action beyond existing authority. Complete independent safe work
+first. Never weaken requirements, acceptance criteria, privacy, security, data
+safety, or publication/deployment boundaries to keep moving.
+
+Validate an authoritative input once on first use in a fresh, resumed, or
+compacted context; after its bytes or dependencies change; after a
+branch/checkout change or possible external writer; and inside a critical
+mutation lock. Reuse unchanged evidence within one uninterrupted controller
+context.
+
+## Phase Flow
+
+1. `wayfinder` establishes or resumes the documentation-only Agentic
+   Foundation, Project Blueprint, traceable roadmap, Approval Policy, and
+   independent Phase Mode.
+2. It reviews the exact Foundation. Autonomous resolves issues, records Ready,
+   and progresses. Review-gated presents one readable Foundation package and
+   progresses only after clear human approval.
+3. `brainstorming` designs one bounded outcome, classifies durable
+   documentation impact, previews any prospective Foundation change, and runs
+   one advisory review.
+4. Autonomous resolves findings, records the Design Spec Ready, applies any
+   reviewed policy-bound Foundation change, validates the result, and progresses
+   to Planning. Review-gated uses one combined readable package and clear human
+   approval before apply/progression.
+5. `writing-plans` validates the exact current spec/Foundation/receipt, writes
+   one implementation plan, reviews it, and records Ready or Approved according
+   to policy.
+6. The selected implementation controller validates the exact plan/spec and
+   optional Foundation receipt, then implements, reviews, repairs, and verifies
+   the bounded goal.
+7. `finishing-a-development-branch` runs final evidence and summarizes local
+   state. Push, merge, PR creation, deployment, publication, spending,
+   communication with others, destructive actions, and discarding work remain
+   separately authorized.
+
+## Phase Mode
+
+Approval Policy and Phase Mode are independent.
+
+**Automated fresh-session mode** progresses a policy-accepted artifact through
+the v2 envelope in `references/phase-handoff.md` when the user request or
+durable Phase Mode authorizes task creation and the runtime proves exact
+checkout, plugin, ignored-state, constraint, and fresh-session affinity.
+
+**Same-session mode** continues after re-reading applicable instructions,
+policy-accepted artifacts, Foundation evidence, and relevant code from disk.
+It does not repeat valid unchanged checks only because the skill name changed.
+
+If automated launch is unavailable or unsafe, follow the recorded Phase Mode's
+fallback. Never copy ignored state, choose another checkout, fabricate
+freshness, or turn a runtime limitation into a document-approval request. A v1
+receiver accepts genuinely Approved inputs only and must reject Ready.
 
 <!-- STARTUP-CONTRACT:START -->
-1. Route through an applicable skill before acting, and announce the selected skill.
-2. New-project inception and project-wide reorientation use wayfinder and stop at exact Agentic Foundation review; bounded roadmap outcomes use brainstorming before planning or implementation.
-3. Local AGENTS.md and user instructions take precedence; never create plugin-root CONTEXT.md, lowercase context.md, ADRs, Matt flows, or visual companions.
-4. Specs and plans remain Draft until the user approves their exact SHA-256 revision; each next phase revalidates the artifact from disk.
-5. The selected Phase Mode controls whether approval launches a genuinely fresh user-owned session or continues after a same-session disk reread; never substitute a fork, resume, or subagent for a fresh phase session.
-6. Missing runtime capabilities must be reported explicitly. Never silently pretend routing, validation, isolation, checkout/plugin affinity, or startup injection succeeded.
+1. Route through the applicable skill, announce it, and read the local instruction chain before acting.
+2. Approval Policy defaults to Autonomous for new and existing work; Review-gated requires a new explicit opt-in, and legacy gates are migrated narrowly with workflow migrate at a safe boundary.
+3. Draft never progresses; Autonomous accepts internally reviewed Ready or Approved artifacts, while Review-gated accepts Approved only and preserves real human provenance.
+4. Keep the authorized goal, acceptance criteria, safety constraints, external-action boundaries, and immutable history; repair in-scope design, plan, code, review, and tests without repeated human approval.
+5. Phase Mode is independent: fresh mode requires a genuinely fresh user-owned same-checkout session with verified v2 bindings, while same-session mode rereads changed inputs; never substitute a fork or subagent.
+6. Report missing capabilities and installed-host evidence honestly; never pretend migration, validation, isolation, checkout/plugin affinity, startup injection, or publication succeeded.
 <!-- STARTUP-CONTRACT:END -->
 
-## Artifact And Foundation Lifecycles
+## Shared Operations
 
-Design Specs and implementation plans are Draft until the user approves an
-exact canonical SHA-256 payload revision. Filenames, timestamps, headings, and
-chat memory never prove approval; only successful validation of artifact type,
-`Status: Approved`, Approved revision, and recomputed payload digest does.
+`using-superpowers/scripts/spa.mjs` owns portable lifecycle, Foundation,
+workflow migration, phase handoff, startup rendering, workspace detection, and
+SDD operations. Runtime wrappers only locate Node.js and invoke that core.
 
-`using-superpowers/scripts/spa.mjs` owns the shared artifact lifecycle
-implementation. Consuming skills and runtime adapters call `artifact draft`,
-`artifact refresh`, `artifact approve`, and `artifact validate` instead of
-reimplementing canonicalization.
+Use:
 
-The same shared operation core owns Agentic Foundation lifecycle and candidate
-operations behind `foundation draft`, `foundation refresh`, `foundation
-approve`, `foundation validate`, `foundation preview`, and `foundation apply`.
-`WAYFINDING.md` is the only lifecycle manifest. Wayfinder and later phase
-consumers call the operations; they never calculate or rewrite Foundation
-revisions themselves.
+- `references/workflow-policy.md` for policy precedence, migration, and
+  revalidation rules;
+- `references/artifact-lifecycle.md` for spec/plan Draft, Ready, Approved;
+- `references/agentic-foundation-lifecycle.md` for Foundation transactions and
+  v1/v2 receipts; and
+- `references/phase-handoff.md` for the v2 envelope and strict v1 boundary.
 
-Result-only `foundation validate` remains the Foundation lifecycle check.
-Planning and implementation use its receipt-backed form to bind the Approved
-Design Spec base, operation-owned `APPLIED.json`, and resulting Approved
-Foundation. They do not require base and result revisions to be equal.
-
-Node.js 20 or newer is required for correctness-critical transitions. If Node
-or the sibling operation module is unavailable, fail closed and print the
-full-package installation guidance from the applicable lifecycle reference.
-
-Managed content changes run the appropriate Draft operation before editing and
-refresh afterward. Advisory reviewers identify issues but cannot approve; only
-explicit user approval of the reported exact revision permits approval. Every
-next phase independently validates every applicable Approved artifact from
-disk.
-
-## Required Skill Discipline
-
-- Use `wayfinder` for greenfield inception, Agentic Foundation creation or
-  resumption, project-wide reorientation, destination or release-boundary
-  changes, and project-wide architecture or multi-outcome fog.
-- Route a ready bounded roadmap outcome to `brainstorming`; never continue
-  discovery, feature design, planning, or implementation inside Wayfinder.
-- Use `brainstorming` for feature work, behavior changes, bounded architecture
-  changes, generic app/site/tool/component creation, or unclear bounded
-  requirements.
-- Use `systematic-debugging` before proposing a fix for a bug, failing test,
-  broken build, regression, or unexpected behavior.
-- Use `writing-plans` only from an exact Approved local Design Spec.
-- Use `subagent-driven-development` for mostly independent plan tasks or
-  `executing-plans` for linear plan execution, only from an exact Approved local
-  implementation plan.
-- Before claiming completion, use `verification-before-completion` unless
-  another selected skill has a stricter closeout.
-
-## Skill Priority
-
-1. `wayfinder` for downstream greenfield inception, Agentic Foundation
-   creation/resumption, and project-wide reorientation. It outranks
-   `brainstorming` only for that project-wide scope.
-2. `brainstorming` for bounded roadmap outcomes, feature work, behavior
-   changes, bounded architecture changes, generic make/build/create/implement
-   requests, or unclear bounded requirements in an established project.
-3. `systematic-debugging` for bugs, failing tests, broken builds, regressions,
-   or unexpected behavior.
-4. `writing-plans` only when an exact Approved local Design Spec is available.
-5. `subagent-driven-development` or `executing-plans` only when an exact
-   Approved local implementation plan is available.
-6. `finishing-a-development-branch` when implementation tasks are done and the
-   user wants release-readiness verification.
-7. `verification-before-completion` before a completion claim not already
-   covered by the finishing skill.
-
-## Phase Boundaries
-
-Do not continue from Wayfinder to Brainstorming, Brainstorming to Planning, or
-Planning to implementation before the relevant exact artifact is Approved.
-
-At the end of Wayfinder, stop at exact Agentic Foundation review. After exact
-approval, follow the durable Phase Mode and the fifteen-field handoff or
-same-session disk-reread rule.
-
-At the end of Brainstorming, stop at its written review gate and describe what
-will happen after exact approval under the selected Phase Mode. At the end of
-Planning, stop at its written-plan review gate. Implementation starts only from
-an explicit exact Approved plan path.
+Node.js 20 or newer is required for correctness-critical operations. Missing
+Node or a missing sibling module fails closed with the reference's complete
+installation guidance.
 
 ## Local Working State
 
-These paths are local developer working state:
+These downstream paths are local working state:
 
 - `docs/superpowers/specs/`
 - `docs/superpowers/plans/`
 - `docs/superpowers/architecture-reviews/`
 - `docs/superpowers/foundation-candidates/`
+- `docs/superpowers/workflow-migrations/`
+- `docs/superpowers/verification/`
 
-Do not stage or commit those paths unless the user explicitly requests it.
-Code commits remain allowed during implementation tasks.
+Do not stage or commit them unless the user explicitly asks.
 
-## Removed Behaviors
+## Repository Constraints
 
-The shipped skills must not actively instruct agents to:
-
-- retain an inception alias or redirect for the removed predecessor skill
-- offer or run a visual companion
-- create or maintain plugin-local lowercase `context.md`
-- create or maintain root `CONTEXT.md` in this plugin repository
-- create or maintain ADRs
-- run Matt issue, PRD, or triage flows
-- commit generated specs, plans, reviews, or Foundation candidates automatically
-- continue across any exact review gate before the relevant artifact is
-  Approved
-- present the default merge, PR, or discard finish menu
-
-Mentions of removed behavior are allowed in public docs only when they clearly
-describe historical migration. Wayfinder may create uppercase root
-`CONTEXT.md` only in a deliberate downstream project.
+Do not create plugin-root `CONTEXT.md`, lowercase `context.md`, ADRs, Matt
+issue/PRD/triage flows, or visual companions. `wayfinder` may create uppercase
+root `CONTEXT.md` and `docs/agentic/` only in a deliberate downstream
+project. Shared skills use bare canonical identities and keep host/runtime
+syntax in adapters.
