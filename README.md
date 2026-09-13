@@ -16,8 +16,6 @@ skills.sh installation, and npm distribution are unsupported.
 Requires Node.js 20+ and a Codex client with plugin support. Select GPT-6 Astra
 in Codex; the plugin preserves that choice for workers and reviewers.
 
-After v0.6.0 is published:
-
 ```sh
 codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.6.0
 codex plugin add superpowers-architecture@superpowers-architecture
@@ -27,10 +25,21 @@ Start a new Codex session. Review and trust this plugin's startup hook through
 Codex's hook controls when prompted. See [Installation](docs/installation.md)
 for local development, upgrades, and migration.
 
-**Release status:** 0.6.0 is a source candidate. Publication remains pending
-the mandatory installed-host evidence in the [Release Contract](docs/release.md).
-
 ## Start Working
+
+Start each task by explicitly loading the entry skill:
+
+```text
+$superpowers-architecture:using-superpowers
+```
+
+**Known limitation in 0.6.0:** automatic startup instructions were absent in
+the tested Windows Codex client, including after hook trust and an app restart.
+All 16 skills are discoverable, but automatic startup and context recovery are
+not verified. Invoke the entry skill again after resuming, clearing, or compacting
+context. This manual workaround does not establish complete end-to-end workflow
+reliability. See [Runtime Support](docs/runtime-support.md#060-known-limitations)
+for observed results and remaining gaps.
 
 For a new project or a change in project direction:
 

@@ -7,6 +7,35 @@ GPT-6 Astra. Claude and standalone skill installation are unsupported.
 Runtime support requires installed-host evidence. Reading source, manifests, or
 passing local tests is not a substitute.
 
+## 0.6.0 Known Limitations
+
+Version 0.6.0 is published with an explicit maintainer exception to the complete
+installed-host release gate. The failed and unavailable observations remain
+recorded; publication is not a claim that the full runtime matrix passed.
+
+- **Observed working:** complete plugin installation and discovery of all 16
+  skills, 75 installed runtime files matching reviewed source, and exact
+  spec/plan validation through installed helpers.
+- **Observed failure:** on Windows with Codex CLI/runtime 0.154.0-alpha.6.2,
+  fresh app tasks did not receive the startup contract before using tools.
+  The failure remained after normal hook trust and a user-reported app restart;
+  a separate CLI diagnostic also reported no injected contract. The remaining
+  cause has not been established.
+- **Unverified:** resume/clear/compaction delivery, installed review isolation,
+  complete receiver/receipt/plugin affinity, and representative new/existing
+  Autonomous and explicit Review-gated workflows. App metadata did establish
+  Astra, the exact checkout, and no fork/parent/subagent lineage for the canaries.
+- **Platform limits:** direct cmd, Git Bash, and WSL launcher checks passed;
+  they do not prove host delivery or an independent macOS/native-Linux Codex run.
+
+Explicitly invoke `$superpowers-architecture:using-superpowers` at the start of
+a task and again after context recovery. This loads the entry instructions for
+that task; it does not repair the hook or prove end-to-end reliability. Fresh
+handoffs still require their actual capability checks and the recorded fallback.
+
+The remaining sections describe the intended runtime contracts. Treat any
+capability listed as unverified above as unverified in this release.
+
 ## Supported Surfaces
 
 | Surface | Shared core | Adapter | Required installed evidence |
@@ -28,7 +57,7 @@ Node.js 20 or newer is required for:
 - workspace preparation detection; and
 - compact startup rendering.
 
-Missing Node is visibly degraded at startup. Correctness-critical operations
+When the startup hook runs, missing Node is visibly degraded. Correctness-critical operations
 fail closed; they never reconstruct revisions, Approval Policy, receipts,
 progress, or migration state from conversation memory.
 
@@ -114,10 +143,10 @@ v2 prompt and one actionable blocker. A subagent/fork is not a fallback fresh
 session. Same-session continuation is used only when the durable Phase Mode
 permits it.
 
-## Hard Release Blockers
+## Evidence Requirements
 
-A runtime or release claim is blocked when any mandatory installed Codex row is
-missing or fails, including:
+A claim of complete verified runtime support requires all mandatory installed
+Codex rows to pass, including:
 
 - plugin load and complete operation discovery;
 - startup/resume/clear/compaction injection and bounded payload;
@@ -128,7 +157,8 @@ missing or fails, including:
 - exact same-checkout/plugin/receipt affinity and safe fallback; or
 - complete Codex marketplace/plugin installation smoke checks.
 
-The current missing installed Codex startup/compaction and genuine user-owned
-fresh-task evidence remains a hard release blocker. Source verification cannot
-waive it. Publication requires user authorization, preserved across phases, plus complete
-evidence and clean review/Git closeout.
+By default, missing mandatory evidence blocks publication. The explicit 0.6.0
+exception in [Release Contract](release.md#060-publication-exception) permits
+publication with the limitations above; it does not establish runtime support
+for unverified capabilities. Review, Git hygiene, truthful evidence, and user
+publication authority remain required.

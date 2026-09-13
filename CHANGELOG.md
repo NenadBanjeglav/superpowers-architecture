@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.6.0 (Unreleased)
+## 0.6.0 — 2026-09-13
+
+- Publishes with an explicit maintainer exception for unresolved installed-host
+  verification. Automatic startup injection failed on the tested Windows Codex
+  client after hook trust and restart. Documents explicit `using-superpowers`
+  invocation; resume/clear/compaction and complete installed flows remain
+  unverified. Failed and unavailable checks are not reported as passed.
 
 - **Breaking distribution change:** ships only the complete Codex plugin, optimized
   for GPT-6 Astra. Removes retained Claude adapters, standalone skills.sh install
@@ -38,7 +44,8 @@
   review packages and rejects stale dependencies.
 - Makes advisory document review policy-aware: `Ready for progression`,
   `Ready for user review`, or `Issues found`; reviewers never approve.
-- Requires genuine installed-Codex startup-context evidence as the remaining runtime gate before clean closeout and merge readiness.
+- Retains genuine installed-Codex startup-context evidence as the requirement
+  for verified automatic behavior; this release uses the disclosed exception above.
 - **Breaking:** removes `project-setup` without an alias and makes `wayfinder` the sole documentation-only skill for project inception and project-wide reorientation.
 - Adds the deterministic Agentic Foundation lifecycle, Root Router, compact dashboard, Project Blueprint, immutable Decision Ledger, and Blueprint-traceable roadmap outcomes.
 - Adds stable DDI/FCA identities and an escape-safe JSON Foundation Candidate Declaration with deterministic owner, ledger, DOX-index, router, manifest, and candidate-equality obligations.

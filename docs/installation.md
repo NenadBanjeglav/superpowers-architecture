@@ -17,8 +17,7 @@ than silently substituting.
 
 ## Released Package
 
-After v0.6.0 publication, register the repository marketplace and install its
-single root plugin:
+Register the repository marketplace and install its single root plugin:
 
 ```sh
 codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.6.0
@@ -33,15 +32,34 @@ from the repository root. It does not contain a duplicate skill tree.
 Start a new session after installation or refresh. A running task does not
 automatically receive refreshed skill instructions.
 
+## Start Explicitly in 0.6.0
+
+In the new task, invoke:
+
+```text
+$superpowers-architecture:using-superpowers
+```
+
+Then describe the outcome you want. This loads the entry instructions and routes
+the request to the relevant skill while preserving the full architecture workflow.
+Repeat the invocation after resuming, clearing, or compacting context.
+
+The tested Windows Codex client discovered all 16 skills but did not deliver
+the startup instructions automatically, even after normal hook trust and an app
+restart. Manual invocation is a workaround; automatic context recovery and
+complete installed workflows remain unverified. See
+[0.6.0 known limitations](runtime-support.md#060-known-limitations).
+
 ## Startup Hook Trust
 
 Installation does not automatically trust plugin hooks. Review the current
 Superpowers Architecture hook when Codex prompts for trust; the CLI exposes
-`/hooks`. The hook invokes the bundled Node startup renderer and injects the
-six marked workflow invariants. Changed hook definitions may require review
+`/hooks`. The hook is intended to invoke the bundled Node startup renderer and
+inject the six marked workflow invariants. Trust and discovery alone do not
+establish execution or delivery. Changed hook definitions may require review
 again. See [Codex hooks](https://learn.chatgpt.com/docs/hooks).
 
-Missing Node produces visible degraded startup guidance. Artifact, Foundation,
+When the hook runs, missing Node produces degraded startup guidance. Artifact, Foundation,
 migration, handoff, and SDD operations fail closed until the complete plugin and
 Node are available. Do not recover by copying individual skills.
 
@@ -88,6 +106,5 @@ nearby worktree nor a fork/subagent substitutes for that identity. If the host
 cannot prove it, the workflow provides the canonical fallback and does not
 launch. Same-session continuation follows the recorded Phase Mode.
 
-See [Runtime Support](runtime-support.md) for the capability contract and
-[Release](release.md) for mandatory evidence. Current source preparation does
-not establish installed startup or compaction behavior.
+See [Runtime Support](runtime-support.md) for observed capabilities and
+[Release](release.md) for the evidence matrix and the 0.6.0 publication exception.

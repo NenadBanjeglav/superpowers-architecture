@@ -12,6 +12,24 @@ The complete package includes .codex-plugin/plugin.json, all 16 skills, shared
 operations, assets, and Codex hooks. The one-entry repository catalog locates
 that root package; it is not another product channel.
 
+## 0.6.0 Publication Exception
+
+On 2026-09-13, after reviewing the failed startup check and the remaining
+installed-host gaps, the maintainer explicitly requested committing and pushing
+to main and publishing 0.6.0 as-is. This exception authorizes source/tag push,
+GitHub About/topics updates, and release publication with the known limitations
+disclosed in the README, installation guide, runtime support, and release notes.
+
+Rows 8–10 retain their failed/unavailable status. The exception does not turn
+source tests into installed-host evidence, assert automatic context recovery,
+or waive lifecycle, architecture, review, user-work, or Git-history constraints.
+Explicit `using-superpowers` invocation is the documented workaround. Full
+runtime verification remains outstanding; see
+[known limitations](runtime-support.md#060-known-limitations).
+
+This exception is specific to 0.6.0. The default evidence requirements below
+continue to apply to later releases unless the maintainer explicitly changes them.
+
 ## Manual Evidence Matrix
 
 Release evidence is local developer state under
@@ -64,9 +82,9 @@ The matrix must cover:
     Review-gated opt-in, and a smoke pass through the complete Codex marketplace/plugin
     installation, including removed-source rejection and migration guidance.
 
-A failed or unavailable mandatory row remains a failure and blocks release. It
-must not be rewritten as a limitation, waived by source inspection, or hidden
-behind a conditional support claim.
+A failed or unavailable mandatory row retains that status and blocks release
+by default, subject only to the explicit 0.6.0 exception above. It must not be
+reported as passed, waived by source inspection, or hidden in public release copy.
 
 Installed Codex evidence is mandatory. Source inspection, passing JSON, or a
 printed fallback command cannot waive the installed-host gate.
@@ -94,7 +112,8 @@ the product workflow, Autonomous/v2 migration, Astra prompt changes, breaking
 distribution changes, installation, actual verification, and unresolved evidence.
 Byte reductions are descriptive measurements; do not infer model speed or quality.
 
-After every mandatory evidence row passes, verify Git hygiene, ancestry, aligned
+After every mandatory evidence row passes, or under the explicit 0.6.0 exception,
+verify Git hygiene, ancestry, aligned
 package/plugin versions, and absence of conflicting tags/releases. Create the
 annotated tag only at the verified release commit. Historical tags are optional
 and must not be invented merely to fill a releases page.
@@ -105,7 +124,7 @@ and tags through a non-force path, publish the exact notes, update repository
 About/topics to the actual Codex/Astra scope, then read remote state back. Preserve
 existing history and published tags.
 
-The 0.6.0 source candidate remains unpublished until installed Codex startup,
-resume, clear, compaction, genuine user-owned fresh-task identity, and every
-other mandatory row pass. Source checks cannot waive a missing installed row.
-The release request does not turn unavailable evidence into success.
+The 0.6.0 release notes must state the observed startup failure and all remaining
+installed-host gaps, give the manual entry-skill workaround, and distinguish
+source, installed-helper, and actual host evidence. The maintainer's exception
+permits publication; it does not turn unavailable evidence into success.
