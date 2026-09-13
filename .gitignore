@@ -8,8 +8,13 @@ docs/superpowers/
 .worktrees/
 worktrees/
 
-# Local skills.sh install output
-.agents/
+# Legacy standalone skill output stays local; publish only the Codex catalog
+.agents/*
+!.agents/AGENTS.md
+!.agents/plugins/
+.agents/plugins/*
+!.agents/plugins/AGENTS.md
+!.agents/plugins/marketplace.json
 skills-lock.json
 
 # Operating system noise

@@ -1,7 +1,7 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.5.0",
-  "description": "Architecture-first Superpowers workflow with selected phase handoffs for Codex",
+  "version": "0.6.0",
+  "description": "Codex-only plugin for architecture-first development with GPT-6 Astra: project foundations, design, planning, TDD, reviews, and verified delivery.",
   "private": true,
   "engines": {
     "node": ">=20"
@@ -17,12 +17,12 @@
   },
   "keywords": [
     "codex",
-    "agent-skills",
-    "skills",
     "superpowers",
     "ai-coding",
     "architecture",
     "tdd",
-    "developer-tools"
+    "developer-tools",
+    "codex-plugin",
+    "gpt-6-astra"
   ]
 }

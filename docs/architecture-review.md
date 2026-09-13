@@ -42,3 +42,9 @@ Mode independently controls fresh-task or same-session progression.
 The resulting plan and implementation must preserve Design Understanding and
 Architecture Conformance. Do not turn an advisory architecture review into an
 approval token or use it to expand unrelated scope.
+
+Implementation review is a separate contract: `requesting-code-review` owns one
+task review per task and one final whole-branch review. Record complete ranges;
+finishing can reuse the exact unchanged final review. Changed source or artifact
+requirements need affected re-review. The architecture scan above does not replace
+either implementation review.

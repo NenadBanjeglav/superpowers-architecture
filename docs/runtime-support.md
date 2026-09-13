@@ -1,9 +1,8 @@
 # Runtime Support
 
 Superpowers Architecture ships one host-neutral `skills/<skill>/SKILL.md` core
-and a thin supported Codex adapter.
-
-Codex supported; Claude deferred/unadvertised.
+and a thin Codex adapter, packaged as one complete Codex plugin optimized for
+GPT-6 Astra. Claude and standalone skill installation are unsupported.
 
 Runtime support requires installed-host evidence. Reading source, manifests, or
 passing local tests is not a substitute.
@@ -12,7 +11,6 @@ passing local tests is not a substitute.
 
 | Surface | Shared core | Adapter | Required installed evidence |
 | --- | --- | --- | --- |
-| GitHub/skills.sh for Codex | Selected `skills/` packages plus shared operation core | Codex native skill runtime | discovery, complete install, policy/lifecycle/SDD invocation, and partial-install failure |
 | Codex plugin package | Shared skills, references, assets, and Node core | `.codex-plugin/plugin.json` and Codex hooks | plugin load, startup/resume/clear/compaction, migration routing, isolated review, v2 handoff, same-checkout affinity, and fallback |
 
 npm is unsupported. `package.json` is private tooling metadata.
@@ -36,7 +34,7 @@ progress, or migration state from conversation memory.
 
 ## Startup
 
-Both source hook adapters use the
+The Codex hook adapter uses the
 `startup|resume|clear|compact` SessionStart matcher and render only the six
 marked invariants from `using-superpowers` inside a 4,000-character host
 envelope. Startup directs the controller to resolve Approval Policy and migrate
@@ -44,8 +42,15 @@ active legacy gates at a safe boundary; it does not scan or mutate projects
 itself.
 
 The Codex adapter must prove actual injection on startup, resume, clear, and
-compaction. Deferred Claude files remain source adapters and are not advertised
-support.
+compaction. Codex requires review and trust of non-managed plugin hooks before
+execution; installation alone does not prove injection.
+
+## Model Choice
+
+The intended model is GPT-6 Astra. An explicit selection is preserved for all
+workers/reviewers and capability tiers. The adapter inspects the active host
+schema and reports unavailable capabilities rather than silently substituting
+another model. Plugin metadata does not enforce model configuration.
 
 ## Isolated Advisory Dispatch
 
@@ -121,8 +126,9 @@ missing or fails, including:
 - isolated review without inherited controller history;
 - v2 target acknowledgement, receive validation, and genuine fresh task identity;
 - exact same-checkout/plugin/receipt affinity and safe fallback; or
-- supported GitHub/skills.sh and plugin-package smoke passes.
+- complete Codex marketplace/plugin installation smoke checks.
 
 The current missing installed Codex startup/compaction and genuine user-owned
 fresh-task evidence remains a hard release blocker. Source verification cannot
-waive it. Publication remains separately authorized.
+waive it. Publication requires user authorization, preserved across phases, plus complete
+evidence and clean review/Git closeout.

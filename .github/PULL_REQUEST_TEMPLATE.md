@@ -12,10 +12,11 @@ If this changes skill behavior, include before/after examples or transcripts.
 
 ## Manual Testing
 
-- [ ] Codex and Claude plugin manifest JSON parses
+- [ ] Codex plugin and repository marketplace JSON parse and resolve
 - [ ] Skill frontmatter includes `name` and `description`
 - [ ] Removed active behavior is absent from shipped skills
-- [ ] Clean-session smoke test performed when behavior changed
+- [ ] Source checks and actual installed Codex evidence are distinguished
+- [ ] Applicable clean-session checks performed when behavior changed
 - [ ] Local `docs/superpowers/**` files were not committed accidentally
 
 ## Attribution

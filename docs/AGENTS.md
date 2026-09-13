@@ -12,8 +12,10 @@ Public documentation and local Superpowers working docs.
 
 ## Local Contracts
 
-- Public docs must state the exact current boundary: `Codex supported; Claude deferred/unadvertised`.
-- Public docs must distinguish exactly two supported channels: GitHub/skills.sh for Codex and the Codex plugin package. npm is unsupported and `package.json` is private tooling metadata.
+- Public docs describe Superpowers Architecture as a Codex-only plugin optimized for GPT-6 Astra.
+- Only the complete Codex plugin is supported. GitHub hosts source/releases; Claude and standalone skills.sh are removed. npm is unsupported and package.json is private tooling metadata.
+- Installation uses the repository marketplace and full plugin, with accurate new-session pickup and hook-trust requirements.
+- Prompt-size measurements describe explicit byte/read-set models, not empirical token, speed, or model-quality gains.
 - Public workflow docs must describe Workflow Policy Version 2: Autonomous is
   the default for new and existing projects, active legacy gates migrate
   narrowly on next entry, Review-gated requires a new explicit opt-in, and

@@ -18,6 +18,7 @@ What should Superpowers Architecture do?
 
 Which phase is affected?
 
+- [ ] Wayfinder / project direction
 - [ ] Brainstorming
 - [ ] Planning
 - [ ] Implementation

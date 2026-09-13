@@ -4,17 +4,13 @@ Superpowers Architecture uses manual, evidence-bearing releases. Source-tree
 inspection can catch packaging defects, but it never substitutes for running
 the installed Codex adapter.
 
-Codex supported; Claude deferred/unadvertised.
+The release package is Codex-only and optimized for GPT-6 Astra. GitHub hosts
+its source, repository marketplace, tags, and release notes. Claude adapters and
+standalone skills.sh distribution are removed; npm remains unsupported.
 
-## Supported Distribution Channels
-
-| Channel | Public artifact | Installation contract |
-| --- | --- | --- |
-| GitHub/skills.sh | This repository's shared `skills/` tree | Install through `skills.sh`; complete lifecycle and SDD workflows include `using-superpowers` |
-| Codex plugin package | `.codex-plugin/plugin.json`, shared skills, assets, and Codex hooks | Install through a supported Codex plugin or marketplace flow |
-
-npm is unsupported. `package.json` is private repository/tooling metadata and
-does not promise an npm package.
+The complete package includes .codex-plugin/plugin.json, all 16 skills, shared
+operations, assets, and Codex hooks. The one-entry repository catalog locates
+that root package; it is not another product channel.
 
 ## Manual Evidence Matrix
 
@@ -65,8 +61,8 @@ The matrix must cover:
    fifteen-field acknowledgement, Ready-to-v1 rejection, genuine user-owned
    fresh-task identity, exact same-checkout/plugin affinity, and fallback.
 10. Representative new and existing Autonomous flows, a new explicit
-    Review-gated opt-in, and a smoke pass through each supported distribution
-    channel.
+    Review-gated opt-in, and a smoke pass through the complete Codex marketplace/plugin
+    installation, including removed-source rejection and migration guidance.
 
 A failed or unavailable mandatory row remains a failure and blocks release. It
 must not be rewritten as a limitation, waived by source inspection, or hidden
@@ -91,22 +87,25 @@ Before creating a local tag, verify ancestry, package and manifest versions,
 changelog coverage, and the complete runtime surface at that commit. Any
 mismatch cancels the candidate; do not choose a convenient replacement commit.
 
-## Local-Only Tag Preparation
+## Release Preparation and Publication
 
-After every mandatory evidence row passes, release preparation may create
-annotated local historical tags and a local `v0.5.0` tag at the exact verified
-release commit. Confirm every tag resolves to its intended commit and that no
-remote tag was created. A local tag is preparation, not publication.
+Prepare release notes for the exact reviewed version and source commit. Include
+the product workflow, Autonomous/v2 migration, Astra prompt changes, breaking
+distribution changes, installation, actual verification, and unresolved evidence.
+Byte reductions are descriptive measurements; do not infer model speed or quality.
 
-## Publication Gate
+After every mandatory evidence row passes, verify Git hygiene, ancestry, aligned
+package/plugin versions, and absence of conflicting tags/releases. Create the
+annotated tag only at the verified release commit. Historical tags are optional
+and must not be invented merely to fill a releases page.
 
-Pushing commits or tags and creating GitHub releases are separate externally
-visible actions. They require a new explicit user request after the complete
-manual matrix passes and local refs are reported. Publication then verifies the
-remote refs and release artifacts; it must not force-push, rewrite history,
-merge, open a pull request, or discard local work unless separately requested.
+External publication needs explicit user authorization; carry existing authority
+across phases instead of requiring a newly timed approval. Push reviewed source
+and tags through a non-force path, publish the exact notes, update repository
+About/topics to the actual Codex/Astra scope, then read remote state back. Preserve
+existing history and published tags.
 
-The current 0.5.0 preparation remains blocked until the refreshed installed
-Codex package passes its genuine startup and compaction canary and every other
-required Codex environment row is recorded as passing evidence. Clean Git and
-review closeout are required before a merge-readiness claim.
+The 0.6.0 source candidate remains unpublished until installed Codex startup,
+resume, clear, compaction, genuine user-owned fresh-task identity, and every
+other mandatory row pass. Source checks cannot waive a missing installed row.
+The release request does not turn unavailable evidence into success.

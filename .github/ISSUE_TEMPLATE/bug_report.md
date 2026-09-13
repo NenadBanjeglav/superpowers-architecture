@@ -8,7 +8,8 @@ assignees: ""
 
 ## Environment
 
-- Runtime and version:
+- Codex client and version:
+- Selected model (intended: GPT-6 Astra):
 - Plugin version:
 - Operating system:
 

@@ -1,6 +1,23 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (Unreleased)
+
+- **Breaking distribution change:** ships only the complete Codex plugin, optimized
+  for GPT-6 Astra. Removes retained Claude adapters, standalone skills.sh install
+  routes, and skills-install handoffs; unsupported inputs fail explicitly.
+- Adds a one-entry repository marketplace for the root Codex plugin and documents
+  full-package upgrades, new-session pickup, and hook trust.
+- Shortens all 16 skill descriptions and removes repeated coaching/diagrams.
+  Detailed templates and Foundation/SDD procedures have direct conditional owners.
+- Preserves the architecture phases, exact lifecycle/receipt contracts, TDD, and
+  review checks. Removes punitive work deletion and silent model escalation.
+- Reuses current evidence across messages, reviews complete task ranges, and
+  reuses one exact unchanged final review during finishing.
+- Aligns README, plugin/package copy, installation, and repository metadata
+  preparation with Codex-only packaging and the Astra model choice.
+- Keeps mandatory installed-host release evidence distinct from local source
+  checks and descriptive prompt-size measurements.
+
 
 - **Breaking workflow change:** defaults new and existing projects to Autonomous
   under Workflow Policy Version 2; Review-gated now requires a new explicit
@@ -21,8 +38,6 @@
   review packages and rejects stale dependencies.
 - Makes advisory document review policy-aware: `Ready for progression`,
   `Ready for user review`, or `Issues found`; reviewers never approve.
-- Sets the current release boundary to `Codex supported; Claude deferred/unadvertised`.
-- Supports exactly two distribution channels: GitHub/skills.sh for Codex and the Codex plugin package; removes the Claude marketplace catalog and defers the retained thin adapter source.
 - Requires genuine installed-Codex startup-context evidence as the remaining runtime gate before clean closeout and merge readiness.
 - **Breaking:** removes `project-setup` without an alias and makes `wayfinder` the sole documentation-only skill for project inception and project-wide reorientation.
 - Adds the deterministic Agentic Foundation lifecycle, Root Router, compact dashboard, Project Blueprint, immutable Decision Ledger, and Blueprint-traceable roadmap outcomes.
@@ -30,6 +45,9 @@
 - Adds one combined Design Change Set review and reuses the operation-owned candidate-root `APPLIED.json` as the sole Foundation Application Receipt.
 - Carries exact Design Spec, base Foundation, receipt, and resulting Foundation identities into Planning and implementation without requiring base/result equality for non-empty candidates.
 - Keeps the phase-handoff record fixed at fifteen fields and carries policy and external bindings in the v2 envelope after policy-aware readiness.
+
+Historical entries below document source versions; they do not establish that
+corresponding GitHub tags or releases were published.
 
 ## 0.5.0
 

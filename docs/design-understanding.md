@@ -40,7 +40,8 @@ Planning, TDD, implementation, task review, and whole-branch review.
 
 ## Durable Documentation Impact
 
-Every Foundation-backed decision receives a stable `DDI-NNN` identity,
+Every design decision receives a stable `DDI-NNN` identity. Foundation-backed
+durable changes additionally bind the candidate and its receipt. Record a
 concrete classification reason, exact current-truth owner, and candidate action
 identity or `none`:
 

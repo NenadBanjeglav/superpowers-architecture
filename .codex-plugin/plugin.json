@@ -1,7 +1,7 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.5.0",
-  "description": "Architecture-first Superpowers for Codex: Wayfinder Agentic Foundations, one Design Change Set, exact phase handoffs, TDD, reviews, and verified implementation.",
+  "version": "0.6.0",
+  "description": "Codex-only plugin for architecture-first development with GPT-6 Astra: project foundations, design, planning, TDD, reviews, and verified delivery.",
   "author": {
     "name": "Nenad Banjeglav"
   },
@@ -10,18 +10,19 @@
   "license": "MIT",
   "keywords": [
     "codex",
-    "agent-skills",
     "superpowers",
     "architecture",
     "tdd",
-    "developer-tools"
+    "developer-tools",
+    "codex-plugin",
+    "gpt-6-astra"
   ],
   "skills": "./skills/",
   "hooks": "./hooks/hooks-codex.json",
   "interface": {
     "displayName": "Superpowers Architecture",
-    "shortDescription": "Architecture-first Superpowers workflow for Codex",
-    "longDescription": "Use Superpowers Architecture to establish a Wayfinder Agentic Foundation and Blueprint-traceable roadmap, design one outcome as a stable DDI/FCA Design Change Set, apply the reviewed Foundation candidate, verify the resulting Foundation, install APPLIED.json as the sole Application Receipt, and carry exact policy-accepted artifacts through verified phase handoffs, TDD, reviews, and final verification. Autonomous is the default for new and existing workflows; Review-gated requires a new explicit opt-in.",
+    "shortDescription": "Architecture-first Superpowers for Codex and GPT-6 Astra",
+    "longDescription": "Take a project from a clear foundation through design, planning, implementation, review, and verification in Codex. Optimized for GPT-6 Astra with concise prompts and relevant reference loading. Autonomous execution is the default for new and existing projects; architecture, TDD, and review checks remain built in. Review-gated is an explicit opt-in. Phase Mode independently controls same-session or verified fresh-session progression.",
     "developerName": "Nenad Banjeglav",
     "category": "Coding",
     "capabilities": [
@@ -30,9 +31,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use Wayfinder to establish the Agentic Foundation and a Blueprint-traceable roadmap for my project.",
-      "Design one ready roadmap outcome as a single exact Design Change Set before implementation.",
-      "Carry the policy-accepted spec, resulting Agentic Foundation, and Foundation Application Receipt through exact phase handoffs."
+      "Use wayfinder to establish my project foundation.",
+      "Use brainstorming to design and implement one bounded outcome.",
+      "Review my codebase architecture and recommend focused improvements."
     ],
     "websiteURL": "https://github.com/NenadBanjeglav/superpowers-architecture",
     "brandColor": "#2563EB",

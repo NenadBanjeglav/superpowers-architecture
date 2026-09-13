@@ -17,6 +17,10 @@ Codex plugin packaging metadata for Superpowers Architecture.
 - Plugin metadata must use **Superpowers Architecture** as the product name and **Architecture-first Superpowers** as positioning.
 - Public workflow prompts must describe policy-accepted artifacts and the Autonomous default; do not imply that every phase requires human Approved state.
 - Keep the manifest version aligned with `package.json`.
+- Describe the Codex-only package and Astra optimization in user-facing terms.
+  Model selection stays in Codex configuration and runtime dispatch; metadata
+  must not imply it forces a model.
+- The repository marketplace points to this root package; do not duplicate it.
 - Do not use unrelated third-party privacy or terms URLs. Add policy links only for separately approved, repository-owned plugin policies.
 - Codex support and release claims require installed-plugin evidence for startup/resume/compaction behavior, isolated dispatch, exact-checkout phase handoff, and safe fallback.
 

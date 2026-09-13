@@ -1,6 +1,7 @@
 # Workflow
 
-Superpowers Architecture separates **Approval Policy** from **Phase Mode**.
+Superpowers Architecture is a Codex-only plugin optimized for GPT-6 Astra.
+It separates **Approval Policy** from **Phase Mode**.
 
 - Approval Policy controls whether exact internally reviewed Ready artifacts can
   progress. Version 2 defaults new and existing work to Autonomous.
@@ -109,10 +110,25 @@ one uninterrupted context.
 
 ## 5. Finish
 
-`finishing-a-development-branch` runs fresh verification, confirms review and
-task evidence, inspects Git/index state, and reports commits, changed files,
+`finishing-a-development-branch` confirms current verification and exact task/
+whole-branch review coverage, inspects Git/index state, and reports commits, changed files,
 tests, satisfied requirements, residual risks, ignored artifacts, and installed
 runtime limitations.
 
 It does not push, merge, open a PR, deploy, publish, discard work, or perform
 destructive cleanup without separate authorization.
+
+## Relevant Context and Evidence
+
+All 16 skills retain their roles. Short catalog descriptions identify when each
+applies; Foundation, migration, and handoff procedures load when needed. Generic
+work still validates explicit absent Foundation bindings. Read-only questions
+do not start an unsolicited design phase.
+
+Within an uninterrupted context, reuse checks and the one final whole-branch
+review when their exact inputs/coverage are unchanged. Changed bytes, dependencies,
+branch/checkout, possible external writers, resume, and compaction require the
+applicable reread/revalidation. Required integrated checks remain mandatory.
+
+Workers and reviewers preserve the explicit Astra choice. A blocked task calls
+for better evidence, diagnosis, context, or decomposition before another attempt.

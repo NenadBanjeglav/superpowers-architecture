@@ -1,149 +1,130 @@
 # Superpowers Architecture
 
-[![skills.sh](https://skills.sh/b/NenadBanjeglav/superpowers-architecture)](https://skills.sh/NenadBanjeglav/superpowers-architecture)
+**Architecture-first Superpowers for Codex, optimized for GPT-6 Astra.**
 
-Architecture-first Superpowers for Codex.
+Superpowers Architecture is a Codex plugin that carries a project from a clear
+foundation through design, planning, implementation, review, and verification.
+Autonomous execution is the default; architecture and quality checks remain
+built in.
 
-Codex supported; Claude deferred/unadvertised.
+The complete Codex plugin is the only supported package. It includes all
+16 skills, shared Node.js operations, and startup hooks. Claude, standalone
+skills.sh installation, and npm distribution are unsupported.
 
-Superpowers Architecture is a shared skill pack and Codex runtime plugin. It
-keeps written design, concrete plans, TDD, review, worktree-aware implementation,
-task commits, and final verification, and adds Wayfinder, an exact Agentic
-Foundation lifecycle, automatic legacy-gate migration, and one Architecture
-Conformance contract.
+## Install
 
-## Workflow Policy
+Requires Node.js 20+ and a Codex client with plugin support. Select GPT-6 Astra
+in Codex; the plugin preserves that choice for workers and reviewers.
 
-Workflow Policy Version 2 defaults new and existing projects to
-**Autonomous**. Once the goal and constraints are understood, the agent designs,
-plans, implements, repairs review findings, tests, and verifies without repeated
-document approvals. **Review-gated** is available only after a new explicit
-opt-in.
+After v0.6.0 is published:
 
-Existing projects are migrated automatically on their next active
-Superpowers Architecture entry. The agent prepares and reviews a narrow
-transaction that removes legacy workflow gates while preserving business,
-safety, privacy, data, publication, deployment, and external-action constraints,
-user work, Phase Mode, and immutable decision history. It does not scan dormant
-projects globally or ask for migration approval.
-
-Artifacts use truthful lifecycle states:
-
-- **Draft** is incomplete and never progresses.
-- **Ready** passed applicable internal checks for its exact revision and carries
-  no human approval metadata.
-- **Approved** records real human approval of that exact revision.
-
-Autonomous accepts Ready or Approved. Review-gated accepts Approved only. Legacy
-v1 callers remain strict and cannot consume Ready.
-
-## Quickstart
-
-Install all shared skills for Codex:
-
-```bash
-npx skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -a codex -g -y
+```sh
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.6.0
+codex plugin add superpowers-architecture@superpowers-architecture
 ```
 
-On Windows PowerShell, use `npx.cmd` when execution policy blocks `npx.ps1`.
-Node.js 20 or newer is required for lifecycle, Foundation, migration, handoff,
-startup, workspace, and SDD operations.
+Start a new Codex session. Review and trust this plugin's startup hook through
+Codex's hook controls when prompted. See [Installation](docs/installation.md)
+for local development, upgrades, and migration.
 
-Then start or reorient a project with:
+**Release status:** 0.6.0 is a source candidate. Publication remains pending
+the mandatory installed-host evidence in the [Release Contract](docs/release.md).
+
+## Start Working
+
+For a new project or a change in project direction:
 
 ```text
-Use the wayfinder skill to establish the Agentic Foundation for <project>.
+Use wayfinder to establish the Agentic Foundation for my project.
 ```
 
-The Codex plugin package is the second supported channel and adds startup hooks.
-npm is unsupported; `package.json` is private tooling metadata.
+For one bounded feature in an established project:
 
-## Agentic Foundation
+```text
+Use brainstorming to design <outcome>, then carry it through implementation and verification.
+```
 
-`wayfinder` creates a documentation-only project foundation:
+For a regression, start with `systematic-debugging`. A read-only explanation
+does not create unsolicited design artifacts.
 
-- root `AGENTS.md` owns operating policy, permissions, reading routes, and
-  Phase Mode;
-- root `CONTEXT.md` is the compact current-state dashboard;
-- `docs/agentic/WAYFINDING.md` is the sole lifecycle manifest;
-- `PROJECT-BLUEPRINT.md` owns project-wide requirements and stable identities;
-- product, domain, architecture, decision, roadmap, and verification documents
-  each own one current-truth area; and
-- `DECISIONS.md` keeps an append-only immutable ledger while its Current
-  Decision Index identifies decisions in force.
+## The Workflow
 
-The manifest-selected bundle has one canonical Draft, Ready, or Approved
-SHA-256 revision. Roadmap outcomes link Blueprint requirements and carry exact
-bounded Brainstorming prompts.
+1. **Wayfinder** establishes or resumes a documentation-only Agentic Foundation:
+   project direction, architecture, a Blueprint, and a traceable roadmap.
+2. **Brainstorming** designs one bounded outcome, records architecture decisions,
+   and reviews any durable documentation changes together.
+3. **Planning** binds an actionable implementation plan to the exact accepted
+   design and, when applicable, the resulting Foundation and application receipt.
+4. **Implementation** follows TDD, preserves the chosen module interfaces and
+   seams, and resolves task review findings.
+5. **Finishing** verifies acceptance, confirms one final whole-branch review,
+   and reports the actual result and Git state.
 
-## Phase Flow
+A single Architecture Conformance rubric follows modules, interfaces, seams,
+adapters, data flow, depth, locality, leverage, and public test surfaces through
+every phase.
 
-1. `wayfinder` establishes or resumes the Foundation, Approval Policy, Phase
-   Mode, Blueprint, and roadmap. It reviews the exact Foundation and progresses
-   to Ready under Autonomous or a readable user package under Review-gated.
-2. `brainstorming` designs one bounded outcome. Every decision receives a
-   stable DDI identity and durable changes use exact FCA actions.
-3. Foundation-backed design previews one complete ignored candidate and readable
-   Design Change Set. Policy-aware apply writes a v2 receipt, preserves empty
-   change-set bytes/timestamps, and records Ready or Approved truthfully.
-4. `writing-plans` validates the exact spec, Foundation base, receipt, and
-   result before reading code. It writes and reviews an exact implementation
-   plan, then progresses according to policy.
-5. `subagent-driven-development` or `executing-plans` validates exact bound
-   inputs, implements with TDD, repairs findings, and runs task and whole-branch
-   review.
-6. `finishing-a-development-branch` verifies and summarizes local work.
-   Push, merge, PR creation, deployment, publication, destructive cleanup, and
-   communication with others remain separately authorized.
+## Autonomous by Default
 
-Approval Policy and Phase Mode are independent. Automated fresh-session mode
-uses a v2 envelope around an exact fifteen-field record. The envelope binds
-policy, goal, authoritative constraints, receipt, and Brainstorming prompt.
-Each target revalidates the exact same checkout and dependencies. A fork,
-subagent, copied ignored artifact, or nearby worktree is never described as a
-fresh user-owned task. Same-session mode rereads changed inputs from disk.
+Once the goal and constraints are understood, Codex handles in-scope design,
+plan, implementation, test, documentation, and review repairs without repeated
+document approvals. Existing projects migrate active legacy approval gates
+narrowly and transactionally on their next workflow entry. Their goals,
+constraints, user work, Phase Mode, and immutable decision history are preserved.
 
-## Local Working State
+- **Draft:** incomplete or changed; never executable.
+- **Ready:** internally reviewed for the exact revision; no human approval claim.
+- **Approved:** genuinely approved by a person for that exact revision.
 
-Generated downstream state is ignored and not committed by default:
+Autonomous accepts Ready or Approved. **Review-gated** requires a new explicit
+opt-in and accepts Approved only. Legacy v1 consumers remain strict and cannot
+consume Ready.
 
-- `docs/superpowers/specs/`
-- `docs/superpowers/plans/`
-- `docs/superpowers/architecture-reviews/`
-- `docs/superpowers/foundation-candidates/`
-- `docs/superpowers/workflow-migrations/`
-- `docs/superpowers/verification/`
+Approval Policy and **Phase Mode** are independent. Same-session mode rereads
+current artifacts from disk. Automated fresh-session mode requires a genuine
+user-owned task in the exact same checkout with verified plugin and artifact
+bindings. If the host cannot prove that, it uses the recorded fallback.
+A subagent, fork, or copied artifact cannot substitute.
 
-## Distribution and Evidence
+Push, merge, PR creation, deployment, publication, messages to others, and
+destructive actions require user authorization. Existing authorization is
+preserved; the workflow does not ask for it again at every phase.
 
-Exactly two channels are supported:
+## What Changed for Astra
 
-- GitHub/skills.sh for Codex;
-- the Codex plugin package.
+Following OpenAI's
+[guidance on skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra),
+the catalog uses short, distinct triggers and skills load detailed procedures
+when needed. Repeated coaching and redundant diagrams are removed. Verification
+reuses current evidence; reviews cover complete task ranges and reuse an exact
+unchanged final review.
 
-Runtime and release claims require executed installed-Codex evidence. Source
-inspection and passing local tests cannot replace startup, resume, clear,
-compaction, plugin inventory, isolated dispatch, genuine fresh-task, exact
-same-checkout, and fallback evidence. The current missing installed startup and
-compaction matrix remains a hard release blocker. Publication requires a
-separate explicit request after clean review and Git closeout.
+The architecture workflow, TDD, review, exact lifecycle, and Foundation contracts
+remain. Smaller prompts are not a measured performance claim.
+
+## Local Project Documentation
+
+Wayfinder gives current truth one owner, links Blueprint requirements to roadmap
+outcomes, and preserves an append-only Decision Ledger. The Foundation exists
+in deliberate downstream projects, not inside this plugin repository.
+
+Generated specs, plans, reviews, Foundation candidates, migration records, and
+verification beneath `docs/superpowers/` remain ignored and unstaged unless
+you request otherwise.
 
 ## Documentation
 
-- [Installation](docs/installation.md)
+- [Installation and migration](docs/installation.md)
 - [Workflow](docs/workflow.md)
 - [Design Understanding](docs/design-understanding.md)
 - [Architecture Review](docs/architecture-review.md)
 - [Runtime Support](docs/runtime-support.md)
 - [Release Contract](docs/release.md)
-- [Workflow Policy](skills/using-superpowers/references/workflow-policy.md)
-- [Artifact Lifecycle](skills/using-superpowers/references/artifact-lifecycle.md)
-- [Agentic Foundation Lifecycle](skills/using-superpowers/references/agentic-foundation-lifecycle.md)
-- [Phase Handoff Contract](skills/using-superpowers/references/phase-handoff.md)
+- [Changelog](CHANGELOG.md)
 
 ## Attribution
 
-This project adapts ideas, workflow structure, and selected MIT-licensed
-material from [obra/superpowers](https://github.com/obra/superpowers) and
-[mattpocock/skills](https://github.com/mattpocock/skills). It is independent and
-not officially affiliated with either project.
+Adapted from [obra/superpowers](https://github.com/obra/superpowers) and
+[mattpocock/skills](https://github.com/mattpocock/skills), with MIT attribution
+in [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE). This project is independent
+and is not officially affiliated with OpenAI or either upstream project.
