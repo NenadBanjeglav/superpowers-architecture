@@ -46,10 +46,10 @@ An unmanaged post-approval edit leaves stale metadata. Validation recomputes the
 
 ## Packaging and Failure Policy
 
-Plugin installs always bundle `using-superpowers` and this operation module. A complete skills.sh lifecycle or SDD installation must include `using-superpowers` alongside every consuming phase skill. If the sibling operation module is missing, fail closed and print this full-package install command:
-
-```powershell
-npx.cmd skills@latest add NenadBanjeglav/superpowers-architecture --skill '*' -y
-```
+The complete Codex plugin bundles `using-superpowers`, this operation module,
+and every consuming phase skill. Standalone or partial skill installation is
+unsupported. If the sibling operation module is missing, fail closed and direct
+the user to reinstall the complete Codex plugin using the supported route in
+the package's `docs/installation.md`; do not reconstruct missing helpers.
 
 Node.js 20 or newer is a correctness prerequisite. Missing Node or a missing operation module never falls back to chat history, manual digest guesses, or a claimed successful phase transition.

@@ -12,11 +12,11 @@ Codex plugin packaging metadata for Superpowers Architecture.
 ## Local Contracts
 
 - Keep this scope Codex-specific.
-- Do not add Claude install support here; Claude Code packaging belongs under `.claude-plugin/`.
+- This is the sole runtime package; do not add another runtime adapter or standalone installation channel.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
 - Plugin metadata must use **Superpowers Architecture** as the product name and **Architecture-first Superpowers** as positioning.
 - Public workflow prompts must describe policy-accepted artifacts and the Autonomous default; do not imply that every phase requires human Approved state.
-- Keep the manifest version aligned with `package.json` and the Claude plugin manifest.
+- Keep the manifest version aligned with `package.json`.
 - Do not use unrelated third-party privacy or terms URLs. Add policy links only for separately approved, repository-owned plugin policies.
 - Codex support and release claims require installed-plugin evidence for startup/resume/compaction behavior, isolated dispatch, exact-checkout phase handoff, and safe fallback.
 

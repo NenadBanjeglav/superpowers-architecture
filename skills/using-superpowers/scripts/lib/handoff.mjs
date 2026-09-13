@@ -42,7 +42,7 @@ const PHASE_ARTIFACTS = Object.freeze({
   planning: 'Design Spec',
   implementation: 'Implementation Plan',
 });
-const PLUGIN_SOURCES = new Set(['installed', 'local-plugin-dir', 'skills-install']);
+const PLUGIN_SOURCES = new Set(['installed', 'local-plugin-dir']);
 const WORKTREE_IDENTITIES = new Set(['main-checkout', 'linked-worktree', 'codex-managed-worktree', 'detached']);
 
 function fail(message) {
@@ -193,7 +193,9 @@ function validateRecordShape(record, revisionField) {
   assertRevision(record[revisionField], revisionField);
   if (record.workspacePolicy !== 'same-checkout') fail('workspacePolicy must be same-checkout.');
   if (!WORKTREE_IDENTITIES.has(record.worktreeIdentity)) fail(`unsupported worktreeIdentity ${record.worktreeIdentity}.`);
-  if (!PLUGIN_SOURCES.has(record.pluginSource)) fail(`unsupported pluginSource ${record.pluginSource}.`);
+  if (!PLUGIN_SOURCES.has(record.pluginSource)) {
+    fail(`unsupported pluginSource ${record.pluginSource}. Install the complete Codex plugin, then prepare a new handoff using installed or local-plugin-dir; do not rewrite an existing envelope.`);
+  }
   const sourceNone = record.sourceSpecPath === 'none' && record.sourceSpecRevision === 'none';
   const sourceBoth = record.sourceSpecPath !== 'none' && record.sourceSpecRevision !== 'none';
   if (!sourceNone && !sourceBoth) fail('source-spec path and revision must be both none or both exact values.');
@@ -215,16 +217,10 @@ async function validatePlugin(record, hostEvidenceRequired) {
   }
   if (record.pluginRoot === 'none') fail(`${record.pluginSource} requires an absolute pluginRoot.`);
   const root = await physicalDirectory(record.pluginRoot, 'pluginRoot');
-  if (record.pluginSource === 'local-plugin-dir') {
-    await physicalFile(join(root, '.codex-plugin', 'plugin.json'), root, 'local plugin manifest');
-    await physicalFile(join(root, 'skills', 'using-superpowers', 'SKILL.md'), root, 'local shared using-superpowers skill');
-    await physicalFile(join(root, 'skills', 'using-superpowers', 'scripts', 'spa.mjs'), root, 'local shared operation entry point');
-    hostEvidenceRequired.add('local-plugin-runtime-binding');
-  } else {
-    const skillPath = join(root, 'using-superpowers', 'SKILL.md');
-    await physicalFile(skillPath, root, 'skills-install using-superpowers skill');
-    hostEvidenceRequired.add('skills-install-inventory');
-  }
+  await physicalFile(join(root, '.codex-plugin', 'plugin.json'), root, 'local plugin manifest');
+  await physicalFile(join(root, 'skills', 'using-superpowers', 'SKILL.md'), root, 'local shared using-superpowers skill');
+  await physicalFile(join(root, 'skills', 'using-superpowers', 'scripts', 'spa.mjs'), root, 'local shared operation entry point');
+  hostEvidenceRequired.add('local-plugin-runtime-binding');
 }
 
 async function readUtf8(path, subject) {

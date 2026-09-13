@@ -99,7 +99,7 @@ Before launch:
    path. A generic request for a new worktree does not preserve an existing
    linked or Codex-managed worktree and cannot satisfy `same-checkout`.
 3. Satisfy every item returned in `hostEvidenceRequired` through the active host.
-   Installed or skills-install inventory and local-plugin runtime binding cannot
+   Installed plugin inventory and local-plugin runtime binding cannot
    be asserted through a CLI option. For `local-plugin-dir`, launch only if the
    app or saved project configuration proves it will load the exact `pluginRoot`.
 4. Treat shared `handoff prepare` validation as current mechanical evidence;

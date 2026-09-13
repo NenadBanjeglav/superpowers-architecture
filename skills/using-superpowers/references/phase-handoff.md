@@ -34,7 +34,7 @@ New handoffs use this exact envelope shape and field order:
     "sourceSpecRevision": "sha256 digest or none",
     "foundationManifestPath": "absolute WAYFINDING.md path or none",
     "foundationRevision": "sha256 digest or none",
-    "pluginSource": "installed | local-plugin-dir | skills-install",
+    "pluginSource": "installed | local-plugin-dir",
     "pluginRoot": "verified absolute path or none",
     "workspacePolicy": "same-checkout"
   },
@@ -110,11 +110,16 @@ Prepare and receive both:
 
 `launchAuthorized` is false while any host proof remains. Typical required
 proofs are installed-plugin inventory, exact local-plugin runtime binding,
-skills-install inventory, Codex-managed worktree identity, and receiver-side
+Codex-managed worktree identity, and receiver-side
 fresh user-owned session identity. An adapter must satisfy these through the
 active host; it cannot pass a CLI flag that merely asserts they are true.
 
 ## V1 Compatibility
+
+Only the complete Codex plugin is supported. Historical `skills-install`
+handoffs fail without mutation: install the complete plugin and prepare a new
+envelope from current validated artifacts. Never reinterpret the old envelope
+or replace its source value while retaining its revision.
 
 A legacy record keeps its original fifteen fields and `approvedRevision` name.
 It has Review-gated semantics and accepts only a genuinely Approved artifact and

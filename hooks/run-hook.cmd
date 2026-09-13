@@ -9,7 +9,6 @@ if "%~1"=="" (
 
 set "HOST="
 if /I "%~1"=="session-start-codex" set "HOST=codex"
-if /I "%~1"=="session-start-claude" set "HOST=claude"
 if not defined HOST (
   >&2 echo run-hook.cmd: unsupported hook script %~1
   exit /b 2
@@ -36,4 +35,8 @@ if [ -z "$script_name" ]; then
   exit 1
 fi
 shift
+if [ "$script_name" != "session-start-codex" ]; then
+  echo "run-hook.cmd: unsupported hook script $script_name" >&2
+  exit 2
+fi
 exec bash "$script_dir/$script_name" "$@"

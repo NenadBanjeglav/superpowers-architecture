@@ -3,7 +3,6 @@ import { isAbsolute, resolve } from 'node:path';
 
 const START_MARKER = '<!-- STARTUP-CONTRACT:START -->';
 const END_MARKER = '<!-- STARTUP-CONTRACT:END -->';
-const HOSTS = new Set(['codex', 'claude']);
 const NODE_DEGRADED_CONTEXT = 'Superpowers Architecture degraded mode: Node.js is unavailable. Manually load and follow using-superpowers before any action. Correctness-critical helpers and phase handoffs must stop until Node.js is installed.';
 
 function fail(message) {
@@ -34,7 +33,7 @@ function buildEnvelope(additionalContext) {
 }
 
 export async function renderStartupContext({ host, pluginRoot, degradedReason } = {}) {
-  if (!HOSTS.has(host)) fail(`Startup host must be codex or claude; received ${JSON.stringify(host)}.`);
+  if (host !== 'codex') fail(`Startup host must be codex; received ${JSON.stringify(host)}.`);
   if (degradedReason) {
     const additionalContext = degradedReason === 'Node.js is unavailable.'
       ? NODE_DEGRADED_CONTEXT
@@ -48,6 +47,5 @@ export async function renderStartupContext({ host, pluginRoot, degradedReason } 
   const skillPath = resolve(root, 'skills', 'using-superpowers', 'SKILL.md');
   const skillText = await readFile(skillPath, 'utf8');
   const contract = extractStartupContract(skillText, skillPath);
-  const hostName = host === 'codex' ? 'Codex' : 'Claude Code';
-  return buildEnvelope(`Superpowers Architecture startup contract for ${hostName}:\n\n${contract}`);
+  return buildEnvelope(`Superpowers Architecture startup contract for Codex:\n\n${contract}`);
 }

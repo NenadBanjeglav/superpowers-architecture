@@ -12,7 +12,7 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 
 ## Local Contracts
 
-- Keep skills shared across Codex and Claude Code by using `skills/<skill>/SKILL.md`.
+- Keep canonical `skills/<skill>/SKILL.md` files bundled in the complete Codex plugin; standalone skills.sh installation and Claude adapters are unsupported.
 - Shared skill workflow policy must stay runtime-neutral; host-specific tool and install details belong in runtime adapters or `skills/using-superpowers/references/`.
 - Shared skills use bare canonical skill identities. Plugin namespaces, host tool names, context flags, session flags, and concrete model identifiers belong only in runtime references.
 - `skills/using-superpowers/references/dispatch-contract.md` owns the host-neutral subagent request. Isolation means no parent conversation turns and must be verified by the runtime adapter; capability tiers map only to choices advertised by the active host, with explicit user model choices taking precedence.

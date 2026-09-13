@@ -6,20 +6,18 @@ Plugin hook manifests and hook runner scripts.
 
 ## Ownership
 
-- Owns `hooks/hooks.json`.
 - Owns `hooks/hooks-codex.json`.
-- Owns `hooks/session-start-claude`.
 - Owns `hooks/session-start-codex`.
 - Owns hook scripts and cross-platform wrappers under `hooks/`.
 - `.codex-plugin/AGENTS.md` owns the Codex plugin manifest that references these hooks.
 
 ## Local Contracts
 
-- Keep Codex and deferred Claude hook manifests separate: `hooks/hooks-codex.json` uses `${PLUGIN_ROOT}`, and `hooks/hooks.json` uses `${CLAUDE_PLUGIN_ROOT}`.
+- `hooks/hooks-codex.json` is the sole hook manifest and uses `${PLUGIN_ROOT}`. Launchers accept only `session-start-codex`.
 - `skills/using-superpowers/SKILL.md` owns the single marked startup contract. Hook adapters inject only that marked text inside a host envelope; they must not duplicate policy or inject the full skill body.
-- Codex and deferred Claude output uses `hookSpecificOutput.hookEventName: SessionStart`, includes all six marked invariants, and stays at or below 4,000 characters.
+- Codex output uses `hookSpecificOutput.hookEventName: SessionStart`, includes all six marked invariants, and stays at or below 4,000 characters.
 - Missing Node.js emits valid host JSON with the exact degraded-mode context and exits zero only for startup rendering; correctness-critical helpers still fail closed.
-- Keep both source adapters on the `startup|resume|clear|compact` matcher. Codex is the sole installed-host release gate; deferred Claude source is not advertised support.
+- Keep the Codex adapter on the `startup|resume|clear|compact` matcher. Installed Codex evidence remains the release gate.
 
 ## Work Guidance
 
@@ -30,7 +28,7 @@ Plugin hook manifests and hook runner scripts.
 ## Verification
 
 - Parse hook JSON after edits.
-- Assert both host manifests match startup, resume, clear, and compact session starts.
+- Assert the Codex manifest matches startup, resume, clear, and compact session starts; removed host/launcher inputs fail without running a hook.
 - Check script references and shell syntax for changed hook scripts.
 - Measure both normal and degraded payloads and assert the 4,000-character gate.
 
