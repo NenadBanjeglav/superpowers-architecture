@@ -31,6 +31,10 @@ For a read-only explanation or review, inspect the requested scope without
 creating an unsolicited phase artifact. A missing Foundation alone does not
 turn a read-only request into project inception.
 
+A bounded outcome in an established project may use brainstorming's generic
+workflow with explicit absent Foundation bindings. Route missing-Foundation
+work to wayfinder when establishing or reorienting project-wide direction.
+
 ## Policy and Authority
 
 Approval Policy defaults to **Autonomous** for new and existing projects.

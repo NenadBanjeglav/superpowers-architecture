@@ -142,10 +142,12 @@ If the installed receiver supports only v1 and the current artifact is Ready,
 do not launch: v1 accepts only genuinely Approved inputs. If no project path equals `checkoutRoot`, an exact linked/managed/detached
 workspace cannot be addressed, receipt affinity or local plugin affinity is not
 guaranteed, or the active API has no exact-path guarantee, use the safe fallback:
-decline automatic launch, print the complete canonical prompt and
-handoff envelope unchanged, tell the user to open a new task in the exact
-checkout, and stop. Never copy an ignored `docs/superpowers/**` artifact or
-receipt to make another checkout appear equivalent.
+decline automatic launch and provide the complete canonical prompt and handoff
+envelope unchanged with the specific missing proof. If the durable Phase Mode
+already permits same-session fallback, reread and validate the exact inputs and
+continue locally. Otherwise tell the user to open a new task in the exact
+checkout and stop. Never copy an ignored `docs/superpowers/**` artifact or receipt
+to make another checkout appear equivalent.
 
 On success, report the new task identity and emit the Codex App
 `created-thread` directive required by the host.
