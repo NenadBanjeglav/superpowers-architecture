@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Use before planning or implementation for one bounded feature, roadmap outcome, behavior, app, site, tool, component, UI, API, workflow, or architecture change
+description: Use to design one bounded outcome before planning or implementation.
 ---
 
 # Brainstorming
@@ -9,9 +9,12 @@ Brainstorming turns one bounded goal into one architecture-aware Design Spec.
 It owns feature-level design and any prospective Foundation change caused by
 that design. It does not implement code.
 
-Read `using-superpowers`, applicable instructions, the workflow policy,
-artifact lifecycle, Foundation lifecycle when present, and Architecture
-Conformance before writing.
+Read `using-superpowers`, applicable instructions,
+[artifact-lifecycle.md](../using-superpowers/references/artifact-lifecycle.md),
+and [Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md)
+before writing. Read workflow migration details only for active legacy gates,
+Foundation lifecycle for non-none Foundation inputs, and phase-handoff details
+only when receiving or preparing a fresh-session envelope.
 
 ## Entry
 
@@ -67,73 +70,8 @@ Save the local artifact under
 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`. Keep it ignored and
 unstaged.
 
-Use this shape:
-
-```markdown
-# <Title> Design Spec
-
-**Source:** <request, roadmap outcome, and authoritative constraint source>
-**Date:** YYYY-MM-DD
-**Artifact Type:** Design Spec
-**Status:** Draft
-**Revision:** none
-**Approved Revision:** none
-**Approved At:** none
-**Approval Policy:** Autonomous | Review-gated
-**Workflow Policy Version:** 2
-**Phase Mode:** Automated fresh-session mode | Same-session mode
-
-## Problem
-## Goal
-## Non-Goals
-## Design Understanding
-### Language
-### Architecture
-### Key Decisions
-### Open Risks
-## Foundation Traceability
-**Foundation Manifest:** <absolute WAYFINDING.md path or none>
-**Base Agentic Foundation:** <exact revision or none>
-**Roadmap Outcome:** <OUT-NNN or none>
-**Blueprint Requirements:** <identities or none>
-**Prior Decisions:** <identities or none>
-## Durable Documentation Impact
-## Foundation Candidate Declaration
-## User-Facing Behavior
-## Implementation Shape
-## Testing Strategy
-## Acceptance Criteria
-```
-
-Every design decision receives a stable `DDI-NNN` row and exactly one
-classification:
-
-- **Task-local:** authoritative in this Design Spec;
-- **Project-durable:** updates a focused Foundation current-truth owner and
-  appends immutable Decision Ledger evidence;
-- **Operating-contract:** updates the exact AGENTS.md owner and affected parent
-  Child DOX indexes;
-- **No impact:** requires no durable change.
-
-Each row gives a concrete classification reason, owner, and candidate action
-identity or `none`. Task-local and No impact rows use `none`.
-
-The fenced declaration is exact JSON:
-
-```json
-{
-  "schema": "superpowers-architecture-foundation-declaration-v1",
-  "actions": []
-}
-```
-
-For durable changes, use unique sorted `FCA-NNN` actions with normalized paths,
-`upsert|delete`, and sorted nonempty decision references. Project-durable
-decisions include both their current-truth owner and a
-`docs/agentic/DECISIONS.md` upsert. Operating-contract changes include their
-exact AGENTS.md owner and affected indexes. Managed-file or reading-order
-changes include the manifest/router consequence. Empty declarations include
-the exact unfenced sentence `No durable documentation changes`.
+Use [spec-template.md](references/spec-template.md) for the exact header,
+required sections, DDI classifications, and candidate declaration.
 
 ## Lifecycle and Foundation Candidate
 
@@ -143,39 +81,17 @@ Run `artifact draft` before changing an existing generic spec and
 For a generic spec:
 
 1. refresh the exact Draft revision;
-2. review the spec through the advisory reviewer or deterministic equivalent;
+2. review with [spec-document-reviewer-prompt.md](spec-document-reviewer-prompt.md)
+   in isolated read-only context when available, otherwise its deterministic
+   checklist; reviewers report policy-aware readiness or issues and never approve;
 3. resolve issues through Draft and refresh;
 4. under Autonomous, run `artifact ready`;
 5. under Review-gated, present one readable package and after clear approval run
    `artifact approve`.
 
-For a Foundation-backed spec:
-
-1. keep the Design Spec Draft while preparing complete ignored candidate files
-   under `docs/superpowers/foundation-candidates/`;
-2. include exact current-truth, immutable ledger, AGENTS.md, manifest, and Root
-   Router consequences declared by the spec;
-3. run policy-aware `foundation preview` against the exact policy-accepted base
-   and exact Draft spec;
-4. inspect operation-owned `candidate.json` and
-   `DESIGN-CHANGE-SET.md`; require declaration/candidate equality and no
-   missing, extra, duplicate, conflicting, unreferenced, or no-op action;
-5. run one combined advisory review against the spec, prospective Foundation,
-   readable change set, and Architecture Conformance;
-6. repair all issues, re-refresh, and re-preview whenever bound bytes change;
-7. under Autonomous, apply the exact reviewed change set with explicit policy;
-   apply records the spec/result as Ready and emits the v2 receipt;
-8. under Review-gated, present the combined readable package once. After a clear
-   approval of that displayed package, bind the response internally and apply
-   with Review-gated; apply records real Approved provenance.
-
-Reviewers return `Ready for progression` under Autonomous,
-`Ready for user review` under Review-gated, or `Issues found`. They never
-approve or mutate artifacts.
-
-An empty Foundation action set must preserve all Foundation bytes and lifecycle
-timestamps while still producing valid policy-bound application evidence when
-the operation requires it.
+For non-none Foundation work, follow
+[foundation-design.md](references/foundation-design.md) for combined review,
+exact candidate application, v2 receipts, and empty-candidate preservation.
 
 ## Progress to Planning
 

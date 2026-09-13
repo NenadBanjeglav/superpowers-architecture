@@ -1,145 +1,48 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use before claiming completion, a fix, or passing checks; bind each claim to current evidence.
 ---
 
 # Verification Before Completion
 
-Resolve the effective **Approval Policy** and exact policy-accepted
-spec/plan/Foundation bindings. This is an evidence gate, not a human approval
-gate. Under Autonomous, repair in-scope verification failures and rerun the
-affected checks. Review-gated changes to authoritative artifacts follow its
-readable review flow. Never weaken acceptance criteria to obtain green output.
+Bind completion claims to the exact work and observed evidence. Resolve Approval
+Policy and current policy-accepted spec/plan and optional Foundation dependencies.
+This is an evidence gate; it does not introduce a human approval gate.
 
-## Overview
+## Evidence Contract
 
-Claiming work is complete without verification is dishonesty, not efficiency.
+1. Identify the observation that establishes each claim: behavioral test, build,
+   lint, acceptance check, review, or actual installed-host exercise.
+2. Run the applicable command or inspect a current result covering these exact
+   inputs. Read the complete relevant output and exit status; account for
+   failures, warnings, and skips.
+3. Compare the evidence with the bounded goal, every acceptance criterion, and
+   [Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md).
+4. Repair in-scope failures and rerun affected checks. Report unresolved gaps
+   precisely; never weaken requirements to make a check pass.
 
-**Core principle:** Evidence before claims, always.
+Follow [workflow-policy.md](../using-superpowers/references/workflow-policy.md)
+for evidence freshness: validate authoritative inputs on first use after a fresh,
+resumed, or compacted context; after input/dependency or branch/checkout changes;
+after a possible external writer; and under correctness-critical mutation locks.
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+Within one uninterrupted controller context, reuse a recorded result while its
+inputs and coverage remain unchanged. A new message or nested skill invocation
+alone does not invalidate it. Run required integrated checks at their planned
+boundary; repeat or broaden testing only for changes, failures, drift, or a
+specific unresolved concern.
 
-## The Iron Law
+A linter result is not build evidence. A passing regression without an observed
+red check does not establish test sensitivity. A worker's success summary needs
+comparison with the actual diff, requirements, and reported test output; that
+does not require rerunning an unchanged suite.
 
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
+Source inspection cannot establish installed startup, isolation, plugin affinity,
+fresh-session identity, or publication. Verify each on the actual applicable
+surface. State unavailable evidence as unavailable.
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+## Closeout
 
-## The Gate Function
-
-```
-BEFORE claiming any status or expressing satisfaction:
-
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
-
-Skip any step = lying, not verifying
-```
-
-## Common Failures
-
-| Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
-
-## Red Flags - STOP
-
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
-
-## Rationalization Prevention
-
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
-
-## Key Patterns
-
-**Tests:**
-```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
-```
-
-**Regression tests (TDD Red-Green):**
-```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
-```
-
-**Build:**
-```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
-```
-
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
-```
-
-**Agent delegation:**
-```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
-```
-
-## Why This Matters
-
-Common consequences of unverified completion:
-- the user said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
-
-## When To Apply
-
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
-
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
-
-## The Bottom Line
-
-**No shortcuts for verification.**
-
-Run the command. Read the output. THEN claim the result.
-
-This is non-negotiable.
+Record commands/results and the source/artifact identity they cover. Keep detailed
+evidence in ignored working records and give the user a concise account of what
+passed and what remains. `finishing-a-development-branch` owns full closeout.

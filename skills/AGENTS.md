@@ -49,7 +49,11 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Patch operational skills narrowly: `subagent-driven-development`, `executing-plans`, `using-git-worktrees`, review, debugging, and TDD skills.
 - Keep inherited examples self-contained: remove upstream project names, dated session claims, unsupported metrics, and runtime-specific fixture names that are not part of this plugin.
 - Keep helper scripts executable and aligned with their owning skill docs.
-- Keep every `SKILL.md` frontmatter with `name` and `description`.
+- Keep every `SKILL.md` frontmatter with `name` and a concise discriminating `description`; preserve all 16 identities.
+- Optimize prompts for the user’s sole model without concrete model identifiers in shared policy. Preserve architecture phases, exact lifecycle, TDD, and reviews while removing repetitive coaching.
+- Root skills expose entry/exit contracts and conditionally load owned references. Foundation, migration, and handoff details load only for relevant operations; explicit absence still requires validation.
+- `requesting-code-review` owns task/final review coverage. Reuse exact unchanged evidence per workflow-policy; changes and unresolved concerns trigger affected checks.
+- Brainstorming owns references/spec-template.md and references/foundation-design.md; writing-plans owns references/plan-template.md; SDD owns references/controller-details.md.
 
 ## Verification
 

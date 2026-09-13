@@ -92,8 +92,8 @@ The adapter must verify isolation and read-only realization or disclose the redu
     running it. If you cannot run commands in this environment, name the
     test you would run.
 
-    Warnings or other noise in the implementer's reported test output are
-    findings — test output should be pristine.
+    Inspect reported warnings/skips for actual impact. Identify unexplained or
+    task-relevant gaps; do not invent a failure from an explained unrelated warning.
 
     ## Part 1: Spec Compliance
 
@@ -165,7 +165,8 @@ The adapter must verify isolation and read-only realization or disclose the redu
     defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
     plan-mandated. The plan's authorship does not grade its own work; the
-    human decides.
+    controller resolves in-scope conflicts through the artifact lifecycle under
+    Autonomous; only a consequential goal/constraint change needs user input.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
@@ -190,6 +191,7 @@ The adapter must verify isolation and read-only realization or disclose the redu
     - **Data flow:** matches the policy-accepted source-to-sink sequence
     - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
     - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
+    - **Constraints and scope:** goal, acceptance criteria, safety and external-action authority are preserved
     - **Design progression:** implementation-discovered design changes returned the controlling artifact to Draft and then to internal review/Ready under Autonomous or readable user review/Approved under Review-gated
 
     ### Issues

@@ -1,6 +1,6 @@
 ---
 name: wayfinder
-description: Use for greenfield project inception or project-wide reorientation to establish or resume the Agentic Foundation, Project Blueprint, traceable roadmap, Approval Policy, and Phase Mode before bounded design
+description: Use for project inception, missing Foundation, or project-wide direction and roadmap changes.
 ---
 
 # Wayfinder
@@ -12,8 +12,10 @@ scaffold production code.
 Read `using-superpowers`, the applicable instruction chain, the complete
 [Agentic Foundation contract](references/agentic-foundation-contract.md), the
 [Foundation lifecycle](../using-superpowers/references/agentic-foundation-lifecycle.md),
-the [workflow policy](../using-superpowers/references/workflow-policy.md), and
-the shared Architecture Conformance rubric before editing.
+the shared [Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md)
+rubric before editing. Load workflow-policy details for active legacy migration
+or unresolved policy handling; load phase-handoff details only for a fresh-session
+transition.
 
 ## Entry
 

@@ -79,7 +79,7 @@ Approval Policy: [APPROVAL_POLICY]
 | Receipt-backed Result Evidence | Planning validation evidence records successful receipt-backed Foundation validation of the exact spec base, receipt, and result before codebase inspection |
 | Foundation Context | Planning evidence, every task, and Architecture Conformance input carry the same exact Foundation base, result, and receipt identity |
 | Architecture Conformance | Every task names and checks the bound modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface through the shared rubric |
-| Future Handoff | Static Draft review verifies the documented post-readiness v2 envelope, fifteen-field record, external receipt, source-spec, goal, policy, and constraint bindings without requiring a future digest |
+| Phase Continuation | Same-session mode requires an exact disk reread; automated fresh-session mode documents the post-readiness v2 envelope, fifteen-field record, external receipt, source-spec, goal, policy, and constraint bindings without requiring a future digest |
 | Git Hygiene | No task stages docs/superpowers unless the user explicitly requested it |
 
 Only flag issues that could cause an incorrect or blocked implementation.

@@ -79,6 +79,10 @@ request writes no transaction state.
 Goal authorization permits ordinary local design, implementation, documentation repair, review repair, and testing needed for the bounded outcome. Record and internally review in-scope changes; never reduce requirements to make checks pass. Ask only about an unresolved consequential product choice, a goal/constraint change, missing access/input that cannot be resolved, or an action outside existing authority. Complete independent safe work first.
 
 Validate authoritative input on first use in a fresh, resumed, or compacted context; after edits or dependency changes; after branch/checkout changes or possible external writers; and inside correctness-critical mutations under their lock. Within one uninterrupted controller context, reuse a proven check while its inputs remain unchanged.
+A new message or nested skill alone does not invalidate evidence. Preserve required
+integrated checks; repeat or broaden verification only after changes, failures,
+drift, or a named unresolved concern. Task and final review coverage are owned by
+`requesting-code-review`; finishing reuses an exact unchanged final review.
 
 ## Phase progression and capability limits
 

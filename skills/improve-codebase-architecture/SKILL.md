@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Use when scanning a codebase for shallow modules, unclear interfaces, weak seams, poor adapters, low locality, or weak leverage and writing a local architecture review
+description: Use for a read-only architecture review of shallow modules, weak seams, or poor locality.
 ---
 
 # Improve Codebase Architecture

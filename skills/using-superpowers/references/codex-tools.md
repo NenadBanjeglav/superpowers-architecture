@@ -1,29 +1,34 @@
 # Codex Tool Mapping
 
-Skills speak in actions ("dispatch a subagent", "create a todo", "read a file"). On Codex these resolve to the tools below.
+Superpowers Architecture supports the complete Codex plugin and is optimized
+for GPT-6 Astra. Shared skills own workflow policy; this reference owns concrete
+Codex capabilities. Inspect the active host schema rather than assuming a tool
+exists or using a stale API shape.
 
-| Action skills request | Codex equivalent |
-|----------------------|------------------|
-| Read a file | `shell` (e.g., `cat`, `head`, `tail`) — Codex reads files via shell |
-| Create / edit / delete a file | `apply_patch` (structured diff for create, update, delete) |
-| Run a shell command | `shell` |
-| Search file contents | `shell` (e.g., `grep`, `rg`) |
-| Find files by name | `shell` (e.g., `find`, `ls`) |
-| Fetch a URL | `shell` with `curl` / `wget` — Codex has no native fetch tool |
-| Search the web | `web_search` (enabled by default; configurable in `config.toml` via the top-level `web_search` setting — `live`, `cached`, or `disabled`) |
-| Invoke a skill | Skills load natively — just follow the instructions |
-| Dispatch a host-neutral request | `spawn_agent` through the adapter below |
-| Multiple parallel dispatches | Multiple `spawn_agent` calls in one response |
-| Wait for subagent result | `wait_agent` |
-| Task tracking ("create a todo", "mark complete") | `update_plan` |
+## Tools and Instructions
 
-## Instructions file
+Use the advertised shell/exec tool for local reads and commands, prefer rg for
+searches, and use apply_patch for edits. Use an available web tool for browsing;
+a shell HTTP client is a fallback. Invoke installed skills by their advertised
+identity (typically superpowers-architecture:<canonical-name>), while shared
+skill text keeps bare canonical names. Task tracking uses the host tool when
+available or the workflow’s ignored progress record.
 
-When a skill mentions "your instructions file", on Codex this is **`AGENTS.md`** at the project root. Codex also reads `~/.codex/AGENTS.md` for global context, and an `AGENTS.override.md` (in the project tree or `~/.codex/`) takes precedence when present. Codex walks from the project root down to the current working directory, concatenating `AGENTS.md` files it finds along the way, up to `project_doc_max_bytes` (32 KiB by default).
+Read the applicable AGENTS.md hierarchy and higher-priority host instructions.
+Load task-relevant owners; do not read unrelated subtrees just because their
+documents exist. A plugin’s selected model is a user configuration choice, not
+a model override enforced by plugin metadata.
 
-## Personal skills directory
+## Model Selection
 
-User-level skills live at **`$CODEX_HOME/skills/`** (default `~/.codex/skills/`). Codex also reads the cross-runtime path **`~/.agents/skills/`** (shared with Copilot CLI and Gemini CLI). When both directories exist at the same scope, Codex loads them both as separate skill catalogs — Codex's docs don't currently document a precedence between them. Each skill is a subdirectory containing a `SKILL.md` (with `name` and `description` frontmatter).
+Honor an explicit GPT-6 Astra selection for every worker, reviewer, capability
+tier, and retry. When advertised by the active schema, its model identifier is
+`gpt-6-astra`. Do not substitute a cheaper, faster, or supposedly stronger model.
+If unavailable, report the mismatch; do not silently replace the user’s choice.
+Without an explicit choice, preserve the host default or map the requested tier
+only to advertised capabilities. Do not set a new reasoning-effort default.
+Blocked work calls for better evidence, context, diagnosis, or decomposition
+before retrying.
 
 ## Wayfinder Invocation
 
@@ -55,10 +60,8 @@ At dispatch time:
 
 For isolation smoke evidence, place a unique token only in the controller conversation, write a different prompt token and artifact path into the bounded request, dispatch with `fork_turns: "none"`, and require the child to report the prompt token/path while confirming the controller-only token is unavailable.
 
-Legacy note: Codex builds before `rust-v0.115.0` exposed spawned-agent
-waiting as `wait`. Current Codex uses `wait_agent` for spawned agents. The
-`wait` name now belongs to code-mode `exec/wait`, which resumes a yielded exec
-cell by `cell_id`; it is not the spawned-agent result tool.
+Use the active agent-wait tool for spawned agents. A code-mode exec/wait cell
+is a different operation; inspect its schema instead of assuming equivalent names.
 
 ## Environment Detection
 
@@ -74,7 +77,7 @@ BRANCH=$(git branch --show-current)
 - `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
 - `BRANCH` empty → detached HEAD (externally managed workspace)
 
-See `using-git-worktrees` Step 0 for how that skill uses these signals.
+See `using-git-worktrees` for submodule guards and workspace policy.
 
 ## Automated Phase Handoff In Codex App
 
@@ -149,9 +152,10 @@ On success, report the new task identity and emit the Codex App
 
 ## Codex App Finishing
 
-By default, `finishing-a-development-branch` is summary-only on Codex:
-run final verification, confirm local Superpowers docs are not staged,
-summarize commits, changed files, tests, and risks, then stop.
+By default, `finishing-a-development-branch` is summary-only on Codex. Confirm
+current verification and exact review coverage, local docs guards, commits,
+changes, and risks. Continue an already-authorized publication workflow after
+its applicable checks.
 
 Only push, merge, open a PR, or discard work when the user explicitly asks.
 For those explicit requests, use normal git safety checks first, including

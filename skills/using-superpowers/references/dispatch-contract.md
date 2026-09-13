@@ -25,7 +25,10 @@ Every field is required. `promptPath` is the single bounded task prompt, and `ar
 
 ## Capability Policy
 
-An explicit user model choice wins. Otherwise the caller supplies a capability tier, not a model identifier:
+An explicit user model choice wins for every role, tier, and retry. A tier does
+not authorize replacing that choice. Improve context, diagnosis, or task
+decomposition when work is blocked. Otherwise the caller supplies a capability
+tier, not a model identifier:
 
 - `fast`: bounded mechanical work with complete requirements.
 - `balanced`: multi-file implementation or review requiring ordinary judgment.

@@ -1,184 +1,26 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use for two or more bounded tasks with independent inputs, state, and safe concurrent workspaces.
 ---
 
 # Dispatching Parallel Agents
 
-## Overview
+Establish independence before delegation: one result must not depend on another,
+and workers must not compete for files, shared state, or external resources.
+Related failures or unclear causes need joint investigation first.
 
-You delegate tasks through the host-neutral dispatch contract and request isolated context. Precisely craft one bounded prompt and artifact set per task. The runtime adapter must verify that parent conversation turns were not inherited or disclose reduced isolation before work begins.
+For each independent domain, write one bounded prompt containing its goal,
+requirements, applicable constraints, relevant artifact paths, owned scope,
+expected evidence, and report format. Use
+[dispatch-contract.md](../using-superpowers/references/dispatch-contract.md)
+and the active runtime mapping. Preserve the user's explicit model choice.
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+Request isolated context with no inherited controller turns. Investigations
+use read-only review; concurrent writers require verified isolated workspaces.
+Never run parallel writers in one shared checkout. When isolation or safe
+workspace realization cannot be proven, disclose the limit and proceed
+sequentially or use the owning workflow's fallback.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
-
-## When to Use
-
-```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
-    "Parallel dispatch" [shape=box];
-
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
-}
-```
-
-**Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
-
-**Don't use when:**
-- Failures are related (fix one might fix others)
-- Need to understand full system state
-- Agents would interfere with each other
-
-## The Pattern
-
-### 1. Identify Independent Domains
-
-Group failures by what's broken:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
-
-Each domain is independent - fixing tool approval doesn't affect abort tests.
-
-### 2. Create Focused Agent Tasks
-
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
-
-### 3. Dispatch in Parallel
-
-Write one bounded prompt file per independent domain. Issue all host-neutral dispatch requests together with `contextPolicy: isolated`, an appropriate capability tier, and a workspace policy that prevents interference. Use `read-only-review` for investigations and `isolated-worktree` for independent writers; do not run multiple writers concurrently in one shared checkout.
-
-```json
-{
-  "role": "implementer",
-  "contextPolicy": "isolated",
-  "capabilityTier": "balanced",
-  "promptPath": "<absolute bounded prompt path>",
-  "artifactPaths": ["<absolute relevant test or evidence path>"],
-  "workspacePolicy": "isolated-worktree"
-}
-```
-
-Repeat the request per independent domain and issue them concurrently through the runtime adapter. If the host cannot verify isolation or safe workspaces, disclose the reduced guarantee and fall back to sequential execution.
-
-### 4. Review and Integrate
-
-When agents return:
-- Read each summary
-- Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
-
-## Agent Prompt Structure
-
-Good agent prompts are:
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
-
-```markdown
-Fix the 3 failing tests in tests/cache-expiry.test.ts:
-
-1. "expires stale entries" - an entry remains readable after its deadline
-2. "preserves fresh entries" - a fresh entry sometimes expires early
-3. "coalesces concurrent refreshes" - expects one refresh but observes three
-
-These are timing/race condition issues. Your task:
-
-1. Read the test file and understand what each test verifies
-2. Identify root cause - timing issues or actual bugs?
-3. Fix by:
-   - Replacing arbitrary timeouts with event-based waiting
-   - Fixing bugs in cache expiry or refresh coordination if found
-   - Adjusting test expectations if testing changed behavior
-
-Do NOT just increase timeouts - find the real issue.
-
-Return: Summary of what you found and what you fixed.
-```
-
-## Common Mistakes
-
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix cache-expiry.test.ts" - focused scope
-
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
-
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
-
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
-
-## When NOT to Use
-
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
-
-## Self-Contained Example
-
-**Scenario:** 6 test failures across 3 files after major refactoring
-
-**Failures:**
-- cache-expiry.test.ts: 3 failures (timing issues)
-- invoice-export.test.ts: 2 failures (formatting boundary)
-- webhook-retry.test.ts: 1 failure (retry count)
-
-**Decision:** Independent domains - cache expiry separate from invoice formatting separate from webhook retries
-
-**Dispatch:**
-```
-Agent 1 → Fix cache-expiry.test.ts
-Agent 2 → Fix invoice-export.test.ts
-Agent 3 → Fix webhook-retry.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed currency formatting at the exporter boundary
-- Agent 3: Corrected retry accounting after successful delivery
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-**Parallel result:** Three independent problems were investigated concurrently.
-
-## Key Benefits
-
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
-
-## Verification
-
-After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
-
-## Expected Outcome
-
-Independent investigations finish concurrently and integrate cleanly because every agent owns a separate file and problem domain.
+Inspect every returned report and actual change, resolve conflicts, review
+the integration, and run applicable combined checks. Passing isolated checks
+alone does not establish that the integrated result meets the requirements.

@@ -1,387 +1,62 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Use before changing code behavior to establish a meaningful failing test, then implement and refactor.
 ---
 
-# Test-Driven Development (TDD)
-
-## Workflow Binding
-
-Resolve the effective **Approval Policy** and exact policy-accepted spec/plan
-before writing tests. Autonomous accepts Ready or Approved and owns in-scope
-test/design repairs; Review-gated accepts Approved. Draft never authorizes
-implementation. TDD preserves the bound goal, acceptance criteria, modules,
-interfaces, seams/adapters, data flow, and public test surface.
-
-## Overview
-
-Write the test first. Watch it fail. Write minimal code to pass.
-
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
-
-**Violating the letter of the rules is violating the spirit of the rules.**
-
-## When to Use
-
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
-
-**Controller-judged exceptions:**
-- Throwaway prototypes
-- Generated code
-- Configuration files
-
-Under Autonomous, choose and document an exception only when a failing
-behavioral test would not provide meaningful evidence, then use the strongest
-available replacement verification. Ask the user only if the choice changes the
-authorized goal, acceptance criteria, safety constraints, or external-action
-authority. Review-gated does not turn routine test-strategy selection into a
-separate approval gate.
-
-Thinking "skip TDD just this once"? Stop. That's rationalization.
-
-## The Iron Law
-
-```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-```
-
-Write code before the test? Delete it. Start over.
-
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
-
-Implement fresh from tests. Period.
-
-## Red-Green-Refactor
-
-```dot
-digraph tdd_cycle {
-    rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
-
-    red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
-    green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
-    next -> red;
-}
-```
-
-### RED - Write Failing Test
-
-Write one minimal test showing what should happen.
-
-<Good>
-```typescript
-test('retries failed operations 3 times', async () => {
-  let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
-
-  const result = await retryOperation(operation);
-
-  expect(result).toBe('success');
-  expect(attempts).toBe(3);
-});
-```
-Clear name, tests real behavior, one thing
-</Good>
-
-<Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
-```
-Vague name, tests mock not code
-</Bad>
-
-**Requirements:**
-- Every new externally observable behavior has a failing test through the intended module interface; internal helpers need direct tests only when they expose an independent behavioral contract.
-- Clear name
-- Test observable behavior through the module interface. Use real local-substitutable adapters where practical; use in-memory or mock adapters only at justified remote/external seams; never assert that a test double itself was called unless that interaction is the interface contract.
-
-### Verify RED - Watch It Fail
-
-**MANDATORY. Never skip.**
-
-```bash
-npm test path/to/test.test.ts
-```
-
-Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
-
-**Test passes?** You're testing existing behavior. Fix test.
-
-**Test errors?** Fix error, re-run until it fails correctly.
-
-### GREEN - Minimal Code
-
-Write simplest code to pass the test.
-
-<Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
-    }
-  }
-  throw new Error('unreachable');
-}
-```
-Just enough to pass
-</Good>
-
-<Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
-}
-```
-Over-engineered
-</Bad>
-
-Don't add features, refactor other code, or "improve" beyond the test.
-
-### Verify GREEN - Watch It Pass
-
-**MANDATORY.**
-
-```bash
-npm test path/to/test.test.ts
-```
-
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
-
-**Test fails?** Fix code, not test.
-
-**Other tests fail?** Fix now.
-
-### REFACTOR - Clean Up
-
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
-
-Keep tests green. Don't add behavior.
-
-### Repeat
-
-Next failing test for next feature.
-
-## Good Tests
-
-| Quality | Good | Bad |
-|---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
-| **Clear** | Name describes behavior | `test('test1')` |
-| **Shows intent** | Demonstrates desired API | Obscures what code should do |
-
-## Why Order Matters
-
-**"I'll write tests after to verify it works"**
-
-Tests written after code pass immediately. Passing immediately proves nothing:
-- Might test wrong thing
-- Might test implementation, not behavior
-- Might miss edge cases you forgot
-- You never saw it catch the bug
-
-Test-first forces you to see the test fail, proving it actually tests something.
-
-**"I already manually tested all the edge cases"**
-
-Manual testing is ad-hoc. You think you tested everything but:
-- No record of what you tested
-- Can't re-run when code changes
-- Easy to forget cases under pressure
-- "It worked when I tried it" ≠ comprehensive
-
-Automated tests are systematic. They run the same way every time.
-
-**"Deleting X hours of work is wasteful"**
-
-Sunk cost fallacy. The time is already gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and add tests after (30 min, low confidence, likely bugs)
-
-The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
-
-**"TDD is dogmatic, being pragmatic means adapting"**
-
-TDD IS pragmatic:
-- Finds bugs before commit (faster than debugging after)
-- Prevents regressions (tests catch breaks immediately)
-- Documents behavior (tests show how to use code)
-- Enables refactoring (change freely, tests catch breaks)
-
-"Pragmatic" shortcuts = debugging in production = slower.
-
-**"Tests after achieve the same goals - it's spirit not ritual"**
-
-No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
-
-Tests-after are biased by your implementation. You test what you built, not what's required. You verify remembered edge cases, not discovered ones.
-
-Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
-
-30 minutes of tests after ≠ TDD. You get coverage, lose proof tests work.
-
-## Common Rationalizations
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
-
-## Red Flags - STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
-
-## Example: Bug Fix
-
-**Bug:** Empty email accepted
-
-**RED**
-```typescript
-test('rejects empty email', async () => {
-  const result = await submitForm({ email: '' });
-  expect(result.error).toBe('Email required');
-});
-```
-
-**Verify RED**
-```bash
-$ npm test
-FAIL: expected 'Email required', got undefined
-```
-
-**GREEN**
-```typescript
-function submitForm(data: FormData) {
-  if (!data.email?.trim()) {
-    return { error: 'Email required' };
-  }
-  // ...
-}
-```
-
-**Verify GREEN**
-```bash
-$ npm test
-PASS
-```
-
-**REFACTOR**
-Extract validation for multiple fields if needed.
-
-## Verification Checklist
-
-Before marking work complete, read the policy-accepted architecture inputs and the shared `codebase-design/ARCHITECTURE-CONFORMANCE.md` rubric:
-
-- [ ] Every new externally observable behavior has a failing test through the intended module interface; internal helpers need direct tests only when they expose an independent behavioral contract.
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Observable behavior is tested through the module interface; in-memory or mock adapters appear only at justified remote/external seams, and test-double interactions are asserted only when they are the interface contract.
-- [ ] Edge cases and errors covered
-
-Can't check all boxes? You skipped TDD. Start over.
-
-## When Stuck
-
-| Problem | Solution |
-|---------|----------|
-| Don't know how to test | Write the wished-for API and assertion first; inspect the bound interface and existing test patterns, then document any unresolved consequential constraint. |
-| Test too complicated | Design too complicated. Simplify interface. |
-| Must replace every collaborator | Recheck the bound seams. Use dependency injection and substitute only justified remote/external adapters. |
-| Test setup huge | Extract helpers. Still complex? Simplify design. |
-
-## Debugging Integration
-
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
-
-Never fix bugs without a test.
-
-## Testing Anti-Patterns
-
-When adding mocks or test utilities, read [testing-anti-patterns.md](testing-anti-patterns.md) to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-
-## Final Rule
-
-```
-Production code → test exists and failed first
-Otherwise → not TDD
-```
-
-Any exception must state why no meaningful failing test exists and what
-observable verification replaces it.
+# Test-Driven Development
+
+Resolve Approval Policy and the exact policy-accepted spec/plan before writing
+tests. Draft never authorizes implementation. Preserve the bound goal,
+acceptance criteria, architecture, and public test surface. Apply
+[Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md).
+
+## Red, Green, Refactor
+
+1. Write a focused test for the required observable behavior through the intended
+   module interface. For a bug, reproduce the original symptom.
+2. Run it before implementation. Confirm it fails for the missing behavior,
+   rather than a syntax, fixture, or environment error. If it already passes,
+   determine whether the requirement already works or the test misses it.
+3. Make the smallest coherent implementation change that satisfies the contract.
+4. Run the focused test and applicable regression checks. Investigate failures;
+   do not weaken a valid assertion to obtain green output.
+5. Refactor while tests stay green. Repeat for remaining behavior.
+
+Record the red command, expected failure, green command, and result. Existing
+coverage can support behavior-preserving refactoring; new behavior needs a
+meaningful red check. Use the project's actual test commands.
+
+Tests assert observable behavior. Use real local-substitutable adapters where
+practical; substitute only justified remote/external seams. Assert calls to a
+test double only when the interaction itself is the interface contract. Directly
+test a private helper only if it exposes an independent behavioral contract.
+
+When adding mocks or test utilities, read
+[testing-anti-patterns.md](testing-anti-patterns.md). If setup is difficult,
+inspect the bound interface and seams before adding test-only production APIs
+or pass-through modules.
+
+## Exceptions and Recovery
+
+For throwaway prototypes, generated code, configuration, or low-impact prose,
+a failing behavioral test may provide no meaningful evidence. Record why and
+use the strongest relevant replacement check. The controller owns ordinary
+test-strategy choices under either policy; an exception cannot weaken acceptance
+criteria or safety constraints.
+
+If code was written before the test, preserve user work, disclose the missing
+red evidence, and establish a regression that fails against the pre-change
+behavior in an isolated fixture when feasible. Do not delete work as punishment
+or call a test-first gap verified without evidence.
+
+An in-scope architecture/test-surface correction returns the controlling spec
+and dependent plan through Draft, refresh, and review. Autonomous returns them
+to Ready; Review-gated requires approval of the changed revision. Stop only
+divergent work until the new binding is accepted.
+
+## Completion
+
+Check required behavior, errors, and edge cases; record warnings, failures,
+skips, and gaps accurately. Use the unchanged-evidence rules in
+[verification-before-completion](../verification-before-completion/SKILL.md).
+A passing test alone does not prove all acceptance criteria or conformance.

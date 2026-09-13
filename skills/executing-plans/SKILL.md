@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when executing a policy-accepted written Implementation Plan linearly in the current or fresh phase session
+description: Use to execute an exact policy-accepted Implementation Plan linearly in the current phase.
 ---
 
 # Executing Plans
@@ -35,7 +35,8 @@ values. Do not fabricate approval, use conversation memory, or switch checkout.
 For each incomplete task in order:
 
 1. Re-read its exact task text, global constraints, and architecture binding.
-2. Confirm its plan/spec/Foundation identities still match entry evidence.
+2. Confirm its plan/spec/Foundation identities still match entry evidence;
+   reuse unchanged checks and revalidate on the canonical freshness triggers.
 3. Implement through `test-driven-development` when code behavior changes:
    establish a meaningful red check, make the smallest coherent change, then
    refactor with tests green.
@@ -44,8 +45,9 @@ For each incomplete task in order:
 5. Run focused verification, then the task's broader checks.
 6. Inspect the diff and staged paths. Keep `docs/superpowers/**` and local root
    instructions unstaged unless the user explicitly requested them.
-7. Run a task-scoped advisory review. Resolve Critical/Important and
-   Architecture Conformance findings before moving on.
+7. Use `requesting-code-review` for task-scoped advisory review and complete
+   range coverage. Record the base before task work; resolve Critical/Important,
+   cannot-verify, and Architecture Conformance findings before moving on.
 8. Commit the coherent task when repository instructions and the authorized
    workflow call for commits. Record its base/head/review result in ignored
    progress.
@@ -84,6 +86,7 @@ Do not turn repeated technical failure into an automatic human approval gate.
 ## Completion
 
 After all tasks and reviews are clean, use
-`finishing-a-development-branch`. Run final verification and whole-branch
-review, report actual evidence and installed-runtime limits, and keep external
+`finishing-a-development-branch`. It confirms final verification and the one
+whole-branch review owned by `requesting-code-review`, reusing exact unchanged
+evidence. Report actual evidence and installed-runtime limits, and keep external
 push/merge/PR/deploy/publish/discard actions separate unless already authorized.

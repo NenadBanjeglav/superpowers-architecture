@@ -1,116 +1,58 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use for a task review or final whole-branch review against exact requirements and changes.
 ---
 
 # Requesting Code Review
 
-Dispatch a code reviewer through the host-neutral dispatch contract to catch issues before they cascade. Request `contextPolicy: isolated`, a bounded prompt path, the requirements and diff artifacts, and `workspacePolicy: read-only-review`. The runtime adapter must verify that parent conversation turns were not inherited or disclose reduced isolation before review.
+This skill owns review coverage for implementation controllers and finishing:
+one task-scoped review per completed task, then one final whole-branch review.
+An unchanged exact final review may be reused during finishing. Re-review the
+affected coverage after fixes, source drift, or changed requirements.
 
-Resolve **Approval Policy** and give the reviewer exact policy-accepted
-spec/plan/Foundation identities. Autonomous accepts Ready or Approved;
-Review-gated accepts Approved. Review is advisory and never creates approval.
+## Prepare the Review
 
-**Core principle:** Review early, review often.
+Record the task base before work starts and its actual final head. Review the
+complete range, including every task commit. For the final review, use the
+verified branch-start/merge base and current head; do not assume a moving local
+main ref is the correct baseline. Include any uncommitted changes explicitly
+as an immutable patch with a digest; no change may escape review coverage.
 
-## When to Request Review
+Bind Approval Policy, exact policy-accepted spec/plan paths and revisions, all
+four Foundation base/result/manifest/receipt fields (all `none` for generic
+work), global constraints, task or whole-branch architecture, and
+[Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md).
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before finishing verification, and before merge only when merge was explicitly requested
+Use the bound shared SDD review-package operation when reviewing committed
+ranges in that workflow. Hand reviewers file paths for the requirements, diff,
+test report, and bindings rather than controller history.
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+For task reviews use
+[task-reviewer-prompt.md](../subagent-driven-development/task-reviewer-prompt.md);
+for final review use [code-reviewer.md](code-reviewer.md). Dispatch through
+[dispatch-contract.md](../using-superpowers/references/dispatch-contract.md)
+with isolated context and read-only review. The runtime reference maps actual
+capabilities, honors the explicit user model, and reports isolation enforcement.
+If independent review is unavailable, disclose it and perform the owning
+workflow's deterministic checklist; never label self-review independent.
 
-## How to Request
+## Review and Repair
 
-**1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
-```
+Require spec compliance, every Architecture Conformance result, and code quality.
+Reviewers judge the actual diff and may inspect related code for a named risk.
+Do not pre-rate findings, tell reviewers what not to flag, or request an unchanged
+suite rerun without a specific unanswered concern.
 
-**2. Dispatch code reviewer:**
+Resolve Critical/Important findings and all conformance violations before
+progression. Resolve each cannot-verify item with concrete controller evidence
+or a repair and re-review. Track Minor findings for final triage; do not silently
+discard them.
 
-Render [code-reviewer.md](code-reviewer.md) to a bounded prompt file, then dispatch `role: final-reviewer`, `contextPolicy: isolated`, `capabilityTier: strongest-available`, the prompt and artifact paths, and `workspacePolicy: read-only-review`. Explicit user model choices win; the adapter maps tiers only to active-host advertised capabilities.
+Use `receiving-code-review` for technical adjudication. Under Autonomous,
+in-scope artifact corrections return through Draft and internal review to Ready;
+Review-gated requires new approval only for changed authoritative content.
+Review is advisory and never creates approval.
 
-**Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{REQUIREMENTS_FILE}` - Absolute path to the policy-accepted plan or bounded requirements file
-- `{DIFF_FILE}` - Absolute path to the review package
-- `{CURRENT_SPEC_FILE}` / `{CURRENT_SPEC_REVISION}` - Exact policy-accepted Design Spec identity
-- `{CURRENT_PLAN_FILE}` / `{CURRENT_PLAN_REVISION}` - Exact policy-accepted Implementation Plan identity
-- `{CONFORMANCE_RUBRIC_FILE}` - Absolute shared Architecture Conformance rubric path
-- `{ARCHITECTURE_BINDING}` - Bound modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-
-**3. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Treat any Architecture Conformance `violation` as blocking. Under Autonomous,
-  repair in-scope design changes through Draft and internal review to Ready;
-  Review-gated returns changed artifacts to readable user review.
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-
-[Subagent returns]:
-  Strengths: Clean architecture, interface-level behavior tests
-  Architecture Conformance: Modules/interfaces preserved; no violations
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready for finishing verification
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
-
-## Integration with Workflows
-
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each task or at natural checkpoints
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
-
-## Red Flags
-
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
-- Argue with valid technical feedback
-
-**If reviewer wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
-
-See template at: [code-reviewer.md](code-reviewer.md)
+Record the review's exact range or patch digest, artifact bindings, verdict,
+findings, and resolution evidence in ignored progress. Finishing confirms that
+this coverage still matches the work before relying on it.

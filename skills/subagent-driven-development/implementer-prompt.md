@@ -60,8 +60,8 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     ## Your Job
 
     Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
+    1. Establish meaningful red evidence through TDD when behavior changes
+    2. Implement exactly the bound task
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
@@ -74,8 +74,9 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     product or authority decision; do not convert ordinary uncertainty into an
     approval request.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    Run focused tests while iterating and the broader checks required for this
+    task. Reuse unchanged evidence; rerun affected checks after changes or a
+    specific unresolved concern. Report gaps instead of inventing a suite.
 
     ## Pre-Commit Local Docs Guard
 
@@ -98,28 +99,19 @@ The runtime adapter must verify the actual context policy and disclose any reduc
       split files merely to make each independently testable
     - Put production and test adapters only at the bound seams
     - If implementation is growing beyond the plan's module/interface intent, stop
-      and report it as DONE_WITH_CONCERNS — do not redesign on your own
+      and report it as BLOCKED — do not redesign on your own
     - If an existing file you're modifying is already large or tangled, work carefully
       and note it as a concern in your report
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
 
-    ## When You're in Over Your Head
+    ## Blockers
 
-    It is always OK to stop and say "this is too hard for me." Bad work is worse than
-    no work. You will not be penalized for escalating.
-
-    **STOP and escalate when:**
-    - The task requires architectural decisions with multiple valid approaches
-    - You need to understand code beyond what was provided and can't find clarity
-    - You feel uncertain about whether your approach is correct
-    - The task involves restructuring existing code in ways the plan didn't anticipate
-    - You've been reading file after file trying to understand the system without progress
-
-    **How to escalate:** Report back with status BLOCKED or NEEDS_CONTEXT. Describe
-    specifically what you're stuck on, what you've tried, and what kind of help you need.
-    The controller can provide more context, re-dispatch with a more capable model,
-    or break the task into smaller pieces.
+    Investigate ordinary uncertainty from the task and relevant repository
+    evidence. If blocked, report the precise missing dependency or conflicting
+    contract, what you tried, and what would resolve it. The controller can
+    improve context or decomposition while preserving the explicit user model.
+    Do not retry unchanged or treat uncertainty as an automatic human gate.
 
     ## Before Reporting Back: Self-Review
 

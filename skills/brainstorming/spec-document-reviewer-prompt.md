@@ -61,7 +61,7 @@ approve or mutate them.
 Spec to review: [ABSOLUTE_SPEC_FILE_PATH]
 Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 Foundation manifest: [ABSOLUTE_FOUNDATION_MANIFEST_OR_NONE]
-Approved base Foundation revision: [BASE_FOUNDATION_REVISION_OR_NONE]
+Policy-accepted base Foundation revision: [BASE_FOUNDATION_REVISION_OR_NONE]
 Candidate declaration: [ABSOLUTE_CANDIDATE_JSON_OR_NONE]
 Readable review: [ABSOLUTE_DESIGN_CHANGE_SET_REPORT_OR_NONE]
 Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
@@ -86,7 +86,7 @@ Approval Policy: [APPROVAL_POLICY]
 | Candidate Coherence | The prospective manifest and complete candidate files remain a coherent Agentic Foundation and an empty candidate preserves the base revision |
 | Empty Declaration | An empty actions array has exactly one unfenced `No durable documentation changes` sentence; a non-empty declaration requires that sentence to be absent |
 | Readable Review | The operation-owned readable report covers every affected-file action and exposes review paths or normalized diffs |
-| Prospective Identity | The report, candidate, exact Draft spec, exact Approved base, and prospective Foundation revision have consistent bindings |
+| Prospective Identity | The report, candidate, exact Draft spec, exact policy-accepted base, and prospective Foundation revision have consistent bindings |
 | Policy progression | Autonomous resolves findings then progresses the exact reviewed bindings to Ready; Review-gated presents one readable combined package and binds a clear user response internally |
 
 For a generic spec whose Foundation fields are both none, treat the

@@ -45,11 +45,13 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     **Head:** [HEAD_SHA]
     **Review package:** [DIFF_FILE]
 
-    Read the review package once. It contains the commit list, stat summary, and full diff for the range.
+    Read the review package and existing test evidence. Inspect related code
+    for concrete risks. Do not rerun unchanged checks without a named unanswered
+    concern. Report verification gaps and the focused check needed to resolve them.
 
     ## Read-Only Review
 
-    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
+    Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. Inspect other revisions through read-only Git operations; do not create worktrees or move HEAD during this review.
 
     ## What to Check
 
@@ -110,6 +112,7 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     - **Data flow:** matches the bound source-to-sink sequence
     - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
     - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
+    - **Constraints and scope:** goal, acceptance criteria, safety and external-action authority are preserved
     - **Design progression:** Autonomous corrections returned through Draft and internal review to Ready; Review-gated changes returned to readable user review
 
     ### Issues
@@ -171,50 +174,3 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 - `[HEAD_SHA]` — ending commit
 
 **Reviewer returns:** Strengths, Architecture Conformance, Issues (Critical / Important / Minor), Recommendations, Assessment. Any architecture `violation` requires `No` or `With fixes`.
-
-## Example Output
-
-```
-### Strengths
-- Clean database schema with proper migrations (db.ts:15-42)
-- Comprehensive test coverage (18 tests, all edge cases)
-- Good error handling with fallbacks (summarizer.ts:85-92)
-
-### Architecture Conformance
-- **Modules:** preserved
-- **Interfaces:** preserved
-- **Seams and adapters:** production database adapter remains at the bound persistence seam
-- **Data flow:** matches the bound request-to-persistence sequence
-- **Depth, locality, leverage:** persistence complexity remains behind the repository interface
-- **Test surface:** repository behavior is exercised through its interface
-- **Design escalation:** no implementation-discovered design change
-
-### Issues
-
-#### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
-
-2. **Date validation missing**
-   - File: search.ts:25-27
-   - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
-
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
-
-### Recommendations
-- Add progress reporting for user experience
-- Consider config file for excluded projects (portability)
-
-### Assessment
-
-**Ready for finishing verification: With fixes**
-
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
-```
