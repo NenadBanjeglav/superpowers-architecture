@@ -86,11 +86,24 @@ targets through installed helpers. The generic plugin-creator validator still
 rejects the retained `hooks` field; the actual supported Codex installation accepts
 it. This discrepancy is recorded without weakening the hook packaging contract.
 
-The user authorized repair and republishing. The 0.7.1 candidate still requires
-release review and the complete installed-host condition below, or a separate
-explicit version-specific exception. Neither earlier exception covers 0.7.1.
-Unavailable host observations remain unavailable; successful source checks cannot
-establish automatic startup or native Unix delivery.
+The source/package candidate passed both task reviews and final whole-branch
+review. Direct installed cmd and Git Bash launcher checks passed; WSL path
+translation failed before its launcher could run. These checks do not establish
+automatic Codex event delivery or native Unix host behavior.
+
+## 0.7.1 Publication Exception
+
+On 2026-09-18, after the reviewed candidate and remaining host-verification gaps
+were presented, the maintainer explicitly requested "publish it". This grants a
+separate exception for 0.7.1 publication with those limits disclosed: automatic
+startup/resume/clear/compaction, complete installed workflows, fresh-task/receipt/
+plugin affinity and fallback, and WSL/native Unix coverage remain unverified.
+Source/tag push, GitHub release and supported local refresh are authorized.
+
+This decision permits publication; it does not turn unavailable evidence into
+passes or waive source review, immutable history or truthful reporting. Explicit
+`using-superpowers` entry remains the workaround. Releases after 0.7.1 retain the
+complete-matrix default unless the maintainer explicitly changes it.
 
 ## Manual Evidence Matrix
 
@@ -154,7 +167,7 @@ inventory, focused/full time and named concepts against the accepted budget.
 These source checks supplement the matrix; they cannot satisfy host rows.
 
 A failed or unavailable mandatory row retains that status and blocks release
-by default, subject only to the version-specific 0.6.0 and 0.7.0 exceptions above.
+by default, subject only to the version-specific 0.6.0, 0.7.0 and 0.7.1 exceptions above.
 It must not be
 reported as passed, waived by source inspection, or hidden in public release copy.
 
@@ -197,8 +210,8 @@ and tags through a non-force path, publish the exact notes, update repository
 About/topics to the actual Codex/Astra scope, then read remote state back. Preserve
 existing history and published tags.
 
-The 0.6.0 and 0.7.0 release notes must state the observed startup failure and all
-remaining
-installed-host gaps, give the manual entry-skill workaround, and distinguish
+The 0.6.0, 0.7.0 and 0.7.1 release notes must distinguish the historical startup
+failure from current unverified behavior, state all remaining installed-host
+gaps, give the manual entry-skill workaround, and distinguish
 source, installed-helper, and actual host evidence. The maintainer's exception
 permits publication; it does not turn unavailable evidence into success.

@@ -23,6 +23,9 @@ An isolated Codex CLI 0.155.0-alpha.9 installation discovered all 16 skills and
 matched 98 tracked files to its candidate snapshot. Installed helpers validated
 the exact Ready spec/plan, generated a bound brief, and rejected both overwrite
 attempts without changing fixture bytes. This proves package/helper behavior.
+Direct installed cmd and Git Bash launchers emitted all six invariants within
+1,325 characters. WSL path translation failed before launcher execution; WSL
+coverage remains unavailable. These probes do not establish automatic delivery.
 The production change is +170/-158/net+12 lines, with ten Node modules and unchanged
 maximum import fan-out. All 12 historical accepted local artifacts remain unchanged.
 
@@ -32,6 +35,8 @@ host coverage remain unverified. The 0.6.0 startup failure below is historical;
 it is not evidence of a newly observed 0.7.1 failure. Invoke `using-superpowers`
 explicitly after startup and context recovery. See [Release Contract](release.md)
 for current package evidence and the applicable publication condition.
+The maintainer explicitly authorized 0.7.1 publication with these limits disclosed;
+this version-specific exception does not claim complete runtime verification.
 
 ## 0.7.0 Verification Status
 

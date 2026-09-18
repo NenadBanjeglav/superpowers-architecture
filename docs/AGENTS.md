@@ -25,6 +25,10 @@ Public documentation and local Superpowers working docs.
   disclosed installed-host gaps. Keep both exceptions version-specific; later
   releases retain the complete-matrix default. Do not turn an exception into
   passing evidence or omit the manual entry workaround.
+- The maintainer separately authorized 0.7.1 publication with the reviewed host
+  gaps disclosed on 2026-09-18. Keep this exception version-specific too; later
+  releases retain the complete-matrix default. Preserve current source, installed
+  helper and direct-launcher evidence without claiming automatic host delivery.
 - Integrity repair in 0.7.1 protects generated-output and workspace writes and
   validates full physical/spec/plan/Foundation bindings. Keep source test results,
   installed package/helper evidence and observed host behavior distinct. Existing
