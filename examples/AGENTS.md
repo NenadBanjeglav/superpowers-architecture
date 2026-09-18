@@ -19,6 +19,13 @@ Committed examples that show expected Superpowers Architecture working-doc shape
 - Example specs use the Draft artifact lifecycle metadata, record Autonomous as
   the example Approval Policy, record one selected Phase Mode, and contain the
   literal exact revision produced by the shared `artifact refresh` operation.
+- The two examples contrast disposable pre-beta direct replacement with scoped
+  durable-data compatibility, an evidenced window and concrete cleanup task.
+  Scenario evidence and authority are explicitly illustrative, never claims
+  about actual plugin users, deployment or runtime verification.
+- Use the current spec shape, reasoned none entries, retained behavior and
+  category/budget context. Do not invent accepted predecessor artifacts or
+  approval provenance; real successors need exact immutable history bindings.
 
 ## Work Guidance
 

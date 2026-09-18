@@ -65,6 +65,10 @@ Foundation Application Receipt: [ABSOLUTE_FOUNDATION_APPLICATION_RECEIPT_OR_NONE
 Architecture rubric: [CONFORMANCE_RUBRIC_FILE]
 Approval Policy: [APPROVAL_POLICY]
 
+Read skills/using-superpowers/references/product-evolution.md and the existing
+authoritative work/outcome selection owner; compare it with the exact source
+spec and the proposed compatible plan selection after acceptance.
+
 ## What to Check
 
 | Category | What to Look For |
@@ -72,6 +76,10 @@ Approval Policy: [APPROVAL_POLICY]
 | Completeness | No TODOs, placeholders, incomplete tasks, or missing steps |
 | Spec Alignment | Every source-spec requirement is covered without scope creep |
 | Task Decomposition | Tasks have clear boundaries, exact context, and actionable steps |
+| Evolution Context | Each extracted task has Add/Replace/Remove/Defer (reasoned none allowed), consumer/durability/authority constraints, affected retained/retired contracts, budget slice, active test categories and sunset obligations without relying on global-plan memory |
+| Successors | Accepted predecessors remain unchanged; predecessor path/type/revision/scope is exact; a plan-only revision retains the source spec, and a design revision binds a compatible successor pair |
+| Current Selection | The authoritative owner selects the supplied accepted spec; ambiguous/partial/stale bindings stop progression, and quiescent post-review selection/rebinding of the complete pair is planned; a Draft plan is not execution authority |
+| Subtraction and Budget | Accepted deletion mappings retain unrelated/safety coverage; every mechanism has a present consumer; measurements, thresholds, reviewer, four-outcome checkpoints and concrete temporary cleanup tasks satisfy shared evolution policy |
 | Buildability | An engineer can follow the plan without relying on conversation memory or prior tasks |
 | Lifecycle | Artifact Type is Implementation Plan; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
 | Source Binding | Spec path and exact policy-accepted Spec Revision match the supplied source artifact |
@@ -84,6 +92,12 @@ Approval Policy: [APPROVAL_POLICY]
 
 Only flag issues that could cause an incorrect or blocked implementation.
 Minor wording and style preferences are not issues.
+
+Ask the shared policy's five subtraction questions and report stage,
+consumer/compatibility, subtraction, category, sunset and budget verdicts with
+evidence: satisfied, violation or cannot verify, including reasoned
+non-applicability. Required gaps block readiness. Follow evidence sources;
+headings and lifecycle hashes cannot prove authority or current selection.
 
 Return only `Ready for progression`, `Ready for user review`, or `Issues found`.
 Use progression only for Autonomous and user review only for Review-gated.
@@ -98,6 +112,8 @@ never approve an artifact.
 
 **Issues (if any):**
 - [Task X, Step Y]: [specific issue] - [why it matters]
+
+**Evolution verdicts:** [evidence-backed results above]
 
 **Recommendations (advisory):**
 - [suggestion]

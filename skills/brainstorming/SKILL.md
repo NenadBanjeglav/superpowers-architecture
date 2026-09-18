@@ -16,6 +16,9 @@ before writing. Read workflow migration details only for active legacy gates,
 Foundation lifecycle for non-none Foundation inputs, and phase-handoff details
 only when receiving or preparing a fresh-session envelope.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+for maturity evidence, successor selection, retirement, budgets, and sunset.
+
 ## Entry
 
 1. Resolve **Approval Policy** from the applicable version-2 owner. Autonomous
@@ -37,6 +40,10 @@ only when receiving or preparing a fresh-session envelope.
 6. If discovery reveals project-wide reorientation, release-boundary change, or
    several affected outcomes, return to `wayfinder`.
 
+At entry, resume, compaction, and rebind compare the authoritative work/outcome
+owner with exact inputs. Ready status or a newer filename does not select work.
+Stop affected progression on ambiguous successors or stale task bindings.
+
 ## Understand the Design
 
 Ask one concise question at a time only when the answer is not available on disk
@@ -52,7 +59,8 @@ Resolve:
 - modules, interfaces, seams, adapters, data flow, depth, locality, leverage,
   and public test surface;
 - business, safety, privacy, security, data, and external-action constraints;
-- migration and compatibility needs;
+- current consumers, scoped durability/reset authority, and evidenced evolution
+  and compatibility needs under the shared policy;
 - relevant prior decisions and Blueprint requirement identities; and
 - durable documentation impact.
 
@@ -61,6 +69,13 @@ options and recommend one. Ask the user only when the choice changes the
 authorized goal, product behavior, risk boundary, or another consequential
 constraint. Under Autonomous, ordinary architecture and technical choices
 within the bounded goal are agent-owned and recorded in the spec.
+
+Always compare the simplest reversible alternative with justified durable
+alternatives. For disposable data, include direct replacement and reseeding
+with actual authority and recovery steps. Record sources, observation dates,
+limits, non-goals, deletion opportunities, budget, and any sunset obligations.
+For generic work, keep these facts in the spec and applicable authority owner;
+do not manufacture a Foundation. Link Foundation owners instead of copying them.
 
 Do not offer a visual companion. Do not create ADR, PRD, issue, or triage flows.
 
@@ -75,8 +90,11 @@ required sections, DDI classifications, and candidate declaration.
 
 ## Lifecycle and Foundation Candidate
 
-Run `artifact draft` before changing an existing generic spec and
-`artifact refresh` after writing. Never type a revision manually.
+Drafts may be edited and refreshed. A Ready/Approved spec is immutable: create
+a distinct dated successor without overwriting any path, initialize it with
+`artifact draft`, and refresh after writing. Never type a revision manually.
+Use the template's predecessor bindings and explicit retirement mappings;
+carry the complete active bounded contract and retain unrelated obligations.
 
 For a generic spec:
 
@@ -103,6 +121,12 @@ Before Planning, validate:
 - every acceptance criterion, constraint, architecture binding, and Foundation
   traceability field; and
 - ignored local state and exact checkout affinity.
+
+After review and applicable Foundation application, select the exact accepted
+spec in the existing authoritative work/outcome owner at a quiescent boundary.
+Follow the shared selection contract; stop divergent workers before selection
+changes. Planning may start with that spec alone, but resumed implementation
+requires a compatible accepted successor plan and regenerated task bindings.
 
 For automated fresh-session mode, prepare the v2 Planning envelope. The Design
 Spec is the phase artifact; the source-spec pair is `none`. Carry Foundation

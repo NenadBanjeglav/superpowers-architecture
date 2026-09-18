@@ -538,6 +538,37 @@ as Ready. Under Review-gated, clear human approval of the readable combined
 package authorizes only those bindings and apply records Approved provenance.
 Planning may begin only after exact policy-aware post-apply validation.
 
+## Successors and Current Selection
+
+The immutable-spec rules in [product-evolution.md](product-evolution.md) do not
+freeze Foundation current truth. To correct an accepted Foundation-backed spec,
+create a new Draft successor at a distinct path and candidate root; bind the
+actual current policy-accepted Foundation as its base. Recompute the declaration
+and complete-file candidate against that base, preview and review, then apply.
+Do not copy old actions that are already current or modify the predecessor's
+accepted bytes, receipt, candidate evidence or immutable ledger entries.
+An empty successor candidate has no upserts and preserves Foundation bytes and
+lifecycle timestamps; the operation transitions only the new spec and emits its
+own receipt. Non-empty candidates append decision evidence and change current
+owners through the existing operation, never a new receipt schema.
+
+Receipt validation binds the exact spec/base/result and lifecycle snapshots.
+An old receipt remains historical evidence; it cannot validate a successor spec
+or a later Foundation result. Preserve it without claiming current validation.
+
+Selection must not silently mutate the just-validated Foundation. The existing
+outcome owner can route current execution to existing ignored task progress:
+include that routing consequence in the reviewed candidate if it is not already
+present. After apply, that progress record selects the exact accepted spec,
+receipt and subsequently compatible plan for the named outcome. Do not embed
+a spec's own final digest into its candidate or create a new selection registry.
+Before progression reread both the outcome owner and its exact execution
+binding, and validate the receipt/result. If selection instead requires changing
+a manifest-owned file after apply, stop: that creates a new Foundation revision
+and requires a successor spec/candidate/application binding before planning or
+implementation resumes. A plan-only successor may reuse an unchanged current
+spec/receipt/result; it cannot repair Foundation drift.
+
 ## Managed Edit Sequence
 
 Use this sequence for every authoritative Foundation change:

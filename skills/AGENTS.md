@@ -56,6 +56,15 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Root skills expose entry/exit contracts and conditionally load owned references. Foundation, migration, and handoff details load only for relevant operations; explicit absence still requires validation.
 - `requesting-code-review` owns task/final review coverage. Reuse exact unchanged evidence per workflow-policy; changes and unresolved concerns trigger affected checks.
 - Brainstorming owns references/spec-template.md and references/foundation-design.md; writing-plans owns references/plan-template.md; SDD owns references/controller-details.md.
+- Wayfinder puts maturity/consumer evidence in PRODUCT, evolution and small
+  durability facts in ARCHITECTURE (detailed durability in existing DATA), reset
+  authority in root AGENTS, and test-category policy in VERIFICATION. Templates
+  carry scope decisions/history links, not duplicate Foundation truth.
+- Spec/plan templates and document reviewers consume product-evolution.md.
+  Extracted tasks retain all four intents and evolution/budget/test/sunset
+  context. Foundation-backed successor corrections use the actual current base,
+  distinct candidate and receipt, and receipt-safe current selection; old
+  accepted artifacts/receipts remain historical and unchanged.
 
 ## Verification
 

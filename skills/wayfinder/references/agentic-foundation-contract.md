@@ -40,9 +40,9 @@ justification in `WAYFINDING.md`. An empty placeholder is not justified.
 | `docs/agentic/AGENTS.md` | Local maintenance, reconciliation, verification, and ownership contract |
 | `WAYFINDING.md` | Foundation lifecycle manifest and resumable navigation state |
 | `PROJECT-BLUEPRINT.md` | Living project-wide requirements baseline and roadmap traceability |
-| `PRODUCT.md` | Product model, user workflows, UX principles, and product rules |
+| `PRODUCT.md` | Product model, maturity/users/current consumers, workflows, UX principles, and product rules |
 | `DOMAIN.md` | Canonical language, definitions, invariants, and relationships |
-| `ARCHITECTURE.md` | Project-wide technology and architecture current truth |
+| `ARCHITECTURE.md` | Project-wide architecture, evolution/compatibility policy, and small data-durability subsection when DATA.md is absent |
 | `DECISIONS.md` | Replaceable current index plus immutable decision ledger entries |
 | `ROADMAP.md` | Ordered bounded outcome identities and Brainstorming entry points |
 | `VERIFICATION.md` | Quality policy, test strategy, commands, and evidence expectations |
@@ -166,7 +166,8 @@ to Autonomous, treats Review-gated as a new explicit opt-in, and routes
 Wayfinder for project-wide reorientation and Brainstorming for one bounded
 outcome. It requires Foundation reconciliation and rejects Draft progression.
 `Permissions` states allowed mutations and
-publication limits. `Verification` summarizes where exact commands are owned
+publication limits and scoped reset authority (authorizer, environment, datasets,
+and concrete rebuild/reseed/recovery procedure). `Verification` summarizes where exact commands are owned
 without copying the full command catalog.
 
 ## Root CONTEXT.md Shape
@@ -311,6 +312,8 @@ future feature specification. Those belong to later Brainstorming Design Specs.
 
 ## Users And Roles
 
+## Maturity And Current Consumers
+
 ## Primary Workflows
 
 ## Product Rules
@@ -324,6 +327,12 @@ future feature specification. Those belong to later Brainstorming Design Specs.
 
 PRODUCT owns current product truth and project-level experience rules. Link
 Blueprint requirements and decisions by identity.
+
+Maturity, users and external consumers carry sources, observation boundaries/
+dates, and limitations. Apply the shared
+[product evolution policy](../../using-superpowers/references/product-evolution.md):
+unknown stays unknown, and new consumers, retained data, environment changes,
+conflicting evidence, stage promotion and release boundaries trigger reassessment.
 
 ## DOMAIN.md Shape
 
@@ -365,6 +374,10 @@ likely. Domain invariants are product truth, not implementation assertions.
 
 ## Data Flow
 
+## Evolution And Compatibility Policy
+
+## Data Durability
+
 ## Depth, Locality, And Leverage
 
 ## Integration Shape
@@ -379,6 +392,12 @@ This is the sole project-wide architecture current-truth owner. Use the
 interfaces; adapters sit only at justified seams; data flow is source-to-sink;
 the test surface exercises observable module interfaces. Feature Design
 Understanding remains in later Design Specs.
+
+Evolution policy links actual consumers and reset authority; compatibility
+mechanisms must pass the shared evidence gate and carry sunset/cleanup ownership.
+Data Durability scopes evidence by dataset/interface. If DATA.md already owns
+the details, this subsection links there instead of copying them. Do not create
+DATA.md merely for empty fields. Real durability overrides stage defaults.
 
 ## DECISIONS.md Shape
 
@@ -446,6 +465,8 @@ the roadmap.
 
 ## Test Strategy
 
+## Test Category Policy
+
 ## Required Commands
 
 ## Evidence Rules
@@ -462,6 +483,11 @@ the roadmap.
 Commands must be runnable or explicitly marked unresolved. Evidence identifies
 what was run, where, at what revision, and with what result. Baseline
 preparation and verification are resolved independently.
+
+Test Category Policy applies the shared evolution policy's five categories,
+active-contract naming, stage defaults and sunset rules to this project's test
+surface. Preserve safety and retained behavior while replacing obsolete-format
+coverage only with authorized retirement. Do not tag every untouched test.
 
 ## Optional SECURITY.md Shape
 
@@ -500,6 +526,8 @@ Create only when durable data ownership or lifecycle decisions exist:
 ## Conceptual Model
 
 ## Lifecycle And Retention
+
+## Durability Evidence
 
 ## Migration
 
@@ -562,6 +590,9 @@ all are true:
 - [ ] Destination and project identity are clear.
 - [ ] Users, goals, non-goals, primary journeys, and success measures are
       defined.
+- [ ] Maturity/consumer and scoped durability evidence, compatibility policy,
+      reset authority/recovery and test categories have their designated owners;
+      unknowns and invalidation triggers are explicit, with no unjustified mechanism.
 - [ ] The Blueprint contains project-wide requirements and release boundaries.
 - [ ] Canonical domain language and invariants exist.
 - [ ] Technology and architecture choices are sufficient for the first ready

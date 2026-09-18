@@ -67,6 +67,10 @@ Readable review: [ABSOLUTE_DESIGN_CHANGE_SET_REPORT_OR_NONE]
 Prospective Foundation revision: [PROSPECTIVE_FOUNDATION_REVISION_OR_NONE]
 Approval Policy: [APPROVAL_POLICY]
 
+Read skills/using-superpowers/references/product-evolution.md and the existing
+authoritative work/outcome selection owner. Follow cited consumer/authority
+evidence rather than treating headings or asserted values as proof.
+
 ## What to Check
 
 | Category | What to Look For |
@@ -77,6 +81,10 @@ Approval Policy: [APPROVAL_POLICY]
 | Lifecycle | Artifact Type is Design Spec; Status is Draft; Revision is complete; Approved Revision and Approved At are none |
 | Source, Policy, and Phase Mode | Source, Workflow Policy Version 2, Approval Policy, one supported Phase Mode, reason, and durability are concrete and independent |
 | Architecture Conformance | Modules, interfaces, seams/adapters, data flow, depth/locality/leverage intent, and test surface are decision-complete under the shared rubric |
+| Evolution and Alternatives | All five evolution sections are concrete; sources/boundaries/dates/limits, scoped durability/reset recovery, simplest reversible alternative and non-goals support the selected design; future-only mechanisms are deferred |
+| Compatibility and Sunset | Proposed/prolonged mechanisms satisfy the shared evidence gate, including versions/window/reset insufficiency; stateless promises are resolved explicitly; temporary mechanisms have an accountable owner and concrete complete cleanup task |
+| Successor and Selection | Predecessor path/type/revision/scope, all four retirement sections and complete active contract are present with authorized mappings or reasoned none; accepted predecessors remain unchanged; current selection is unambiguous and stale worker bindings cannot progress |
+| Budget and Tests | Metrics have scope, baseline source/command/environment, thresholds and reviewer; unavailable values are not passing; test categories name active contracts and preserve safety/retained behavior |
 | Foundation Traceability | Foundation Manifest and Base Agentic Foundation are a consistent absolute-path/exact-revision pair or both none; a Foundation-backed spec has one ready outcome, complete Blueprint traceability, and relevant prior decisions |
 | Decision Classification | Every decision has one unique stable DDI-NNN identity, exactly one Task-local, Project-durable, Operating-contract, or No impact classification, and a concrete classification reason |
 | Structured Declaration | The fenced JSON uses the exact declaration schema and keys, FCA-NNN identities and paths are unique, action order is unsigned UTF-8 path then action, paths are normalized escape-safe JSON strings, and decision references are sorted, unique, non-empty, and reciprocal |
@@ -84,6 +92,7 @@ Approval Policy: [APPROVAL_POLICY]
 | Navigation Consequences | Managed-file additions/deletions include the manifest action, reading-order changes include the applicable router action, and no Task-local or No impact decision references an action |
 | Declared/Candidate Equality | Candidate action cells contain FCA-NNN identities and never paths, the declaration's path/action projection has exact candidate equality with candidate.json, complete upsert files exist, and there are no missing, extra, undeclared, duplicate, conflicting, unreferenced, or no-op candidates |
 | Candidate Coherence | The prospective manifest and complete candidate files remain a coherent Agentic Foundation and an empty candidate preserves the base revision |
+| Foundation Successor | New spec/candidate uses actual current base and its own receipt flow; no replay of applied actions or old receipt reuse, no accepted spec edits, and selection does not silently change the receipt-bound result |
 | Empty Declaration | An empty actions array has exactly one unfenced `No durable documentation changes` sentence; a non-empty declaration requires that sentence to be absent |
 | Readable Review | The operation-owned readable report covers every affected-file action and exposes review paths or normalized diffs |
 | Prospective Identity | The report, candidate, exact Draft spec, exact policy-accepted base, and prospective Foundation revision have consistent bindings |
@@ -96,6 +105,13 @@ classifies every decision and no candidate is claimed.
 Only flag issues that could cause an incorrect plan or an incomplete,
 misleading, or unappliable Design Change Set. Minor wording preferences are not
 issues.
+
+Use the shared policy's five subtraction questions and report stage,
+consumer/compatibility, subtraction, category, sunset and budget as satisfied,
+violation or cannot verify with evidence or reasoned non-applicability. Required
+gaps block readiness; an advisory finding alone cannot retire an obligation.
+Check the proposed post-acceptance selection at a quiescent boundary; a Draft
+proposal does not need to be selected yet and Ready alone never selects it.
 
 Return only `Ready for progression`, `Ready for user review`, or `Issues found`.
 Use progression only for Autonomous and user review only for Review-gated.
@@ -110,6 +126,8 @@ never approve an artifact or Design Change Set.
 
 **Issues (if any):**
 - [Section or candidate path]: [specific issue] - [why it matters]
+
+**Evolution verdicts:** [evidence-backed results above]
 
 **Recommendations (advisory):**
 - [suggestion]

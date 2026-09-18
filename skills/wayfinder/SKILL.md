@@ -17,6 +17,10 @@ rubric before editing. Load workflow-policy details for active legacy migration
 or unresolved policy handling; load phase-handoff details only for a fresh-session
 transition.
 
+Use [product-evolution.md](../using-superpowers/references/product-evolution.md)
+for the evidence and authority rules below; keep project facts in the Foundation
+owners, not in another profile document.
+
 ## Entry
 
 1. Resolve the physical repository root, branch/worktree identity, applicable
@@ -47,6 +51,8 @@ Resolve enough to make these project-wide facts coherent:
 
 - destination and observable success;
 - users, journeys, scope, and explicit out-of-scope boundaries;
+- maturity, actual users/external consumers, scoped data durability,
+  compatibility obligations, and reset authority with recovery procedure;
 - release boundary and non-negotiable business, privacy, security, data, and
   external-action constraints;
 - modules, interfaces, seams, adapters, data flow, depth, locality, leverage,
@@ -60,6 +66,13 @@ Do not turn discovery into a questionnaire. Do not invent decisions to eliminate
 uncertainty. A consequential unresolved direction choice is a valid user
 question; ordinary documentation and architecture repairs are agent-owned under
 Autonomous.
+
+For each maturity/evolution fact record its source, observation boundary/date,
+and limitations. Unknown stays unknown. Reassess when a new consumer, retained
+user data, environment change, or conflicting observation appears, and before
+stage promotion or release. Scope mixed durability by dataset/interface. Use
+the shared policy's gates to defer future-only mechanisms and resolve external
+promises; a stage label never authorizes resetting data.
 
 ## Foundation Shape
 
@@ -127,6 +140,8 @@ Before progression confirm:
   visible;
 - module/interface/seam/adapter/data-flow/test-surface decisions conform;
 - current truth and immutable decision history have correct owners;
+- evolution facts, reset scope/recovery, compatibility evidence and test policy
+  are in their designated owners; missing evidence cannot authorize a mechanism;
 - Approval Policy Version 2 and Phase Mode are durable and independent; and
 - local generated files are ignored and unstaged.
 

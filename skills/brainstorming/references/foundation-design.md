@@ -31,3 +31,19 @@ approve or mutate artifacts.
 An empty Foundation action set must preserve all Foundation bytes and lifecycle
 timestamps while still producing valid policy-bound application evidence when
 the operation requires it.
+
+## Correcting an accepted Foundation-backed spec
+
+Use a distinct Draft successor and a new stem-matched candidate root. Bind its
+Foundation Manifest/Base to the actual current policy-accepted Foundation,
+which may be the predecessor's applied result or a later managed revision.
+Preserve the old accepted spec, receipt and candidate evidence. Reassess the
+declaration against current truth: do not replay already-applied actions or
+copy a predecessor's base. Prepare, preview, review and apply the new combined
+change set through the same sequence above. An unchanged Foundation uses an
+empty declaration/candidate and a new receipt for the successor.
+
+Follow [receipt-safe selection](../../using-superpowers/references/agentic-foundation-lifecycle.md#successors-and-current-selection)
+before selecting the accepted successor. This preserves mutable Foundation
+current truth without editing an accepted spec or invalidating its new receipt
+with a post-apply Foundation edit.

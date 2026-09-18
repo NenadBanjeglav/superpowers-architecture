@@ -18,6 +18,8 @@ Read every input fresh from disk:
 - the exact
   `skills/wayfinder/references/agentic-foundation-contract.md`;
 - the shared `skills/codebase-design/ARCHITECTURE-CONFORMANCE.md`;
+- the shared `skills/using-superpowers/references/product-evolution.md` and
+  actual evidence sources for the maturity/evolution facts;
 - the absolute `docs/agentic/WAYFINDING.md` manifest path and exact Draft
   Foundation revision;
 - every manifest-selected Foundation file, including root files and every
@@ -58,7 +60,10 @@ Check:
     absence of unjustified placeholders;
 11. visible Frontier, Fog, Out of Scope, remaining uncertainty, and a
     destination coherent with the ready outcome;
-12. absence of banned behavior: production scaffolding, framework or
+12. evidence-backed maturity/consumer/durability, compatibility, scoped reset
+    authority and recovery, and test-category policy in the correct owners;
+    explicit unknowns, invalidation triggers and no speculative mechanisms;
+13. absence of banned behavior: production scaffolding, framework or
     package-manager files, implementation plans, feature Design Specs, ADRs,
     PRDs, issue or triage flows, visual companions, and lowercase `context.md`.
 
@@ -67,6 +72,14 @@ required correction. Do not silently redesign a bound module, interface, seam,
 adapter, data flow, depth/locality/leverage intent, or test surface. Under
 Autonomous, an in-scope correction returns through Draft and internal review to
 Ready. Review-gated changes return to readable user review.
+
+Apply the shared evolution review questions and report evidence-backed stage,
+consumer/compatibility, subtraction, test-category, sunset and budget verdicts
+through Architecture Conformance. Use satisfied, violation, or cannot verify;
+reasoned non-applicability is valid. Required missing evidence blocks readiness.
+Foundation current truth remains managed-editable; accepted spec/plan history
+and ledger entries are not rewritten. Review the existing outcome selection
+owner and receipt implications whenever this change affects current work.
 
 Return exactly one of these terminal statuses:
 
