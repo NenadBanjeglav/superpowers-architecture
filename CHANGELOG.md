@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.1 — 2026-09-18
+
+- Protects task-brief and review-package outputs from overwriting accepted
+  artifacts, bindings, Foundation manifests, receipts and managed files, including
+  hardlinks and physical aliases. Safely preserves existing workspace metadata.
+- Fixes SDD physical containment so equal-length sibling checkouts cannot satisfy
+  same-checkout bindings.
+- Checks the source spec's Foundation manifest/base against implementation plans
+  in SDD and handoff prepare/receive, including generic all-none bindings.
+- Uses one shared binding validator and validated snapshots; preserves public
+  commands/results, all 16 skills, lifecycle hashes and supported v1/v2 flows.
+- Source checks: broader suite 162 passed/two Windows symlink skips (25.7 seconds);
+  final focused suite 56 passed/two symlink skips (24.5 seconds). Runtime delta
+  +170/-158/net+12, one internal module, no new schema or external dependency.
+- No startup repair: automatic startup/context recovery, complete installed
+  workflows, fresh-task/receipt/plugin affinity and native Unix remain unverified.
+  Explicitly invoke `using-superpowers`; see runtime support and release conditions.
+
 ## 0.7.0 — 2026-09-18
 
 - Makes the workflow stage-aware, evidence-gated, reversible, and subtractive.

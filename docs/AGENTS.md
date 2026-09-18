@@ -25,6 +25,10 @@ Public documentation and local Superpowers working docs.
   disclosed installed-host gaps. Keep both exceptions version-specific; later
   releases retain the complete-matrix default. Do not turn an exception into
   passing evidence or omit the manual entry workaround.
+- Integrity repair in 0.7.1 protects generated-output and workspace writes and
+  validates full physical/spec/plan/Foundation bindings. Keep source test results,
+  installed package/helper evidence and observed host behavior distinct. Existing
+  public interfaces, lifecycle hashes and accepted history remain supported.
 - Stage-aware workflow descriptions apply to 0.7.0 and later; installation pins,
   package/plugin versions and changelog must agree. Keep historical 0.6.0 evidence
   distinct from current source, installed-byte and actual host observations.

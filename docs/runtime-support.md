@@ -7,6 +7,32 @@ GPT-6 Astra. Claude and standalone skill installation are unsupported.
 Runtime support requires installed-host evidence. Reading source, manifests, or
 passing local tests is not a substitute.
 
+## 0.7.1 Verification Status
+
+Version 0.7.1 repairs three integrity defects: generated-output overwrites,
+foreign-checkout acceptance and inconsistent spec/plan/Foundation bindings.
+Workspace metadata and aliases receive the same protection. Public command and
+result formats, canonical hashes, all 16 skills and valid v1/v2 behavior remain.
+
+The broader source suite passed 162 checks with two Windows file-symlink skips
+in 25.7 seconds. Two further focused coverage cases were then added; the final
+focused run passed 56 with two symlink skips in 24.5 seconds. Hardlink/junction
+checks and real Foundation receipts under both approval policies ran successfully.
+These are separate runs, not a claim of complete installed-host coverage.
+An isolated Codex CLI 0.155.0-alpha.9 installation discovered all 16 skills and
+matched 98 tracked files to its candidate snapshot. Installed helpers validated
+the exact Ready spec/plan, generated a bound brief, and rejected both overwrite
+attempts without changing fixture bytes. This proves package/helper behavior.
+The production change is +170/-158/net+12 lines, with ten Node modules and unchanged
+maximum import fan-out. All 12 historical accepted local artifacts remain unchanged.
+
+No startup-hook repair is included. Automatic startup/resume/clear/compaction,
+complete installed workflows, fresh-task/receipt/plugin affinity and native Unix
+host coverage remain unverified. The 0.6.0 startup failure below is historical;
+it is not evidence of a newly observed 0.7.1 failure. Invoke `using-superpowers`
+explicitly after startup and context recovery. See [Release Contract](release.md)
+for current package evidence and the applicable publication condition.
+
 ## 0.7.0 Verification Status
 
 Version 0.7.0 contains the reviewed stage-aware workflow and accepted-artifact
@@ -22,7 +48,7 @@ files to its source snapshot. Installed helpers validated the exact Ready spec
 and plan and rejected an attempted Ready-to-Draft reset without changing bytes.
 This is package/helper evidence, not a fresh user-task or startup-delivery check.
 
-The runtime still contains all 16 skills and nine Node modules, with no added
+The 0.7.0 runtime contains all 16 skills and nine Node modules, with no added
 schema, dependency or compatibility path. Ready/Approved spec/plan writes are
 guarded; revisions require reviewed successors and exact current-owner selection.
 Core checks establish identity and write boundaries. Semantic consumer evidence,

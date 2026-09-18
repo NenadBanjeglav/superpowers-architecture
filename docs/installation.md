@@ -20,7 +20,7 @@ than silently substituting.
 Register the repository marketplace and install its single root plugin:
 
 ```sh
-codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.1
 codex plugin add superpowers-architecture@superpowers-architecture
 codex plugin list
 ```
@@ -40,13 +40,13 @@ replace that registration, then reinstall the plugin:
 
 ```sh
 codex plugin marketplace remove superpowers-architecture
-codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.1
 codex plugin add superpowers-architecture@superpowers-architecture
 ```
 
 These commands target only this Git marketplace. For a local development
 marketplace, keep its existing name/source and follow Local Development below.
-Start a new task and confirm 0.7.0 after reinstalling. `marketplace upgrade`
+Start a new task and confirm 0.7.1 after reinstalling. `marketplace upgrade`
 refreshes the configured ref; it does not select a newer tag for a pinned install.
 
 ## Start Explicitly
@@ -63,9 +63,9 @@ Repeat the invocation after resuming, clearing, or compacting context.
 
 The prior 0.6.0 Windows checks discovered all 16 skills but did not deliver
 startup instructions automatically, even after hook trust and an app restart.
-Version 0.7.0 does not change that hook implementation. Manual invocation remains
+Version 0.7.1 does not change that hook implementation. Manual invocation remains
 the workaround; automatic context recovery and complete installed workflows
-remain unverified. See [0.7.0 verification status](runtime-support.md#070-verification-status).
+remain unverified. See [0.7.1 verification status](runtime-support.md#071-verification-status).
 
 ## Startup Hook Trust
 
@@ -116,6 +116,10 @@ session. Do not manually patch installed cache files.
   Unchanged accepted refresh and historical readers remain supported. Foundation
   current-truth edits retain their candidate/apply/receipt workflow. Do not use
   an older helper to bypass the new write boundary.
+- **0.7.0 generated outputs:** 0.7.1 rejects outputs targeting accepted artifacts,
+  bound inputs, file aliases and unsafe workspace metadata. It also rejects
+  foreign-checkout inputs and Foundation absence that contradicts the source spec.
+  Valid generation, regeneration and existing v1/v2 formats remain supported.
 - **Old handoff:** `skills-install` is rejected without rewriting its envelope.
   Recreate the handoff from validated current artifacts using `installed` or
   `local-plugin-dir`, both referring to the complete Codex package. A Ready

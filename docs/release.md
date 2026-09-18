@@ -66,6 +66,32 @@ The default complete-matrix condition continues for later releases unless
 explicitly changed. Review, exact source provenance, immutable history, Git
 hygiene, existing consumer/data obligations and truthful reporting still apply.
 
+## 0.7.1 Release Evidence
+
+The integrity repair passed isolated Task 1 review against its exact Ready design
+and plan. It protects SDD outputs and workspace metadata, fixes physical checkout
+containment, and validates complete spec/plan/Foundation traceability. Source
+verification: broader suite 162 passed/two symlink skips in 25.7 seconds; final
+focused suite 56 passed/two symlink skips in 24.5 seconds. The final focused suite
+adds two coverage cases after the broader run; unchanged retained results are reused.
+Runtime delta +170/-158/net+12; ten modules, maximum import fan-out nine, no new
+persistent schema, compatibility path or external dependency. Historical accepted
+artifact hashes remain unchanged. An initial Windows EPERM in unchanged migration
+code did not recur on the diagnostic rerun; its failed evidence is retained locally.
+
+An isolated Windows Codex CLI 0.155.0-alpha.9 install matched all 98 tracked files
+to its candidate snapshot, discovered all 16 skills, validated the exact Ready
+spec/plan, and demonstrated valid generation and unchanged rejected overwrite
+targets through installed helpers. The generic plugin-creator validator still
+rejects the retained `hooks` field; the actual supported Codex installation accepts
+it. This discrepancy is recorded without weakening the hook packaging contract.
+
+The user authorized repair and republishing. The 0.7.1 candidate still requires
+release review and the complete installed-host condition below, or a separate
+explicit version-specific exception. Neither earlier exception covers 0.7.1.
+Unavailable host observations remain unavailable; successful source checks cannot
+establish automatic startup or native Unix delivery.
+
 ## Manual Evidence Matrix
 
 Release evidence is local developer state under

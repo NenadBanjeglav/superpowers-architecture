@@ -1,6 +1,6 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Architecture-first Superpowers for Codex and GPT-6 Astra: stage-aware design, evidence-gated compatibility, reversible decisions, TDD, and subtractive review.",
   "private": true,
   "engines": {

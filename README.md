@@ -4,8 +4,8 @@
 
 Superpowers Architecture is a Codex plugin that carries a project from a clear
 foundation through design, planning, implementation, review, and verification.
-Version 0.7.0 makes that workflow **stage-aware, evidence-gated, reversible,
-and subtractive**. Autonomous execution is the default; architecture, TDD,
+The workflow is **stage-aware, evidence-gated, reversible, and subtractive**.
+Version 0.7.1 protects generated outputs and strengthens exact workflow bindings. Autonomous execution is the default; architecture, TDD,
 and review checks remain built in.
 
 The complete Codex plugin is the only supported package. It includes all
@@ -18,7 +18,7 @@ Requires Node.js 20+ and a Codex client with plugin support. Select GPT-6 Astra
 in Codex; the plugin preserves that choice for workers and reviewers.
 
 ```sh
-codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.1
 codex plugin add superpowers-architecture@superpowers-architecture
 ```
 
@@ -36,12 +36,12 @@ Start each task by explicitly loading the entry skill:
 $superpowers-architecture:using-superpowers
 ```
 
-**Runtime limitation:** 0.7.0 changes the workflow and accepted-artifact writers;
+**Runtime limitation:** 0.7.1 repairs SDD and handoff integrity;
 it does not repair startup hook delivery. Automatic startup failed in the prior
 Windows 0.6.0 checks, including after hook trust and an app restart. Automatic
 startup, context recovery, and complete installed-host workflows remain unverified
-for 0.7.0. Invoke the entry skill again after resuming, clearing, or compacting
-context. See [Runtime Support](docs/runtime-support.md#070-verification-status)
+for 0.7.1. Invoke the entry skill again after resuming, clearing, or compacting
+context. See [Runtime Support](docs/runtime-support.md#071-verification-status)
 for the source evidence and remaining gaps.
 
 For a new project or a change in project direction:
