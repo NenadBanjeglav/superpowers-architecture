@@ -16,6 +16,9 @@ Codex plugin packaging metadata for Superpowers Architecture.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.
 - Plugin metadata must use **Superpowers Architecture** as the product name and **Architecture-first Superpowers** as positioning.
 - Public workflow prompts must describe policy-accepted artifacts and the Autonomous default; do not imply that every phase requires human Approved state.
+- Describe stage-aware evidence, reversible choices and scoped retirement through
+  successors. Distinguish verified source behavior from unverified host delivery;
+  product copy must retain the explicit entry-skill workaround when needed.
 - Keep the manifest version aligned with `package.json`.
 - Describe the Codex-only package and Astra optimization in user-facing terms.
   Model selection stays in Codex configuration and runtime dispatch; metadata

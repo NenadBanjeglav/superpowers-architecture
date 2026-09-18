@@ -20,7 +20,7 @@ than silently substituting.
 Register the repository marketplace and install its single root plugin:
 
 ```sh
-codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.6.0
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
 codex plugin add superpowers-architecture@superpowers-architecture
 codex plugin list
 ```
@@ -32,7 +32,24 @@ from the repository root. It does not contain a duplicate skill tree.
 Start a new session after installation or refresh. A running task does not
 automatically receive refreshed skill instructions.
 
-## Start Explicitly in 0.6.0
+## Upgrade a Pinned Git Installation
+
+Codex rejects adding the same marketplace from a different pinned ref. If your
+`superpowers-architecture` marketplace is the GitHub repository at an older tag,
+replace that registration, then reinstall the plugin:
+
+```sh
+codex plugin marketplace remove superpowers-architecture
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
+codex plugin add superpowers-architecture@superpowers-architecture
+```
+
+These commands target only this Git marketplace. For a local development
+marketplace, keep its existing name/source and follow Local Development below.
+Start a new task and confirm 0.7.0 after reinstalling. `marketplace upgrade`
+refreshes the configured ref; it does not select a newer tag for a pinned install.
+
+## Start Explicitly
 
 In the new task, invoke:
 
@@ -44,11 +61,11 @@ Then describe the outcome you want. This loads the entry instructions and routes
 the request to the relevant skill while preserving the full architecture workflow.
 Repeat the invocation after resuming, clearing, or compacting context.
 
-The tested Windows Codex client discovered all 16 skills but did not deliver
-the startup instructions automatically, even after normal hook trust and an app
-restart. Manual invocation is a workaround; automatic context recovery and
-complete installed workflows remain unverified. See
-[0.6.0 known limitations](runtime-support.md#060-known-limitations).
+The prior 0.6.0 Windows checks discovered all 16 skills but did not deliver
+startup instructions automatically, even after hook trust and an app restart.
+Version 0.7.0 does not change that hook implementation. Manual invocation remains
+the workaround; automatic context recovery and complete installed workflows
+remain unverified. See [0.7.0 verification status](runtime-support.md#070-verification-status).
 
 ## Startup Hook Trust
 
@@ -92,6 +109,13 @@ session. Do not manually patch installed cache files.
 - **Older project workflow:** active legacy document gates migrate on entry under
   Autonomous. Historical approvals and unrelated constraints remain intact;
   Review-gated requires a new opt-in.
+- **0.6.0 accepted-artifact edits:** 0.7.0 rejects resetting a Ready/Approved
+  spec or plan to Draft, refreshing changed accepted content, and migrating
+  changed accepted targets in place. Create a distinct Draft successor, review
+  and accept it under policy, then select the compatible current spec/plan pair.
+  Unchanged accepted refresh and historical readers remain supported. Foundation
+  current-truth edits retain their candidate/apply/receipt workflow. Do not use
+  an older helper to bypass the new write boundary.
 - **Old handoff:** `skills-install` is rejected without rewriting its envelope.
   Recreate the handoff from validated current artifacts using `installed` or
   `local-plugin-dir`, both referring to the complete Codex package. A Ready
@@ -107,4 +131,4 @@ cannot prove it, the workflow provides the canonical fallback and does not
 launch. Same-session continuation follows the recorded Phase Mode.
 
 See [Runtime Support](runtime-support.md) for observed capabilities and
-[Release](release.md) for the evidence matrix and the 0.6.0 publication exception.
+[Release](release.md) for the evidence matrix and version-specific publication conditions.

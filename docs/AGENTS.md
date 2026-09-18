@@ -21,8 +21,13 @@ Public documentation and local Superpowers working docs.
   narrowly on next entry, Review-gated requires a new explicit opt-in, and
   Ready never claims human approval.
 - Runtime claims require installed Codex evidence; source inspection cannot substitute. Missing mandatory evidence blocks release by default. The maintainer explicitly authorized 0.6.0 publication with failed/unverified host checks disclosed; docs/release.md owns this version-specific exception, and README/installation/runtime/release notes must agree on the manual entry workaround and limits.
-- Stage-aware workflow descriptions apply to current repository source and
-  explicitly distinguish unreleased/uninstalled changes from pinned 0.6.0.
+- A separate explicit 2026-09-18 exception permits 0.7.0 publication with its
+  disclosed installed-host gaps. Keep both exceptions version-specific; later
+  releases retain the complete-matrix default. Do not turn an exception into
+  passing evidence or omit the manual entry workaround.
+- Stage-aware workflow descriptions apply to 0.7.0 and later; installation pins,
+  package/plugin versions and changelog must agree. Keep historical 0.6.0 evidence
+  distinct from current source, installed-byte and actual host observations.
   Accepted specs/plans use immutable history and reviewed successors; current
   selection, stage/consumer evidence, subtraction, categories, budget and sunset
   must agree with the shared evolution policy and conformance rubric.

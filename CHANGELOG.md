@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.7.0 — 2026-09-18
+
+- Makes the workflow stage-aware, evidence-gated, reversible, and subtractive.
+  Current consumers, retained data and actual reset authority determine durability;
+  prototype/pre-beta labels alone do not authorize data loss or remove promises.
+- **Breaking authoring change:** Ready/Approved specs and plans are immutable,
+  including unused artifacts. Supported writers reject Draft reset, stale refresh,
+  and changed accepted migration targets. Use distinct reviewed successors with
+  exact current selection; historical readers and Foundation receipts remain.
+- Adds scoped retirement of requirements, compatibility contracts, tests and
+  fixtures, plus explicit replacement behavior. Historical decisions do not make
+  old runtime behavior permanently binding; omitted obligations remain active.
+- Requires present-consumer justification and five evidence items for new or
+  prolonged compatibility. Disposable, reset-authorized data favors direct
+  replacement/reseed; future-only mechanisms go to the roadmap.
+- Adds reversible alternatives/non-goals, five evolution sections in specs,
+  Add/Replace/Remove/Defer in every task, contract-based test categories, and
+  Simplify/Replace/Defer/Revise checkpoints in both execution paths.
+- Adds stage/subtraction/budget review verdicts, measured complexity budgets,
+  and complete ownership/expiration/cleanup for temporary mechanisms.
+- Preserves all 16 skills, TDD, architecture vocabulary, exact lifecycle and
+  Foundation guarantees, Phase Mode, and genuine external-action authority.
+- Source verification: focused 88 passed/full 107 passed, one Windows EPERM
+  symlink skip each; 17.4/23.8 seconds. Production +16/-7 lines, net +9;
+  nine runtime modules and no new schemas, imports or compatibility paths.
+- Does not repair the prior Windows startup-delivery failure. Explicit
+  `using-superpowers` entry remains necessary; automatic recovery and complete
+  installed-host workflows remain unverified. See runtime support and release
+  documentation for the evidence boundary and publication condition.
+
 ## 0.6.0 — 2026-09-13
 
 - Publishes with an explicit maintainer exception for unresolved installed-host

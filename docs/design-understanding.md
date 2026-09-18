@@ -11,10 +11,9 @@ purpose, users, journeys, scope, stable requirements, release boundaries, and
 roadmap traceability. A feature spec links those identities without copying
 project-wide truth.
 
-The stage-aware evolution changes described here apply to current repository
-source. They are not installed or released in the pinned 0.6.0 plugin; its
-[startup and installed-host limits](runtime-support.md#060-known-limitations)
-remain. Source checks do not establish host delivery.
+The stage-aware design contracts described here are included in 0.7.0. See
+[verification status](runtime-support.md#070-verification-status) for source
+evidence and the remaining installed-host limits.
 
 ## Language
 

@@ -7,6 +7,34 @@ GPT-6 Astra. Claude and standalone skill installation are unsupported.
 Runtime support requires installed-host evidence. Reading source, manifests, or
 passing local tests is not a substitute.
 
+## 0.7.0 Verification Status
+
+Version 0.7.0 contains the reviewed stage-aware workflow and accepted-artifact
+write guards. The source implementation passed all 13 acceptance criteria,
+three task reviews and final whole-branch review. Focused checks passed 88 tests
+in 17.4 seconds; full checks passed 107 in 23.8 seconds. Each had one Windows
+EPERM symlink skip. These checks cover source operations and authored policy,
+not actual host delivery.
+
+An isolated Windows Codex CLI 0.155.0-alpha.9 installation smoke test installed
+the 0.7.0 candidate, discovered all 16 skills, and matched 97 tracked package
+files to its source snapshot. Installed helpers validated the exact Ready spec
+and plan and rejected an attempted Ready-to-Draft reset without changing bytes.
+This is package/helper evidence, not a fresh user-task or startup-delivery check.
+
+The runtime still contains all 16 skills and nine Node modules, with no added
+schema, dependency or compatibility path. Ready/Approved spec/plan writes are
+guarded; revisions require reviewed successors and exact current-owner selection.
+Core checks establish identity and write boundaries. Semantic consumer evidence,
+retirement authority and current selection remain controller/reviewer duties.
+
+No startup-hook repair is included. The prior Windows failure below remains
+relevant; automatic startup/resume/clear/compaction, complete installed workflow
+coverage, exact fresh-task/receipt/plugin affinity and native Unix host behavior
+remain unverified for 0.7.0. Installation or byte comparison alone cannot close
+those gaps. Invoke the entry skill explicitly and honor capability fallback.
+See [Release Contract](release.md) for the publication condition.
+
 ## 0.6.0 Known Limitations
 
 Version 0.6.0 is published with an explicit maintainer exception to the complete
@@ -33,19 +61,10 @@ a task and again after context recovery. This loads the entry instructions for
 that task; it does not repair the hook or prove end-to-end reliability. Fresh
 handoffs still require their actual capability checks and the recorded fallback.
 
-The remaining sections describe the intended runtime contracts. Treat any
-capability listed as unverified above as unverified in this release.
-
-## Unreleased Source Evolution
-
-Current repository source guards Ready/Approved spec/plan writes and requires
-reviewed successors, current-owner selection, consumer/stage evidence, complexity
-checkpoints and sunset review. These changes are not installed or released in
-the pinned 0.6.0 plugin. Its older helpers can still mutate accepted artifacts;
-controllers must follow successor policy and must not infer the new guards from
-the version label. Core checks establish identity/write boundaries; semantic
-evidence and current selection remain controller/reviewer responsibilities.
-No handoff fields, runtime schemas or installed-host claims are added.
+The remaining sections describe the intended runtime contracts. Treat capabilities
+listed as unverified above as unverified until actual evidence establishes them.
+Older 0.6.0 helpers can still mutate accepted artifacts; upgrade the complete
+plugin and use successor authoring. Do not use old helpers to bypass 0.7.0 guards.
 
 ## Supported Surfaces
 
@@ -168,8 +187,9 @@ Codex rows to pass, including:
 - exact same-checkout/plugin/receipt affinity and safe fallback; or
 - complete Codex marketplace/plugin installation smoke checks.
 
-By default, missing mandatory evidence blocks publication. The explicit 0.6.0
-exception in [Release Contract](release.md#060-publication-exception) permits
-publication with the limitations above; it does not establish runtime support
-for unverified capabilities. Review, Git hygiene, truthful evidence, and user
-publication authority remain required.
+By default, missing mandatory evidence blocks publication. The explicit
+[0.7.0 exception](release.md#070-publication-exception) permits this release with
+its disclosed limits; the [0.6.0 exception](release.md#060-publication-exception)
+remains historical. Neither establishes unverified runtime support or waives the
+complete matrix for later releases. Review, Git hygiene, truthful evidence and
+user publication authority remain required.

@@ -1,7 +1,7 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.6.0",
-  "description": "Codex-only plugin for architecture-first development with GPT-6 Astra: project foundations, design, planning, TDD, reviews, and verified delivery.",
+  "version": "0.7.0",
+  "description": "Architecture-first Superpowers for Codex and GPT-6 Astra: stage-aware design, evidence-gated compatibility, reversible decisions, TDD, and subtractive review.",
   "private": true,
   "engines": {
     "node": ">=20"
@@ -23,6 +23,8 @@
     "tdd",
     "developer-tools",
     "codex-plugin",
-    "gpt-6-astra"
+    "gpt-6-astra",
+    "stage-aware",
+    "subtractive-design"
   ]
 }

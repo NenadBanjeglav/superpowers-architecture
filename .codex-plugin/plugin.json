@@ -1,7 +1,7 @@
 {
   "name": "superpowers-architecture",
-  "version": "0.6.0",
-  "description": "Codex-only plugin for architecture-first development with GPT-6 Astra: project foundations, design, planning, TDD, reviews, and verified delivery.",
+  "version": "0.7.0",
+  "description": "Architecture-first Superpowers for Codex and GPT-6 Astra: stage-aware design, evidence-gated compatibility, reversible decisions, TDD, and subtractive review.",
   "author": {
     "name": "Nenad Banjeglav"
   },
@@ -15,14 +15,16 @@
     "tdd",
     "developer-tools",
     "codex-plugin",
-    "gpt-6-astra"
+    "gpt-6-astra",
+    "stage-aware",
+    "subtractive-design"
   ],
   "skills": "./skills/",
   "hooks": "./hooks/hooks-codex.json",
   "interface": {
     "displayName": "Superpowers Architecture",
     "shortDescription": "Architecture-first Superpowers for Codex and GPT-6 Astra",
-    "longDescription": "Take a project from a clear foundation through design, planning, implementation, review, and verification in Codex. Optimized for GPT-6 Astra with concise prompts and relevant reference loading. Autonomous execution is the default for new and existing projects; architecture, TDD, and review checks remain built in. Review-gated is an explicit opt-in. Phase Mode independently controls same-session or verified fresh-session progression.",
+    "longDescription": "Take a project from foundation through design, planning, implementation, review, and verification in Codex, optimized for GPT-6 Astra. Match durability and compatibility to evidenced consumers and data obligations. Prefer reversible choices, explicitly retire obsolete requirements through immutable artifact successors, classify tests by active contract, and review complexity budgets and temporary-code sunsets. All 16 skills, architecture phases, TDD, and reviews remain. Autonomous is the default; Review-gated is an explicit opt-in. Invoke using-superpowers explicitly; automatic startup and complete installed-host flows remain unverified.",
     "developerName": "Nenad Banjeglav",
     "category": "Coding",
     "capabilities": [
@@ -31,9 +33,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use wayfinder to establish my project foundation.",
-      "Use brainstorming to design and implement one bounded outcome.",
-      "Review my codebase architecture and recommend focused improvements."
+      "Use wayfinder to establish my project foundation, maturity, data durability, and reset authority.",
+      "Use brainstorming to design one bounded outcome with the simplest reversible option, then implement and verify it.",
+      "Review my codebase architecture, identify current consumers, and recommend what can be simplified or removed."
     ],
     "websiteURL": "https://github.com/NenadBanjeglav/superpowers-architecture",
     "brandColor": "#2563EB",

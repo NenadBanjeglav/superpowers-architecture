@@ -4,8 +4,9 @@
 
 Superpowers Architecture is a Codex plugin that carries a project from a clear
 foundation through design, planning, implementation, review, and verification.
-Autonomous execution is the default; architecture and quality checks remain
-built in.
+Version 0.7.0 makes that workflow **stage-aware, evidence-gated, reversible,
+and subtractive**. Autonomous execution is the default; architecture, TDD,
+and review checks remain built in.
 
 The complete Codex plugin is the only supported package. It includes all
 16 skills, shared Node.js operations, and startup hooks. Claude, standalone
@@ -17,13 +18,15 @@ Requires Node.js 20+ and a Codex client with plugin support. Select GPT-6 Astra
 in Codex; the plugin preserves that choice for workers and reviewers.
 
 ```sh
-codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.6.0
+codex plugin marketplace add NenadBanjeglav/superpowers-architecture --ref v0.7.0
 codex plugin add superpowers-architecture@superpowers-architecture
 ```
 
 Start a new Codex session. Review and trust this plugin's startup hook through
 Codex's hook controls when prompted. See [Installation](docs/installation.md)
 for local development, upgrades, and migration.
+For an existing installation pinned to an older tag, follow the
+[upgrade steps](docs/installation.md#upgrade-a-pinned-git-installation) first.
 
 ## Start Working
 
@@ -33,13 +36,13 @@ Start each task by explicitly loading the entry skill:
 $superpowers-architecture:using-superpowers
 ```
 
-**Known limitation in 0.6.0:** automatic startup instructions were absent in
-the tested Windows Codex client, including after hook trust and an app restart.
-All 16 skills are discoverable, but automatic startup and context recovery are
-not verified. Invoke the entry skill again after resuming, clearing, or compacting
-context. This manual workaround does not establish complete end-to-end workflow
-reliability. See [Runtime Support](docs/runtime-support.md#060-known-limitations)
-for observed results and remaining gaps.
+**Runtime limitation:** 0.7.0 changes the workflow and accepted-artifact writers;
+it does not repair startup hook delivery. Automatic startup failed in the prior
+Windows 0.6.0 checks, including after hook trust and an app restart. Automatic
+startup, context recovery, and complete installed-host workflows remain unverified
+for 0.7.0. Invoke the entry skill again after resuming, clearing, or compacting
+context. See [Runtime Support](docs/runtime-support.md#070-verification-status)
+for the source evidence and remaining gaps.
 
 For a new project or a change in project direction:
 
@@ -73,13 +76,19 @@ A single Architecture Conformance rubric follows modules, interfaces, seams,
 adapters, data flow, depth, locality, leverage, and public test surfaces through
 every phase.
 
-Current repository source additionally makes this workflow stage-aware: designs
-use evidence of current consumers and data obligations, plans name what to add,
-replace, remove and defer, and execution checkpoints unexpected complexity.
-Accepted specs/plans stay immutable; reviewed successors explicitly retire old
-obligations. Reviews check subtraction, test contracts, budgets and temporary
-cleanup. These source changes are **not installed or released in pinned 0.6.0**.
-The known host limits above remain; see [Workflow](docs/workflow.md).
+Designs use evidence of current consumers and data obligations. Plans name what
+to **add, replace, remove, and defer**. Both execution paths checkpoint unexpected
+complexity through **Simplify, Replace, Defer, or Revise**. Reviews check stage
+appropriateness, obsolete code/tests, complexity budgets, and temporary cleanup.
+
+> Historical artifacts are immutable records of past decisions. They do not make past runtime behavior permanently binding. Only the current policy-accepted artifact defines the active product contract.
+
+Ready/Approved specs and plans stay immutable, including unused artifacts.
+Revisions use new reviewed successors with explicit retirement and replacement.
+Compatibility needs a real consumer, durable data, a support window, an expiration
+condition, and evidence that reset/reseed is insufficient. Unknown data or users
+do not grant reset authority. See [Workflow](docs/workflow.md) and the
+[0.7.0 changelog](CHANGELOG.md#070--2026-09-18).
 
 ## Autonomous by Default
 

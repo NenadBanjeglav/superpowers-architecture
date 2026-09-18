@@ -30,13 +30,41 @@ runtime verification remains outstanding; see
 This exception is specific to 0.6.0. The default evidence requirements below
 continue to apply to later releases unless the maintainer explicitly changes them.
 
-## Current Source Changes
+## 0.7.0 Release Evidence
 
-The stage-aware source work is unreleased and has not refreshed the pinned
-0.6.0 installation. Source verification covers immutable accepted writes,
-reviewed successors, current selection, evidence gates, test retirement,
-checkpoints and sunset; it proves no installed startup or fresh-host behavior.
-Its source/installed distinction does not extend the 0.6.0 exception.
+The 0.7.0 source implements stage-aware evidence, immutable accepted writes,
+reviewed successors, current selection, test retirement, complexity checkpoints
+and sunset. It passed all 13 source acceptance criteria and isolated task/final
+reviews. Focused verification: 88 passed, one EPERM skip, 17.4 seconds; full:
+107 passed, one EPERM skip, 23.8 seconds. Production delta is +16/-7/net+9, with
+nine unchanged runtime modules and no added schemas, imports or compatibility.
+
+An isolated Codex CLI 0.155.0-alpha.9 install of the candidate passed package
+discovery, a 97-file source comparison, exact spec/plan validation and an
+accepted-file no-write rejection probe. The generic plugin-creator validator
+rejects the retained legacy `hooks` field; current OpenAI packaging documentation
+supports that field and the actual Codex install accepted it. This discrepancy
+is recorded, not reported as a validator pass or used to alter the hook contract.
+
+The maintainer requested a new release on 2026-09-18. Publication authority is
+recorded separately from verification: complete installed startup, recovery,
+fresh-task/receipt/plugin affinity and native Unix host evidence remain missing.
+No hook repair is included. Source checks or a successful reinstall do not
+satisfy these missing host rows.
+
+## 0.7.0 Publication Exception
+
+On 2026-09-18, after the release candidate and notes passed independent review,
+the maintainer explicitly selected publishing 0.7.0 with the remaining
+installed-host verification gaps disclosed. This is a new exception for 0.7.0,
+not an inferred extension of the earlier 0.6.0 decision. It permits the reviewed
+source/main/tag publication, GitHub release and metadata update, and local
+plugin refresh while preserving failed/unverified evidence and the explicit
+entry-skill workaround. It does not claim complete runtime verification.
+
+The default complete-matrix condition continues for later releases unless
+explicitly changed. Review, exact source provenance, immutable history, Git
+hygiene, existing consumer/data obligations and truthful reporting still apply.
 
 ## Manual Evidence Matrix
 
@@ -100,7 +128,8 @@ inventory, focused/full time and named concepts against the accepted budget.
 These source checks supplement the matrix; they cannot satisfy host rows.
 
 A failed or unavailable mandatory row retains that status and blocks release
-by default, subject only to the explicit 0.6.0 exception above. It must not be
+by default, subject only to the version-specific 0.6.0 and 0.7.0 exceptions above.
+It must not be
 reported as passed, waived by source inspection, or hidden in public release copy.
 
 Installed Codex evidence is mandatory. Source inspection, passing JSON, or a
@@ -129,7 +158,8 @@ the product workflow, Autonomous/v2 migration, Astra prompt changes, breaking
 distribution changes, installation, actual verification, and unresolved evidence.
 Byte reductions are descriptive measurements; do not infer model speed or quality.
 
-After every mandatory evidence row passes, or under the explicit 0.6.0 exception,
+After every mandatory evidence row passes, or under the applicable explicit
+version-specific exception,
 verify Git hygiene, ancestry, aligned
 package/plugin versions, and absence of conflicting tags/releases. Create the
 annotated tag only at the verified release commit. Historical tags are optional
@@ -141,7 +171,8 @@ and tags through a non-force path, publish the exact notes, update repository
 About/topics to the actual Codex/Astra scope, then read remote state back. Preserve
 existing history and published tags.
 
-The 0.6.0 release notes must state the observed startup failure and all remaining
+The 0.6.0 and 0.7.0 release notes must state the observed startup failure and all
+remaining
 installed-host gaps, give the manual entry-skill workaround, and distinguish
 source, installed-helper, and actual host evidence. The maintainer's exception
 permits publication; it does not turn unavailable evidence into success.

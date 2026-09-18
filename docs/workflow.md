@@ -9,10 +9,10 @@ It separates **Approval Policy** from **Phase Mode**.
 - Phase Mode controls whether progression uses a genuinely fresh user-owned
   same-checkout task or continues after a same-session disk reread.
 
-The stage-aware evolution changes described here apply to current repository
-source. They are not installed or released in the pinned 0.6.0 plugin; its
-[startup and installed-host limits](runtime-support.md#060-known-limitations)
-remain. Source checks do not establish host delivery.
+The stage-aware workflow described here is included in 0.7.0. Its
+[verification status](runtime-support.md#070-verification-status) separates
+source behavior from installed-host delivery; the remaining runtime limits
+are not repaired by the workflow changes.
 
 ## Entry and Existing Projects
 
