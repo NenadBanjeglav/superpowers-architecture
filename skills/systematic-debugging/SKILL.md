@@ -10,6 +10,14 @@ the bound goal, acceptance criteria, and architecture before repair. Autonomous
 owns in-scope investigation and repairs; ask only for a consequential goal or
 constraint change, unavailable required input/access, or action beyond authority.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and check the authoritative current
+selection against exact bindings. Evaluate actual stage/consumer evidence,
+retirements, test categories, sunset and budget through the shared rubric.
+An obsolete test or advisory finding cannot retire an active obligation.
+Unplanned mechanisms or material duration/budget growth require the shared
+Simplify/Replace/Defer/Revise checkpoint before divergent repairs.
+
 ## Investigate
 
 Read the actual error and complete relevant trace. Establish repeatable steps
@@ -46,9 +54,9 @@ shared state, coupling, misplaced seams, and changes that create new symptoms.
 Three failures establish an inadequate causal model, not a proven replacement.
 
 If the bound module, interface, seam, adapter, data flow, or test surface needs
-an in-scope correction, return the controlling spec and dependent plan through
-Draft and internal review to Ready under Autonomous, or the changed-revision
-approval flow under Review-gated. Preserve constraints and continue independent
+an in-scope correction, preserve accepted bytes and create distinct Draft
+successor spec/plan files for review and Ready under Autonomous, or genuine
+successor approval under Review-gated. Select and rebind before divergent work. Preserve constraints and continue independent
 work. Repeated technical failure does not create a human approval gate.
 
 If evidence points to an external, timing, or environmental cause, document

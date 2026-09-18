@@ -22,6 +22,15 @@ workspace prints its absolute path. Record the returned unique path, never guess
 it. Missing Node.js 20+ or the sibling core must fail closed; do not recreate
 briefs, packages, or progress with ad hoc shell parsing.
 
+Before generation and after resume/rebind or possible owner change, compare
+current work/outcome selection with the exact binding per
+[product-evolution.md](../../using-superpowers/references/product-evolution.md).
+The core validates identities; the controller verifies semantic selection and
+evidence. Do not add JSON fields or infer selection from Ready or dates. Stop
+stale workers before changing selection, then regenerate briefs and review
+inputs. Include the owner path and task evolution/budget/test/sunset context;
+reuse prior evidence only after successor-contract and exact diff checks.
+
 Keep bulk context in files. An implementer gets the task brief, exact
 architecture bindings, necessary prior interfaces, and report path. Reviewers
 get that brief, report, complete diff package, spec/plan bindings, constraints,

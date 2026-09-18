@@ -66,6 +66,17 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
   distinct candidate and receipt, and receipt-safe current selection; old
   accepted artifacts/receipts remain historical and unchanged.
 
+- Execution, TDD, document/task/final/architecture review and finishing consume
+  the one evolution policy and full shared rubric, including its five subtraction
+  questions. Current-owner selection is checked at entry/resume/rebind; it is a
+  semantic gate, not a new SDD/handoff field. Quiescent successor selection stops
+  stale workers and regenerates inputs before divergent work resumes.
+- Both executors checkpoint unplanned mechanisms and material time/budget growth
+  through Simplify/Replace/Defer/Revise. Touched test retirement preserves active
+  interface/safety coverage; adapter count alone never proves a justified seam.
+  Closeout reports actual budgets, explicit deletions and remaining sunset cleanup.
+
+
 ## Verification
 
 - Check every edited `SKILL.md` has `name` and `description` frontmatter.

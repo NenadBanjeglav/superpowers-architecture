@@ -62,7 +62,7 @@ When designing an interface, ask:
 - **Depth is a property of the interface, not the implementation.** A deep module can be internally composed of small, mockable, swappable parts — they just aren't part of the interface. A module can have **internal seams** (private to its implementation, used by its own tests) as well as the **external seam** at its interface.
 - **The deletion test.** Imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
 - **The interface is the test surface.** Callers and tests cross the same seam. If you want to test *past* the interface, the module is probably the wrong shape.
-- **One adapter means a hypothetical seam. Two adapters means a real one.** Don't introduce a seam unless something actually varies across it.
+- **Evidence justifies a seam, not adapter count.** Name the present caller or workflow and the variation it needs. A test adapter must protect an active product/safety contract at a justified seam; two hypothetical adapters prove nothing. Defer future-only indirection.
 
 ## Designing for testability
 
@@ -131,9 +131,12 @@ Use this skill during:
 For plan, implementation, TDD, task review, and final review, use the shared
 [Architecture Conformance rubric](ARCHITECTURE-CONFORMANCE.md). Any reported
 violation blocks completion. An implementation-discovered design change is
-conformant only after the controlling artifact returns to Draft, receives the
-applicable review, and reaches a state accepted by the effective Approval
-Policy: Ready or Approved under Autonomous, and Approved under Review-gated.
+conformant only after distinct successor artifacts receive applicable review
+and policy acceptance: Ready or Approved under Autonomous, Approved under
+Review-gated. Preserve accepted history and rebind selected current work.
+Apply [product-evolution.md](../using-superpowers/references/product-evolution.md)
+to stage, current consumers, scoped retirement, budgets and sunset; depth never
+justifies a speculative adapter or automatic deletion of active tests.
 
 Do not create `context.md` or ADRs from this skill in this plugin. Wayfinder
 owns project-wide architecture current truth; put feature-specific architecture

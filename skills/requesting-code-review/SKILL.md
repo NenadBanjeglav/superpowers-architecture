@@ -36,6 +36,14 @@ capabilities, honors the explicit user model, and reports isolation enforcement.
 If independent review is unavailable, disclose it and perform the owning
 workflow's deterministic checklist; never label self-review independent.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and check the authoritative current
+selection against exact bindings. Evaluate actual stage/consumer evidence,
+retirements, test categories, sunset and budget through the shared rubric.
+An obsolete test or advisory finding cannot retire an active obligation.
+Unplanned mechanisms or material duration/budget growth require the shared
+Simplify/Replace/Defer/Revise checkpoint before divergent repairs.
+
 ## Review and Repair
 
 Require spec compliance, every Architecture Conformance result, and code quality.
@@ -49,8 +57,9 @@ or a repair and re-review. Track Minor findings for final triage; do not silentl
 discard them.
 
 Use `receiving-code-review` for technical adjudication. Under Autonomous,
-in-scope artifact corrections return through Draft and internal review to Ready;
-Review-gated requires new approval only for changed authoritative content.
+in-scope artifact corrections preserve accepted bytes and use distinct Draft
+successors through review to Ready; Review-gated requires genuine successor
+approval. Revalidate current selection and regenerate review bindings.
 Review is advisory and never creates approval.
 
 Record the review's exact range or patch digest, artifact bindings, verdict,

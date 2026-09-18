@@ -2,6 +2,13 @@
 
 How to deepen a cluster of shallow modules safely, given its dependencies. Assumes the vocabulary in [SKILL.md](SKILL.md) — **module**, **interface**, **seam**, **adapter**.
 
+Apply [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and the shared [rubric](ARCHITECTURE-CONFORMANCE.md). Dependency categories
+suggest test techniques; they do not authorize deepening, new compatibility,
+or retirement without current consumer/stage evidence and accepted scope.
+Temporary mechanisms need sunset cleanup across code, tests, fixtures, docs and
+formats. Classify new/touched tests by active contract, preserving meaningful TDD.
+
 ## Dependency categories
 
 When assessing a candidate for deepening, classify its dependencies. The category determines how the deepened module is tested across its seam.
@@ -26,12 +33,12 @@ Third-party services (Stripe, Twilio, etc.) you don't control. The deepened modu
 
 ## Seam discipline
 
-- **One adapter means a hypothetical seam. Two adapters means a real one.** Don't introduce a port unless at least two adapters are justified (typically production + test). A single-adapter seam is just indirection.
+- **Evidence justifies a seam, not adapter count.** Name a present consumer and actual variation; production/test adapters need an active contract at a justified seam. Two hypothetical adapters do not justify a port. Compare direct implementation/deletion first and defer future-only indirection.
 - **Internal seams vs external seams.** A deep module can have internal seams (private to its implementation, used by its own tests) as well as the external seam at its interface. Don't expose internal seams through the interface just because tests use them.
 
 ## Testing strategy: replace, don't layer
 
-- Old unit tests on shallow modules become waste once tests at the deepened module's interface exist — delete them.
+- Inspect touched old tests against active contracts. Delete or replace only implementation-detail or explicitly retired-format coverage after retained behavior is covered at the deepened interface. Independent behavior and safety contracts remain binding; new interface tests alone do not prove redundancy.
 - Write new tests at the deepened module's interface. The **interface is the test surface**.
 - Tests assert on observable outcomes through the interface, not internal state.
 - Tests should survive internal refactors — they describe behaviour, not implementation. If a test has to change when the implementation changes, it's testing past the interface.

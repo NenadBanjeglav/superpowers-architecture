@@ -9,6 +9,11 @@ It separates **Approval Policy** from **Phase Mode**.
 - Phase Mode controls whether progression uses a genuinely fresh user-owned
   same-checkout task or continues after a same-session disk reread.
 
+The stage-aware evolution changes described here apply to current repository
+source. They are not installed or released in the pinned 0.6.0 plugin; its
+[startup and installed-host limits](runtime-support.md#060-known-limitations)
+remain. Source checks do not establish host delivery.
+
 ## Entry and Existing Projects
 
 Every fresh, resumed, or compacted controller reads the applicable instruction
@@ -19,9 +24,11 @@ and current artifact/Foundation bytes named in its exact ignored request.
 
 Migration preserves goal, acceptance criteria, business and safety rules,
 privacy/data/security constraints, external-action authority, Phase Mode, user
-work, and immutable Decision Ledger entries. Changed current specs/plans and
-Foundation results become Ready with no human approval metadata. Existing valid
-Approved artifacts remain Approved. No migration-approval prompt is used.
+work, and immutable Decision Ledger entries. Changed Draft specs/plans and
+managed Foundation results become Ready with no human approval metadata.
+Ready/Approved specs/plans remain byte-for-byte unchanged; required changes use
+distinct Draft successors, review and policy acceptance. Unchanged accepted
+inputs remain valid. No migration-approval prompt is used.
 
 ## 0. Wayfinder
 
@@ -53,6 +60,20 @@ Under Review-gated, one combined readable package receives clear human approval
 before apply records real Approved provenance. An empty change set causes no
 Foundation byte or lifecycle timestamp churn.
 
+Design compares the simplest reversible alternative with evidenced durable
+options and non-goals. Maturity, users/consumers, scoped durability/reset
+authority, compatibility and recovery facts cite sources and limitations;
+unknown never means disposable or permission. Real data/promises override stage
+labels. Future-only mechanisms are deferred. New/prolonged compatibility needs
+a real consumer, durable data, support window, expiration and reset-insufficiency
+evidence; a stateless external promise requires explicit constraint resolution.
+
+Specs include Current Consumers, Evolution Policy, Complexity Budget,
+Compatibility Justification and Deletion Plan. Successors identify exact
+predecessors and Retired Requirements, Deleted Compatibility Contracts,
+Obsolete Tests and Fixtures, and Replacement Behavior. Omission is not retirement;
+Foundation current truth keeps managed edits and immutable ledger/receipt history.
+
 ## 2. Planning
 
 `writing-plans` accepts a Ready or Approved spec under Autonomous and Approved
@@ -74,6 +95,13 @@ Advisory review returns Ready for progression, Ready for user review, or Issues
 found. Autonomous repairs and marks the plan Ready; Review-gated records
 Approved only after a clear user response.
 
+Each task carries Add/Replace/Remove/Defer intent, current evolution evidence,
+affected contracts, test categories, budget slice and sunset obligations.
+A current work/outcome owner selects exact accepted artifacts at a quiescent
+boundary; Ready and newest filename do not select work. Implementation needs a
+complete compatible accepted spec/plan pair. Design changes require successors
+for both; plan-only changes retain the exact source spec.
+
 ## 3. Implementation
 
 Implementation validates the exact plan, source spec, and optional
@@ -88,6 +116,21 @@ unauthorized external action still requires the appropriate user decision.
 
 Generated `docs/superpowers/**` state remains ignored and unstaged unless the
 user explicitly requests committing it.
+
+Both executors compare current selection on entry, resume, compaction and rebind.
+Stop stale workers before selection changes, regenerate inputs and revalidate.
+Unexpected schemas, abstractions, adapters, caches/replay, compatibility paths,
+budget breaches or material test-duration growth checkpoint as **Simplify**,
+**Replace**, **Defer**, or **Revise**. Contract/plan/budget changes need reviewed
+successors before divergent work resumes; unaffected safe work can continue.
+
+New/touched durable tests name a primary category and active contract: product
+behavior, safety/security, external compatibility, temporary migration, or
+implementation detail. Uniform suites may share an annotation; mixed exceptions
+are explicit. Pre-beta favors product/safety with evidenced external exceptions.
+Retire tests only with their obligations and retained coverage; temporary
+mechanisms need an owner, supported versions, expiration and complete cleanup.
+Expired support requires reviewed removal or fresh-evidence successor renewal.
 
 ## 4. Phase Handoff
 
@@ -113,7 +156,11 @@ one uninterrupted context.
 `finishing-a-development-branch` confirms current verification and exact task/
 whole-branch review coverage, inspects Git/index state, and reports commits, changed files,
 tests, satisfied requirements, residual risks, ignored artifacts, and installed
-runtime limitations.
+runtime limitations. It reports added/deleted/net production lines, module
+count/change, fan-out, schemas, compatibility paths, focused/full time, named
+concepts, budget verdict, retirements and remaining cleanup. Unavailable metrics
+need reasons and cannot pass; Markdown volume is separate. Every reviewer uses
+one rubric and the five subtraction questions from the shared evolution policy.
 
 It does not push, merge, open a PR, deploy, publish, discard work, or perform
 destructive cleanup without separate authorization.

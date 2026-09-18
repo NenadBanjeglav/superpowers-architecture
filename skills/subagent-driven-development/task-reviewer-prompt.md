@@ -45,6 +45,14 @@ The adapter must verify isolation and read-only realization or disclose the redu
 
     [ARCHITECTURE_BINDING]
 
+    Read skills/using-superpowers/references/product-evolution.md and the
+    authoritative current work/outcome owner. Compare selected exact artifacts
+    with review bindings; ambiguous, partial, retired or stale bindings block
+    affected review even if lifecycle validation passes. Check any successor
+    selection occurred after workers stopped or finished nondivergent work,
+    with regenerated inputs and exact evidence coverage.
+
+
     ## What the Implementer Claims They Built
 
     Read the implementer's report: [REPORT_FILE]
@@ -185,14 +193,11 @@ The adapter must verify isolation and read-only realization or disclose the redu
 
     ### Architecture Conformance
 
-    - **Modules:** preserved | changed with policy-accepted revision | violation
-    - **Interfaces:** preserved | changed with policy-accepted revision | violation
-    - **Seams and adapters:** justified production/test adapters at policy-accepted seams; no leaked host/runtime policy
-    - **Data flow:** matches the policy-accepted source-to-sink sequence
-    - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
-    - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
-    - **Constraints and scope:** goal, acceptance criteria, safety and external-action authority are preserved
-    - **Design progression:** implementation-discovered design changes returned the controlling artifact to Draft and then to internal review/Ready under Autonomous or readable user review/Approved under Review-gated
+    Return every result line from [CONFORMANCE_RUBRIC_FILE], including stage,
+    consumer/compatibility, subtraction, test categories, sunset and budget.
+    Cite evidence or reasoned non-applicability; required cannot-verify items
+    and violations block progression. Answer its five subtraction questions.
+    Reviewers are advisory and never approve or retire an obligation.
 
     ### Issues
 

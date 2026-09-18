@@ -30,6 +30,15 @@ progress check-ins.
 Missing or stale evidence stops the affected operation with expected/actual
 values. Do not fabricate approval, use conversation memory, or switch checkout.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and the existing authoritative current work/outcome
+owner. At entry, resume, compaction, rebind, or possible owner change, compare
+its selected exact spec/plan pair with task bindings. A valid but retired plan,
+ambiguous successors, or partial pair stops affected progression. Dates and
+Ready status do not select work. Carry Add/Replace/Remove/Defer intent, current
+consumer/stage evidence, retained and retired contracts, test categories,
+budget slice and sunset obligations in each task's context.
+
 ## Execution Loop
 
 For each incomplete task in order:
@@ -58,17 +67,21 @@ whether to continue.
 
 ## Design Discoveries
 
-If implementation reveals a necessary change to a bound module, interface,
-seam, adapter, data flow, or test surface:
+Stop affected divergent work before an unplanned schema, abstraction, adapter,
+cache/replay mechanism, compatibility path, budget breach, or material unexpected
+test-duration increase. Compare deletion/direct implementation first, then choose
+**Simplify**, **Replace**, **Defer**, or **Revise** using product-evolution.md.
+Record evidence and consequences; compare timings with commands, inputs,
+environment and cache conditions. One diagnostic rerun may investigate noise.
 
-1. stop only the divergent work;
-2. run the controlling spec and dependent plan through Draft;
-3. record the in-scope design correction and any durable documentation impact;
-4. refresh and run advisory review;
-5. under Autonomous, resolve findings, return artifacts to Ready, validate, and
-   resume;
-6. under Review-gated, present the changed readable package and resume only
-   after clear approval of the new revision.
+Ready/Approved specs/plans remain unchanged. If contract, plan or budget changes,
+author distinct Draft successors, refresh and review. Autonomous progresses to
+Ready; Review-gated requires real approval of the successor. A design change
+needs both successor spec and plan; a plan-only change retains its exact spec.
+At a quiescent boundary select the compatible accepted pair in the existing
+owner, regenerate task/review inputs, and revalidate before resuming. Finish
+only nondivergent work or stop workers before selection changes. Reuse evidence
+only after checking successor contracts and exact diff coverage.
 
 Ask the user only when the discovery changes the authorized goal, acceptance
 criteria, safety boundary, consequential product behavior, or external-action

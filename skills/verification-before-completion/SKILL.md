@@ -9,6 +9,15 @@ Bind completion claims to the exact work and observed evidence. Resolve Approval
 Policy and current policy-accepted spec/plan and optional Foundation dependencies.
 This is an evidence gate; it does not introduce a human approval gate.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md).
+At entry/resume/compaction/rebind or possible owner change, compare authoritative
+current selection with the exact work bindings. A still-valid historical plan
+cannot prove current completion. Check retained coverage and explicit successor
+retirement, primary test categories, complete sunset cleanup, and all evolution
+verdicts in the shared rubric. A missing required metric is unavailable with a
+reason, never zero or a pass; a material unexpected duration/budget increase
+requires the four-outcome checkpoint before further divergent work.
+
 ## Evidence Contract
 
 1. Identify the observation that establishes each claim: behavioral test, build,

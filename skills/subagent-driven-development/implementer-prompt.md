@@ -42,12 +42,23 @@ The runtime adapter must verify the actual context policy and disclose any reduc
     This task must preserve:
     [ARCHITECTURE_BINDING]
 
-    If implementation requires changing a bound module, interface, seam,
-    adapter, data flow, or test surface, stop and report BLOCKED with the exact
-    needed correction. The controller returns the controlling artifact to Draft,
-    repairs and reviews it, then progresses it according to [APPROVAL_POLICY].
-    Autonomous returns internally reviewed work to Ready; Review-gated requires
-    new user approval for the changed revision.
+    Read skills/using-superpowers/references/product-evolution.md and compare
+    the authoritative current work/outcome selection with these exact bindings
+    at entry, resume, compaction, rebind, or possible owner change. Stop affected
+    work for an ambiguous, partial, or stale pair; a Ready artifact alone is
+    not current selection. Carry the brief's Add/Replace/Remove/Defer intent,
+    evidence, retained/retired contracts, categories, budget and sunset context.
+
+    Before unplanned schemas, abstractions, adapters, caches/replay,
+    compatibility paths, budget breaches or material unexpected test-duration
+    growth, stop divergent work and report the evidence. Recommend Simplify,
+    Replace, Defer, or Revise, comparing deletion/direct implementation first.
+    Do not relax thresholds or weaken tests. The controller preserves accepted
+    bytes, authors distinct Draft successors when contract/plan/budget changes,
+    reviews and accepts under [APPROVAL_POLICY], then selects and rebinds at a
+    quiescent boundary. A design change needs both spec and plan successors.
+    Resume only on regenerated current inputs; unchanged evidence needs exact
+    successor-contract/diff coverage. Independent nondivergent work can continue.
 
     ## Before You Begin
 
@@ -155,7 +166,10 @@ The runtime adapter must verify the actual context policy and disclose any reduc
 
     Write your full report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
-    - What you tested and test results
+    - What you tested and test results, primary test categories and active contracts
+    - Production added/deleted/net lines, module/fan-out, schemas/compatibility
+      paths, focused/full time, named concepts and budget verdict; unavailable
+      values include reasons. Report retirements and remaining sunset cleanup.
     - **TDD Evidence** (if TDD was required for this task):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation

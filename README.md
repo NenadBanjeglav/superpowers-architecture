@@ -73,6 +73,14 @@ A single Architecture Conformance rubric follows modules, interfaces, seams,
 adapters, data flow, depth, locality, leverage, and public test surfaces through
 every phase.
 
+Current repository source additionally makes this workflow stage-aware: designs
+use evidence of current consumers and data obligations, plans name what to add,
+replace, remove and defer, and execution checkpoints unexpected complexity.
+Accepted specs/plans stay immutable; reviewed successors explicitly retire old
+obligations. Reviews check subtraction, test contracts, budgets and temporary
+cleanup. These source changes are **not installed or released in pinned 0.6.0**.
+The known host limits above remain; see [Workflow](docs/workflow.md).
+
 ## Autonomous by Default
 
 Once the goal and constraints are understood, Codex handles in-scope design,

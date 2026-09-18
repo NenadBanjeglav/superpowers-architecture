@@ -18,6 +18,17 @@ Tests verify observable behavior through the intended module interface. Test dou
 3. NEVER introduce a mock outside a justified remote/external seam you understand
 ```
 
+## Retiring tests without losing contracts
+
+Apply [product-evolution.md](../using-superpowers/references/product-evolution.md):
+classify new/touched durable tests by primary category and active contract.
+A suite annotation covers uniform contracts; mixed suites identify exceptions.
+Do not keep obsolete-format assertions solely because they existed, or delete
+safety/active behavior to meet a budget. Map removal to explicit successor
+retirement and retained interface coverage. Temporary tests, fixtures and
+formats leave with their mechanism's reviewed cleanup. Absence assertions need
+an observable absence contract; untouched tests need no blanket reclassification.
+
 ## Anti-Pattern 1: Testing Mock Behavior
 
 **The violation:**

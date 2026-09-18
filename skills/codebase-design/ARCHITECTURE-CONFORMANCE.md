@@ -8,6 +8,12 @@ judging the implementation.
 Autonomous accepts Ready or Approved artifacts. Review-gated accepts Approved
 artifacts only. Draft never authorizes downstream work.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and the authoritative current work/outcome owner. Compare its exact selection
+with task bindings at entry, resume, compaction, rebind, or possible owner change.
+Ready status and dates do not select work. For document review, judge the
+proposed post-acceptance selection; a Draft proposal is not execution authority.
+
 ## Result Shape
 
 - **Modules:** preserved | changed with policy-accepted revision | violation
@@ -17,7 +23,20 @@ artifacts only. Draft never authorizes downstream work.
 - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
 - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
 - **Constraints and scope:** goal, acceptance criteria, business/safety/privacy/security/data limits, and external-action authority are preserved
-- **Design progression:** Autonomous correction recorded through Draft and internal review to Ready | Review-gated change newly human-approved | no design change | violation
+- **Design progression:** accepted history unchanged; correction uses distinct policy-accepted successors and fresh exact bindings | no design change | violation
+- **Stage appropriateness:** evidenced maturity, scoped durability/reset authority, and reassessment triggers fit this change
+- **Consumer/compatibility:** present consumers justify mechanisms; new/prolonged compatibility meets the shared evidence gate; unresolved stateless promises block the affected decision
+- **Subtraction:** explicit successor retirement maps deletions/replacements to authority and evidence; omitted and unrelated obligations remain binding
+- **Test categories:** new/touched durable tests name primary category and active contract; retained product/safety coverage survives retirement
+- **Sunset:** temporary mechanisms have complete ownership, expiration and cleanup; expired support has reviewed removal or evidenced successor renewal
+- **Complexity budget:** actual scoped measurements meet accepted thresholds; unavailable metrics are not zero or a pass
+
+For each evolution line report `satisfied`, `violation`, or `cannot verify`,
+with evidence or reasoned non-applicability. Required missing evidence blocks
+affected progression. Answer all five subtraction questions: what can this
+delete; which assumptions are obsolete; which tests protect obsolete formats;
+does this fit the current stage; would we build this mechanism today from an
+empty codebase? An evidenced no-deletion outcome is valid.
 
 Any `violation` is blocking. Passing tests do not excuse a violated interface,
 leaked adapter concern, weakened acceptance criterion, or widened scope.
@@ -35,10 +54,13 @@ leaked adapter concern, weakened acceptance criterion, or widened scope.
    change. Report a blocking violation with file/line evidence when neither is
    true.
 5. Distinguish an in-scope technical correction from a goal/constraint change.
-   Under Autonomous, return the controlling artifact through Draft, record the
-   correction, review it internally, mark the exact revision Ready, update the
-   dependent plan, and resume. Under Review-gated, present the changed readable
-   artifact and require new clear human approval.
+   Stop affected divergent work; compare Simplify, Replace, Defer, and Revise.
+   Preserve Ready/Approved spec/plan bytes. Changed contracts or budgets need
+   distinct Draft successors, refresh and review; Autonomous marks Ready,
+   Review-gated requires genuine successor approval. A design correction needs
+   both compatible successors; a plan-only correction retains its exact spec.
+   Select at a quiescent boundary, regenerate worker/review inputs, and revalidate
+   before resuming. Foundation current truth keeps its managed receipt workflow.
 6. Ask the user only when the change alters the authorized goal, acceptance
    criteria, safety boundary, consequential product behavior, or external-action
    authority. Do not send ordinary architecture or test repairs to a human gate.

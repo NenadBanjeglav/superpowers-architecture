@@ -36,6 +36,17 @@ handoffs still require their actual capability checks and the recorded fallback.
 The remaining sections describe the intended runtime contracts. Treat any
 capability listed as unverified above as unverified in this release.
 
+## Unreleased Source Evolution
+
+Current repository source guards Ready/Approved spec/plan writes and requires
+reviewed successors, current-owner selection, consumer/stage evidence, complexity
+checkpoints and sunset review. These changes are not installed or released in
+the pinned 0.6.0 plugin. Its older helpers can still mutate accepted artifacts;
+controllers must follow successor policy and must not infer the new guards from
+the version label. Core checks establish identity/write boundaries; semantic
+evidence and current selection remain controller/reviewer responsibilities.
+No handoff fields, runtime schemas or installed-host claims are added.
+
 ## Supported Surfaces
 
 | Surface | Shared core | Adapter | Required installed evidence |

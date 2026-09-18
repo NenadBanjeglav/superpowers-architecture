@@ -30,6 +30,14 @@ runtime verification remains outstanding; see
 This exception is specific to 0.6.0. The default evidence requirements below
 continue to apply to later releases unless the maintainer explicitly changes them.
 
+## Current Source Changes
+
+The stage-aware source work is unreleased and has not refreshed the pinned
+0.6.0 installation. Source verification covers immutable accepted writes,
+reviewed successors, current selection, evidence gates, test retirement,
+checkpoints and sunset; it proves no installed startup or fresh-host behavior.
+Its source/installed distinction does not extend the 0.6.0 exception.
+
 ## Manual Evidence Matrix
 
 Release evidence is local developer state under
@@ -65,8 +73,10 @@ The matrix must cover:
    the V1 quiescent-application boundary: hostile same-machine mutation inside
    the bounded window is not covered.
 6. Transactional generic and Foundation-backed existing-project migration:
-   narrow complete-byte changes, Ready reconciliation, immutable history,
-   concurrent writers, interruption/recovery, idempotence, and preservation of
+   narrow complete-byte Draft/owner changes, rejection of changed accepted
+   specs/plans, unchanged accepted input validation, owner-only migration with
+   separately reviewed successors, immutable history, concurrent writers,
+   interruption/recovery, idempotence, and preservation of
    business/safety constraints and prior human approval facts.
 7. Portable SDD operations, exact policy/spec/plan/Foundation binding, stale
    dependency rejection, workspace-manager fixtures, serialization, paths
@@ -81,6 +91,13 @@ The matrix must cover:
 10. Representative new and existing Autonomous flows, a new explicit
     Review-gated opt-in, and a smoke pass through the complete Codex marketplace/plugin
     installation, including removed-source rejection and migration guidance.
+
+For current source changes, also record scenario evidence for current-owner
+selection after resume/rebind, all four discovery outcomes, stage/consumer and
+stateless obligations, retained test coverage, expired sunset and unavailable
+metrics. Report production added/deleted/net lines, module/fan-out, schema/path
+inventory, focused/full time and named concepts against the accepted budget.
+These source checks supplement the matrix; they cannot satisfy host rows.
 
 A failed or unavailable mandatory row retains that status and blocks release
 by default, subject only to the explicit 0.6.0 exception above. It must not be

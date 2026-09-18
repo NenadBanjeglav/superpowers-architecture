@@ -21,6 +21,12 @@ Public documentation and local Superpowers working docs.
   narrowly on next entry, Review-gated requires a new explicit opt-in, and
   Ready never claims human approval.
 - Runtime claims require installed Codex evidence; source inspection cannot substitute. Missing mandatory evidence blocks release by default. The maintainer explicitly authorized 0.6.0 publication with failed/unverified host checks disclosed; docs/release.md owns this version-specific exception, and README/installation/runtime/release notes must agree on the manual entry workaround and limits.
+- Stage-aware workflow descriptions apply to current repository source and
+  explicitly distinguish unreleased/uninstalled changes from pinned 0.6.0.
+  Accepted specs/plans use immutable history and reviewed successors; current
+  selection, stage/consumer evidence, subtraction, categories, budget and sunset
+  must agree with the shared evolution policy and conformance rubric.
+
 - Local tag preparation and external publication are separate gates. Public docs must not imply that a local tag was pushed or a GitHub release was created.
 - Mentions of removed upstream behavior must be descriptive, not active instructions.
 - Public URLs must point to `https://github.com/NenadBanjeglav/superpowers-architecture`.

@@ -41,6 +41,15 @@ against Git and resume at the first incomplete task. Reconcile unparsed legacy
 entries before writing progress or dispatching; never overwrite unknown recovery
 state or repeat a completed task because conversation context was lost.
 
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+and the existing authoritative current work/outcome
+owner. At entry, resume, compaction, rebind, or possible owner change, compare
+its selected exact spec/plan pair with task bindings. A valid but retired plan,
+ambiguous successors, or partial pair stops affected progression. Dates and
+Ready status do not select work. Carry Add/Replace/Remove/Defer intent, current
+consumer/stage evidence, retained and retired contracts, test categories,
+budget slice and sunset obligations in each task's context.
+
 ## Task Loop
 
 1. Inspect the plan for conflicts before the first task. Bind the task's exact
@@ -81,12 +90,22 @@ deterministic fallback.
 - BLOCKED: diagnose what failed, improve context or decomposition, and retry only
   with a changed approach. Preserve the explicit user model.
 
-A change to bound modules, interfaces, seams/adapters, data flow, or test surface
-stops only divergent work. Return controlling spec and dependent plan through
-Draft, correction, refresh, and advisory review; restore Ready under Autonomous
-or obtain changed-revision approval under Review-gated. Refresh SDD bindings and
-generated inputs before resuming. Ask only for a consequential goal/constraint
-choice, required unavailable input/access, or an action beyond authority.
+Stop affected divergent work before an unplanned schema, abstraction, adapter,
+cache/replay mechanism, compatibility path, budget breach, or material unexpected
+test-duration increase. Use product-evolution.md's checkpoint: compare deletion
+and direct implementation, then choose **Simplify**, **Replace**, **Defer**, or
+**Revise** with evidence and consequences. Compare timing inputs/environment;
+one diagnostic rerun may investigate noise, never select the best repeated time.
+
+Preserve Ready/Approved bytes. Changed contract/plan/budget needs distinct Draft
+successors, refresh, review and policy acceptance: Ready under Autonomous, real
+successor approval under Review-gated. A design change needs both compatible
+successor spec and plan; a plan-only change retains its exact spec. Finish only
+nondivergent work or stop workers before changing selection at a quiescent
+controller boundary. Update the existing owner, regenerate SDD bindings and
+worker/review inputs, and revalidate. Check successor contracts and exact diff
+before reusing task evidence. Ask only for a consequential goal/constraint
+choice, required unavailable input/access, or action beyond authority.
 
 Fix dispatches carry covering tests and append command/output evidence to the
 same report. Re-review the changed coverage. One bounded fix dispatch may handle

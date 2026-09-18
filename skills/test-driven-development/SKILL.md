@@ -10,6 +10,25 @@ tests. Draft never authorizes implementation. Preserve the bound goal,
 acceptance criteria, architecture, and public test surface. Apply
 [Architecture Conformance](../codebase-design/ARCHITECTURE-CONFORMANCE.md).
 
+## Contract and Retirement
+
+Read [product-evolution.md](../using-superpowers/references/product-evolution.md)
+for primary categories: Product behavior,
+Safety/security invariant, External compatibility contract, Temporary migration
+test, and Implementation detail. Every new or substantively changed durable
+test names its primary category and active contract in a title/comment or
+adjacent inventory. A uniform suite annotation suffices; mixed suites identify
+exceptions. No tagging framework or reclassification of untouched tests.
+
+Pre-beta primarily protects product/safety behavior; actual external obligations
+need evidence. At touched boundaries inspect old tests/fixtures. Remove only
+explicitly retired obligations under the selected accepted successor, retaining
+coverage of active behavior and safety. Replace private-detail assertions with
+interface coverage unless an independent contract warrants reclassification.
+Temporary tests follow their mechanism's sunset and concrete cleanup task.
+Assert absence only when it is observable; otherwise check retained behavior
+and removed references. A category, failed test or budget alone permits no purge.
+
 ## Red, Green, Refactor
 
 1. Write a focused test for the required observable behavior through the intended
@@ -49,10 +68,11 @@ red evidence, and establish a regression that fails against the pre-change
 behavior in an isolated fixture when feasible. Do not delete work as punishment
 or call a test-first gap verified without evidence.
 
-An in-scope architecture/test-surface correction returns the controlling spec
-and dependent plan through Draft, refresh, and review. Autonomous returns them
-to Ready; Review-gated requires approval of the changed revision. Stop only
-divergent work until the new binding is accepted.
+An in-scope architecture/test-surface correction preserves accepted bytes and
+uses distinct Draft successor spec/plan files, refresh and review. Autonomous
+marks Ready; Review-gated requires real successor approval. Stop divergent work
+until the controller selects the compatible accepted pair and rebinds. Unplanned
+test adapters or material time/budget growth use the shared four-outcome checkpoint.
 
 ## Completion
 

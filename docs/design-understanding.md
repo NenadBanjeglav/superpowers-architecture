@@ -11,6 +11,11 @@ purpose, users, journeys, scope, stable requirements, release boundaries, and
 roadmap traceability. A feature spec links those identities without copying
 project-wide truth.
 
+The stage-aware evolution changes described here apply to current repository
+source. They are not installed or released in the pinned 0.6.0 plugin; its
+[startup and installed-host limits](runtime-support.md#060-known-limitations)
+remain. Source checks do not establish host delivery.
+
 ## Language
 
 Name important concepts and rejected synonyms when ambiguity would spread across
@@ -37,6 +42,17 @@ Record:
 
 The shared Architecture Conformance rubric binds these decisions through
 Planning, TDD, implementation, task review, and whole-branch review.
+
+## Evolution Evidence
+
+Use [product-evolution.md](../skills/using-superpowers/references/product-evolution.md)
+for maturity, current consumers, scoped data/reset authority and reversible
+alternatives. Unknowns remain unknown; stage labels cannot remove obligations.
+Specs carry the five evolution sections and successor retirement mappings;
+accepted history is immutable, while current selection defines the target.
+Future-only complexity is deferred. Budget measurements, active test categories
+and complete temporary cleanup are reviewed through the one conformance rubric.
+A hypothetical second adapter does not justify a seam.
 
 ## Durable Documentation Impact
 
@@ -72,10 +88,12 @@ Current Decision Index changes prior status.
 Advisory reviewers return Ready for progression under Autonomous, Ready for user
 review under Review-gated, or Issues found. They never approve content.
 
-Implementation-discovered in-scope design corrections return the spec and
-dependent plan through Draft. Under Autonomous, the controller records the
-change, refreshes, reviews, marks Ready, and resumes. Under Review-gated, the
-changed readable artifact requires new clear human approval. A reviewer report,
+Implementation-discovered in-scope design corrections preserve accepted bytes
+and create distinct Draft successor spec and plan files. Under Autonomous, the
+controller records explicit retirement/replacement, refreshes, reviews and marks
+Ready. Under Review-gated, the readable successors require genuine approval.
+Select the compatible pair in the current work owner at a quiescent boundary,
+regenerate inputs and revalidate before divergent work resumes. A reviewer report,
 conversation statement, or passing test does not create lifecycle evidence.
 
 Ask the user only when a discovery changes the authorized goal, acceptance

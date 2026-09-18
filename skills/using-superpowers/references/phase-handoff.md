@@ -114,6 +114,19 @@ Codex-managed worktree identity, and receiver-side
 fresh user-owned session identity. An adapter must satisfy these through the
 active host; it cannot pass a CLI flag that merely asserts they are true.
 
+## Current Selection at Receive
+
+Before phase work, the receiver reads the authoritative current work/outcome
+owner and [product-evolution.md](product-evolution.md), comparing selection with
+its exact artifact bindings. Planning may bind a selected accepted spec alone;
+implementation needs the selected complete compatible spec/plan pair. Valid
+historical artifacts, filename dates and Ready status do not select work.
+Ambiguous successors, partial pairs or stale saved inputs stop affected
+progression. This is a controller/semantic check, not an added record field or
+claim that mechanical validation proves authority. On resume/compaction/rebind
+or possible owner change, repeat that comparison. Stop stale workers before
+quiescent selection changes; regenerate inputs and revalidate before resuming.
+
 ## V1 Compatibility
 
 Only the complete Codex plugin is supported. Historical `skills-install`

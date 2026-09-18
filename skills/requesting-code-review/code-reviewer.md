@@ -39,6 +39,14 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 
     [ARCHITECTURE_BINDING]
 
+    Read skills/using-superpowers/references/product-evolution.md and the
+    authoritative current work/outcome owner. Compare selected exact artifacts
+    with review bindings; ambiguous, partial, retired or stale bindings block
+    affected review even if lifecycle validation passes. Check any successor
+    selection occurred after workers stopped or finished nondivergent work,
+    with regenerated inputs and exact evidence coverage.
+
+
     ## Git Range to Review
 
     **Base:** [BASE_SHA]
@@ -83,8 +91,9 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
     - All tests passing?
 
     **Production readiness:**
-    - Migration strategy if schema changed?
-    - Backward compatibility considered?
+    - Current consumer/durability evidence justifies schema and compatibility?
+    - Direct replacement/reset alternatives considered within actual authority?
+    - Temporary mechanisms have supported versions, sunset and complete cleanup?
     - Documentation complete?
     - No obvious bugs?
 
@@ -106,14 +115,11 @@ Render the bounded prompt below to `[PROMPT_FILE]`, then issue this host-neutral
 
     ### Architecture Conformance
 
-    - **Modules:** preserved | changed with policy-accepted revision | violation
-    - **Interfaces:** preserved | changed with policy-accepted revision | violation
-    - **Seams and adapters:** justified production/test adapters at bound seams; no leaked host/runtime policy
-    - **Data flow:** matches the bound source-to-sink sequence
-    - **Depth, locality, leverage:** complexity remains hidden behind the intended interface; no pass-through decomposition
-    - **Test surface:** observable behavior is tested through the intended module interface; internal helpers are directly tested only when they expose an independent behavioral contract
-    - **Constraints and scope:** goal, acceptance criteria, safety and external-action authority are preserved
-    - **Design progression:** Autonomous corrections returned through Draft and internal review to Ready; Review-gated changes returned to readable user review
+    Return every result line from [CONFORMANCE_RUBRIC_FILE], including stage,
+    consumer/compatibility, subtraction, test categories, sunset and budget.
+    Cite evidence or reasoned non-applicability; required cannot-verify items
+    and violations block progression. Answer its five subtraction questions.
+    Reviewers are advisory and never approve or retire an obligation.
 
     ### Issues
 
