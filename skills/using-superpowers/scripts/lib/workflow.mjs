@@ -264,7 +264,6 @@ async function prepareArtifactGraph(rootRealPath, request, snapshot) {
   }
   const states = new Map();
   const outputs = new Map();
-  const history = [];
   for (const artifact of request.artifacts) {
     const source = snapshot.get(artifact.path);
     if (!source || source.bytes === null) throw workflowError(`artifact ${artifact.path}`, 'an existing regular artifact', 'absent');
@@ -275,8 +274,8 @@ async function prepareArtifactGraph(rootRealPath, request, snapshot) {
       continue;
     }
     const inspected = inspectArtifactBytes({ path: source.target, bytes: source.bytes, artifactType: artifact.artifactType });
-    if (inspected.status === 'Approved' && inspected.revision === inspected.payloadRevision && inspected.approvedRevision === inspected.revision) {
-      history.push({ path: artifact.path, bytes: source.bytes, mode: source.mode, kind: 'Approved artifact' });
+    if (inspected.status !== 'Draft') {
+      throw workflowError(`artifact ${artifact.path}`, 'editable Draft target; preserve accepted history and create a distinct Draft successor', `Status ${inspected.status}`);
     }
     const prepared = prepareReadyArtifactBytes({ path: source.target, bytes: Buffer.from(change.content, 'utf8'), artifactType: artifact.artifactType });
     if (prepared.state.revision !== artifact.expectedRevision) {
@@ -312,7 +311,7 @@ async function prepareArtifactGraph(rootRealPath, request, snapshot) {
       if (actual !== expected) throw workflowError(`plan ${artifact.path} ${label}`, expected, actual);
     }
   }
-  return { states, outputs, history };
+  return { states, outputs };
 }
 
 function foundationReceipt({ request, prepared, artifactGraph, nonce, appliedAt }) {
@@ -1058,7 +1057,7 @@ async function migrateUnlocked({ root, requestPath, policy }, adapters) {
       }
     }
     outputs = lockedOutputs;
-    const history = await persistHistory(operationRoot, rootRealPath, requestDigest, [...lockedArtifactGraph.history, ...(lockedFoundationGraph?.history ?? [])]);
+    const history = await persistHistory(operationRoot, rootRealPath, requestDigest, lockedFoundationGraph?.history ?? []);
     journal = await prepareTransaction(
       transactionRoot,
       { operationNonce: lock.operationNonce, root: rootRealPath, id: request.id, requestDigest },

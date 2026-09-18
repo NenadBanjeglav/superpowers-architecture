@@ -32,7 +32,10 @@ fail before mutation.
 
 Mutation targets are limited to named AGENTS.md owners, root CONTEXT.md,
 Foundation documents, and current local Design Specs or Implementation Plans.
-Source code, Git internals, and old receipts are never migration targets. A
+Only editable Draft specs/plans may change. Ready/Approved history stays frozen;
+automatically migrate active instruction owners, then separately author/review
+successors for accepted artifacts needing changes. Source code, Git internals,
+and old receipts are never migration targets. A
 generic request cannot change a managed Foundation record; it must supply the
 complete Foundation subgraph. Existing Review-gated language is migration input,
 not evidence of a new opt-in. The controller preserves business, safety,
@@ -42,9 +45,10 @@ bytes.
 Each artifact entry contains `path`, `artifactType`, `expectedRevision`, and
 `sourceSpecPath`. Every changed spec or plan is listed. Plans bind an included
 Design Spec, its exact revision, and all four Foundation fields. Unchanged valid
-Approved artifacts remain unchanged. Changed current artifacts become Ready
-with empty approval fields; original changed Approved bytes are archived as
-immutable history.
+Ready/Approved artifacts remain unchanged. Changed accepted targets reject before
+mutation and again during locked graph reread. Changed Draft artifacts become
+Ready with empty approval fields. Prior accepted-artifact migration archives
+remain valid historical evidence; new migrations do not create such archives.
 
 The optional Foundation record contains `manifestPath`, `baseRevision`,
 `resultRevision`, `specPath`, `specRevision`, and the absent deterministic
@@ -76,7 +80,15 @@ request writes no transaction state.
 - Approved means a human approved that exact content revision. It retains its historical meaning.
 - Autonomous accepts Ready or Approved authoritative inputs. Review-gated accepts Approved only. Operations whose callers omit policy retain strict Review-gated compatibility.
 
-Goal authorization permits ordinary local design, implementation, documentation repair, review repair, and testing needed for the bounded outcome. Record and internally review in-scope changes; never reduce requirements to make checks pass. Ask only about an unresolved consequential product choice, a goal/constraint change, missing access/input that cannot be resolved, or an action outside existing authority. Complete independent safe work first.
+Goal authorization permits ordinary local design, implementation, documentation
+repair, review repair, and testing needed for the bounded outcome. Preserve the
+current selected contract. [Product evolution](product-evolution.md) owns exact
+successor selection, authorized retirement, evidence, and subtraction; old
+runtime choices do not remain binding solely because history records them.
+Never weaken active requirements to make checks pass. Ask only about an unresolved
+consequential product choice, a goal/constraint change, missing access/input that
+cannot be resolved, or an action outside existing authority. Complete independent
+safe work first.
 
 Validate authoritative input on first use in a fresh, resumed, or compacted context; after edits or dependency changes; after branch/checkout changes or possible external writers; and inside correctness-critical mutations under their lock. Within one uninterrupted controller context, reuse a proven check while its inputs remain unchanged.
 A new message or nested skill alone does not invalidate evidence. Preserve required

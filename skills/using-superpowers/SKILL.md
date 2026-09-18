@@ -48,12 +48,15 @@ Pass explicit policy to shared operations; omitted-policy/v1 consumers stay
 strict. Never manufacture approval to overcome a capability mismatch.
 
 In-scope design, plan, code, tests, review, and documentation repairs are
-agent-owned under Autonomous. Changed authoritative content returns through
-Draft, refresh, review, and Ready; Review-gated requires approval of the changed
-readable package. Ask about consequential goal/constraint choices or missing
+agent-owned under Autonomous. Ready/Approved specs and plans remain immutable;
+revisions use distinct Draft successors through refresh, review, and Ready.
+Review-gated requires approval of the successor's readable package. Ask about consequential goal/constraint choices or missing
 required input/access, and actions beyond existing authority. Complete independent
 safe work first. Preserve acceptance criteria, safety, immutable history, and
-external-action boundaries.
+external-action boundaries. Load [product-evolution.md](references/product-evolution.md)
+for stage/consumer evidence, current-owner selection, explicit retirement,
+test categories, budgets, and sunset. Preserve the selected current contract;
+historical runtime choices can be retired only through its scoped successor rules.
 
 Load [workflow-policy.md](references/workflow-policy.md) for active legacy gate
 migration or detailed policy/freshness handling. Migration is narrow,
@@ -88,7 +91,7 @@ Read details only when the operation applies:
 1. Route through the applicable skill, announce it, and read the local instruction chain before acting.
 2. Approval Policy defaults to Autonomous for new and existing work; Review-gated requires a new explicit opt-in, and legacy gates are migrated narrowly with workflow migrate at a safe boundary.
 3. Draft never progresses; Autonomous accepts internally reviewed Ready or Approved artifacts, while Review-gated accepts Approved only and preserves real human provenance.
-4. Keep the authorized goal, acceptance criteria, safety constraints, external-action boundaries, and immutable history; repair in-scope design, plan, code, review, and tests without repeated human approval.
+4. Preserve the authorized goal, acceptance criteria, selected current contract, safety and external-action boundaries; Ready/Approved specs and plans are immutable. Use distinct reviewed successors for revisions and explicit authorized retirement; repair in-scope work without repeated human approval.
 5. Phase Mode is independent: fresh mode requires a genuinely fresh user-owned same-checkout session with verified v2 bindings, while same-session mode rereads changed inputs; never substitute a fork or subagent.
 6. Report missing capabilities and installed-host evidence honestly; never pretend migration, validation, isolation, checkout/plugin affinity, startup injection, or publication succeeded.
 <!-- STARTUP-CONTRACT:END -->

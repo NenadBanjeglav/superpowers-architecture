@@ -94,7 +94,7 @@ export function prepareReadyArtifactBytes({ path, bytes, artifactType }) {
 }
 
 function recoveryAction() {
-  return 'Recovery: run artifact draft before editing and artifact refresh afterward. Resolve applicable review findings, then use artifact ready under Autonomous or obtain clear human approval and use artifact approve under Review-gated.';
+  return 'Recovery: preserve Ready/Approved history; create a distinct Draft successor for revisions. Preserve suspect accepted bytes and restore only from known exact evidence. Edit and refresh only Draft work, resolve review findings, then use artifact ready under Autonomous or obtain clear human approval and use artifact approve under Review-gated.';
 }
 
 function artifactError(path, expected, actual, recovery = recoveryAction()) {
@@ -243,6 +243,13 @@ async function draftArtifactUnlocked({ path, artifactType }) {
     );
   }
   const { bytes, normalized } = await readArtifact(path);
+  if (maskMarkdownFences(normalized).match(LIFECYCLE_LINE)) {
+    const current = parseLifecycleMetadata(path, normalized);
+    if (current.status !== 'Draft' || current.approvedRevision !== 'none' || current.approvedAt !== 'none') {
+      throw artifactError(path, 'editable Draft with no approval metadata or a new successor file', `Status ${current.status}; Approved Revision ${current.approvedRevision}; Approved At ${current.approvedAt}`);
+    }
+    assertArtifactType(path, artifactType, current.artifactType);
+  }
   const revision = computeArtifactRevision(bytes);
   return writeArtifact(path, normalized, {
     artifactType,
@@ -276,6 +283,9 @@ async function refreshArtifactRevisionUnlocked({ path, artifactType }) {
 
   if (approvalStillValid || readinessStillValid) {
     return { path, ...current };
+  }
+  if (current.status !== 'Draft') {
+    throw artifactError(path, 'unchanged accepted artifact or a distinct Draft successor', `Status ${current.status}; Revision ${current.revision}; payload ${revision}; Approved Revision ${current.approvedRevision}; Approved At ${current.approvedAt}`);
   }
 
   return writeArtifact(path, normalized, {
@@ -314,7 +324,7 @@ async function approveArtifactUnlocked({ path, artifactType, expectedRevision, a
       path,
       'status Draft before approval',
       current.status || 'missing status',
-      'Recovery: run artifact draft before any edit, artifact refresh afterward, and obtain user review of the refreshed revision before approval.',
+      recoveryAction(),
     );
   }
 

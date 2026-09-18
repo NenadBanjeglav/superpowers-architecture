@@ -34,15 +34,26 @@ Each success prints one JSON object. Any failure prints an actionable error and 
 
 All lifecycle writes acquire one exact sibling directory lock and reread state under that lock. Cooperating lifecycle writers serialize. A controlled validation or write failure releases its known-empty lock and preserves the original diagnostic; a terminated process or cleanup anomaly leaves visible state that must be inspected before its empty lock is removed. Cleanup errors never silently replace an operation error. An uncooperative external process can still replace bytes after validation, so controllers require a quiescent writer boundary and every later consumer recomputes the exact revision. Unknown drift is never treated as Ready.
 
-## Managed Edit Sequence
+## Draft Authoring and Immutable Accepted History
 
-1. Run `artifact draft` before changing content. This invalidates prior approval.
-2. Edit the payload.
+1. For new work, create a distinct file without overwriting an existing path and run `artifact draft`. Existing Draft work remains editable; managed metadata must be unambiguous and have no approval provenance. Fenced examples are not managed metadata.
+2. Edit only the Draft payload. Ready/Approved files are immutable, whether consumed or not. Revisions use a new Draft successor under [product-evolution.md](product-evolution.md), with exact predecessor identity and explicit retirement/replacement scope.
 3. Run `artifact refresh` and advisory review on the exact resulting revision.
 4. Under Autonomous, resolve findings and run `artifact ready`. Under Review-gated, present a readable review package and only after clear user approval run `artifact approve`.
-5. Every downstream phase runs `artifact validate` with explicit policy, expected type, and revision before acting.
+5. Every downstream phase runs `artifact validate` with explicit policy, expected type, and revision before acting, and reviews the authoritative owner's exact current selection.
 
-An unmanaged post-approval edit leaves stale metadata. Validation recomputes the payload and rejects it with both the expected approved digest and actual digest; filename, timestamp, or conversation memory never proves approval.
+`artifact draft` rejects accepted or malformed managed input without normalizing
+or relabeling it, including when another type is requested. `artifact refresh`
+returns valid unchanged Ready/Approved state without writing; stale accepted
+payload or provenance fails without downgrade. `ready` and `approve` remain
+Draft-only. A Ready proposal needing human approval uses a new Draft successor.
+
+An unmanaged accepted-file edit leaves suspect history. Validation recomputes
+the payload and rejects stale identity; filename, timestamp, or conversation
+memory never proves acceptance. Preserve suspect bytes and restore only from
+known exact evidence or author a separate successor. The CLI is a cooperative
+writer boundary, not tamper-proof storage. Foundation current-truth edits and
+immutable ledger/receipt evidence retain their separate existing workflow.
 
 ## Packaging and Failure Policy
 
