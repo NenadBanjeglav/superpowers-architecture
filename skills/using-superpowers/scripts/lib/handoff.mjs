@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
-import { validateArtifact, validateApprovedArtifact } from './artifacts.mjs';
+import { readValidatedArtifactSnapshot } from './artifacts.mjs';
+import { physicalFile, exactField, maskMarkdownFences, validateImplementationBinding } from './bindings.mjs';
 import { resolveApprovalPolicy } from './policy.mjs';
 
 const REVISION = /^sha256:[0-9a-f]{64}$/;
@@ -88,21 +89,6 @@ function inside(root, path) {
   return rel === '' || (!isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`));
 }
 
-async function physicalFile(path, root, subject) {
-  if (typeof path !== 'string' || !isAbsolute(path)) fail(`${subject} must be an absolute path.`);
-  let physical;
-  try {
-    physical = await realpath(path);
-    if (!(await stat(physical)).isFile()) fail(`${subject} is not a regular file: ${path}.`);
-  } catch (error) {
-    if (error.message?.startsWith('Phase handoff:')) throw error;
-    fail(`${subject} is not a readable physical file at ${path}: ${error.code ?? error.message}.`);
-  }
-  if (physical !== resolve(path)) fail(`${subject} must use its physical path; received ${path}, resolved ${physical}.`);
-  if (!inside(root, physical)) fail(`${subject} must stay inside checkout ${root}; received ${physical}.`);
-  return physical;
-}
-
 async function physicalDirectory(path, subject) {
   if (typeof path !== 'string' || !isAbsolute(path)) fail(`${subject} must be an absolute path.`);
   try {
@@ -130,34 +116,6 @@ function rawRevision(bytes) {
 
 function envelopeRevision(envelope) {
   return rawRevision(Buffer.from(`${JSON.stringify(envelope)}\n`, 'utf8'));
-}
-
-function maskMarkdownFences(text) {
-  const lines = normalizeLf(text).split('\n');
-  let fence = null;
-  return lines.map((line) => {
-    if (fence) {
-      const close = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
-      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
-      return '';
-    }
-    const open = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (open) {
-      fence = { character: open[1][0], length: open[1].length };
-      return '';
-    }
-    return line;
-  }).join('\n');
-}
-
-function exactField(text, label, subject) {
-  const source = maskMarkdownFences(text);
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const matches = [...source.matchAll(new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'))];
-  if (matches.length !== 1 || matches[0][1].length === 0) {
-    fail(`${subject} must contain exactly one nonempty ${label} field outside fenced blocks.`);
-  }
-  return matches[0][1].replace(/^`|`$/g, '');
 }
 
 async function checkoutEvidence(root, record) {
@@ -279,7 +237,7 @@ async function validateDependencies({ root, record, revisionField, policy, envel
       ...(legacy ? {} : { policy }),
     });
   } else {
-    artifact = legacy ? await validateApprovedArtifact(artifactArgs) : await validateArtifact({ ...artifactArgs, policy });
+    artifact = await readValidatedArtifactSnapshot({ ...artifactArgs, policy });
   }
 
   let sourceSpec = null;
@@ -287,9 +245,7 @@ async function validateDependencies({ root, record, revisionField, policy, envel
     assertRevision(record.sourceSpecRevision, 'sourceSpecRevision');
     const sourcePath = await physicalFile(record.sourceSpecPath, root, 'source Design Spec');
     await requireIgnored(root, sourcePath, 'source Design Spec');
-    sourceSpec = legacy
-      ? await validateApprovedArtifact({ path: sourcePath, artifactType: 'Design Spec', expectedRevision: record.sourceSpecRevision })
-      : await validateArtifact({ path: sourcePath, artifactType: 'Design Spec', expectedRevision: record.sourceSpecRevision, policy });
+    sourceSpec = await readValidatedArtifactSnapshot({ path: sourcePath, artifactType: 'Design Spec', expectedRevision: record.sourceSpecRevision, policy });
   }
 
   let foundation = null;
@@ -308,7 +264,7 @@ async function validateDependencies({ root, record, revisionField, policy, envel
       await requireIgnored(root, receiptPath, 'Foundation Application Receipt');
       const specPath = record.phase === 'planning' ? artifactPath : record.sourceSpecPath;
       const specRevision = record.phase === 'planning' ? record[revisionField] : record.sourceSpecRevision;
-      const controllingText = await readUtf8(artifactPath, 'phase artifact');
+      const controllingText = artifact.text;
       const baseLabel = record.phase === 'planning' ? 'Base Agentic Foundation' : 'Foundation Base Revision';
       const baseRevision = exactField(controllingText, baseLabel, `${record.artifactType} traceability`);
       assertRevision(baseRevision, baseLabel);
@@ -329,31 +285,26 @@ async function validateDependencies({ root, record, revisionField, policy, envel
   }
 
   if (record.phase === 'implementation') {
-    const plan = await readUtf8(artifactPath, 'Implementation Plan');
-    if (exactField(plan, 'Spec', 'Implementation Plan traceability') !== record.sourceSpecPath) fail('Implementation Plan Spec path differs from the handoff sourceSpecPath.');
-    if (exactField(plan, 'Spec Revision', 'Implementation Plan traceability') !== record.sourceSpecRevision) fail('Implementation Plan Spec Revision differs from the handoff sourceSpecRevision.');
-    const expectedFoundation = foundationBoth ? {
-      'Foundation Manifest': record.foundationManifestPath,
-      'Foundation Base Revision': foundation.baseRevision,
-      'Foundation Result Revision': record.foundationRevision,
-      'Foundation Application Receipt': envelope.foundationApplicationReceipt,
-    } : {
-      'Foundation Manifest': 'none',
-      'Foundation Base Revision': 'none',
-      'Foundation Result Revision': 'none',
-      'Foundation Application Receipt': 'none',
-    };
-    for (const [label, expected] of Object.entries(expectedFoundation)) {
-      if (exactField(plan, label, 'Implementation Plan traceability') !== expected) fail(`Implementation Plan ${label} differs from the handoff binding.`);
-    }
+    validateImplementationBinding(artifact, sourceSpec, {
+      foundationManifestPath: record.foundationManifestPath,
+      foundationBaseRevision: foundationBoth ? foundation.baseRevision : 'none',
+      foundationResultRevision: record.foundationRevision,
+      foundationApplicationReceipt: envelope.foundationApplicationReceipt,
+    });
   } else if (record.phase === 'planning') {
-    const spec = await readUtf8(artifactPath, 'Design Spec');
+    const spec = artifact.text;
     const expectedManifest = foundationBoth ? record.foundationManifestPath : 'none';
     const expectedBase = foundationBoth ? foundation.baseRevision : 'none';
     if (exactField(spec, 'Foundation Manifest', 'Design Spec traceability') !== expectedManifest) fail('Design Spec Foundation Manifest differs from the handoff binding.');
     if (exactField(spec, 'Base Agentic Foundation', 'Design Spec traceability') !== expectedBase) fail('Design Spec Base Agentic Foundation differs from the handoff binding.');
   }
-  return { artifact, sourceSpec, foundation };
+  const publicMetadata = (snapshot) => {
+    if (!snapshot) return null;
+    const { bytes, text, ...metadata } = snapshot;
+    if (legacy) delete metadata.policy;
+    return metadata;
+  };
+  return { artifact: publicMetadata(artifact), sourceSpec: publicMetadata(sourceSpec), foundation };
 }
 
 async function loadEnvelope(envelope, envelopePath) {

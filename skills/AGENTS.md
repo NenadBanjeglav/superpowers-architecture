@@ -25,6 +25,14 @@ Shared Superpowers Architecture skills, prompts, references, and helper scripts.
 - Blueprint requirements and roadmap outcomes use stable identities. Brainstorming Design Specs trace bounded outcomes back to the Blueprint, and durable or operating-contract changes enter one prospective Foundation candidate for the combined Design Change Set review.
 - Foundation candidates under `docs/superpowers/foundation-candidates/` are ignored, non-authoritative complete-file previews. Exact application is bound to the reviewed prospective revision and the lifecycle contract's quiescent-application precondition.
 - Portable SDD workspace, task-brief, review-package, and progress behavior lives in the shared Node operation core. New task briefs and review packages consume one exact v2 binding for Approval Policy, plan, spec, and optional Foundation/receipt dependencies; shared operations validate those inputs before rendering them, while legacy positional calls remain available. Bash and Windows files under `subagent-driven-development/scripts/` are process-only launchers; progress writes use a sibling temporary file, atomic rename, and serialized replacement.
+- `bindings.mjs` owns SDD/handoff physical-file containment, unfenced field
+  extraction and snapshot-based implementation traceability. Both consumers
+  compare the spec's Foundation manifest/base even when the plan declares none;
+  lifecycle and receipt validation retain their existing owners.
+- SDD output writes protect every bound input and existing lifecycle artifacts,
+  reject file/ancestor aliases and hardlinks, and replace only checked generated
+  files through exclusive sibling temporaries. Workspace initialization preserves
+  compatible metadata and rejects unsafe state; ordinary regeneration remains.
 - The marked `STARTUP-CONTRACT` block in `using-superpowers/SKILL.md` is the only startup-policy source. The shared Node renderer extracts it into host envelopes no larger than 4,000 characters; hook launchers own process invocation and exact visible Node-degraded JSON only.
 - Workspace preparation detection is a read-only shared Node operation. Applicable project instructions win; declarations outrank same-ecosystem lockfiles; ambiguity runs nothing; baseline verification is resolved independently and never inferred from the selected package manager.
 - Node.js 20 or newer is required for correctness-critical artifact operations. Missing Node or a missing sibling operation module must fail closed with actionable installation guidance.

@@ -14,8 +14,17 @@ Use the active runtime's launcher; paths below are relative to the SDD skill.
 
 New controllers pass the exact v2 SDD binding defined by `writing-plans`:
 policy, plan/spec paths and revisions, and all four Foundation fields. The core
-validates dependencies and extracts task text from one validated plan snapshot.
+validates physical checkout containment and the complete plan/spec/Foundation
+graph, including the spec's manifest/base when the plan declares none. It extracts
+task text from the validated plan snapshot.
 Legacy positional calls are for legacy controllers only.
+
+Outputs must be regular generated files, separate from every bound input and
+existing lifecycle artifact. Linked files/directories, hardlinks and protected
+aliases fail before replacement. Workspace initialization preserves compatible
+`.gitignore` metadata; reconcile incompatible state explicitly. Ordinary generated
+files can be regenerated. Writes use exclusive sibling temporaries and a final
+safety check; cooperative writer quiescence still applies.
 
 Task, review, and progress commands return JSON with the output path/result;
 workspace prints its absolute path. Record the returned unique path, never guess

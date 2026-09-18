@@ -103,7 +103,9 @@ Prepare and receive both:
    Ready or Approved, while Review-gated accepts Approved only;
 5. validate the exact source Design Spec when implementation records one;
 6. validate the Foundation and policy-bound v2 receipt when recorded;
-7. verify plan/spec/Foundation cross-fields and Brainstorming roadmap bindings;
+7. verify plan/spec/Foundation cross-fields from validated snapshots, including
+   the spec's manifest/base when an implementation plan declares Foundation none,
+   and Brainstorming roadmap bindings;
 8. require working artifacts beneath `docs/superpowers/` to remain ignored;
 9. inspect the local plugin layout where possible and return every remaining
    host proof in `hostEvidenceRequired`.

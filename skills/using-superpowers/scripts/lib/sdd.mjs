@@ -1,7 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import {
+  lstat,
   mkdir,
+  open,
   readFile,
   realpath,
   rename,
@@ -13,6 +15,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 
 import { readValidatedArtifactSnapshot } from './artifacts.mjs';
 import { resolveApprovalPolicy } from './policy.mjs';
+import { physicalFile, maskMarkdownFences, validateImplementationBinding } from './bindings.mjs';
 
 const TASK_NUMBER = /^[1-9][0-9]*$/;
 const PROGRESS_LINE = /^Task ([1-9][0-9]*): complete \(commits ([0-9a-f]{4,64})\.\.([0-9a-f]{4,64}), review (clean)\)$/;
@@ -84,31 +87,6 @@ function trimSection(text) {
   return normalizeLf(text).replace(/\n+$/g, '');
 }
 
-function maskMarkdownFences(text) {
-  const lines = normalizeLf(text).split('\n');
-  let fence = null;
-  return lines.map((line) => {
-    if (fence) {
-      const close = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
-      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
-      return '';
-    }
-    const open = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (open) {
-      fence = { character: open[1][0], length: open[1].length };
-      return '';
-    }
-    return line;
-  }).join('\n');
-}
-
-function exactField(text, label, subject) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const matches = [...maskMarkdownFences(text).matchAll(new RegExp(`^\\*\\*${escaped}:\\*\\*[ \\t]*(.*?)[ \\t]*$`, 'gm'))];
-  if (matches.length !== 1 || matches[0][1].length === 0) fail(`${subject} must contain exactly one nonempty ${label} field outside fenced blocks.`);
-  return matches[0][1].replace(/^`|`$/g, '');
-}
-
 function assertExactKeys(value, keys, subject) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail(`${subject} must be an object.`);
   const actual = Object.keys(value);
@@ -119,22 +97,6 @@ function assertExactKeys(value, keys, subject) {
 
 function assertRevision(value, subject) {
   if (!REVISION.test(value ?? '')) fail(`${subject} must be a complete lowercase sha256 revision.`);
-}
-
-async function physicalFile(root, path, subject) {
-  if (typeof path !== 'string' || !isAbsolute(path)) fail(`${subject} must be an absolute path.`);
-  let physical;
-  try {
-    physical = await realpath(path);
-    if (!(await stat(physical)).isFile()) fail(`${subject} must be a regular file: ${path}.`);
-  } catch (error) {
-    if (error.message?.startsWith(`${subject} must`)) throw error;
-    fail(`Unable to read ${subject} ${path}: ${error.message}`);
-  }
-  if (physical !== resolve(path)) fail(`${subject} must use its physical path; received ${path}, resolved ${physical}.`);
-  const relativePath = physical.slice(root.length);
-  if (physical !== root && !relativePath.startsWith('\\') && !relativePath.startsWith('/')) fail(`${subject} must stay inside checkout ${root}.`);
-  return physical;
 }
 
 async function readBinding(bindingPath) {
@@ -151,50 +113,26 @@ async function readBinding(bindingPath) {
 
 async function validateSddBinding({ cwd, bindingPath, expectedPlanPath }) {
   if (!bindingPath) return null;
-  const root = resolve(runGit(cwd, ['rev-parse', '--show-toplevel']).trim());
-  const physicalBinding = await physicalFile(root, resolveFrom(cwd, bindingPath), 'SDD binding');
+  const root = await realpath(runGit(cwd, ['rev-parse', '--show-toplevel']).trim());
+  const physicalBinding = await physicalFile(resolveFrom(cwd, bindingPath), root, 'SDD binding');
   const binding = await readBinding(physicalBinding);
   const policy = resolveApprovalPolicy(binding.policy);
   assertRevision(binding.planRevision, 'SDD planRevision');
   assertRevision(binding.specRevision, 'SDD specRevision');
-  const planPath = await physicalFile(root, binding.planPath, 'SDD Implementation Plan');
-  const specPath = await physicalFile(root, binding.specPath, 'SDD Design Spec');
+  const planPath = await physicalFile(binding.planPath, root, 'SDD Implementation Plan');
+  const specPath = await physicalFile(binding.specPath, root, 'SDD Design Spec');
   if (expectedPlanPath && planPath !== expectedPlanPath) fail(`SDD binding planPath ${planPath} differs from requested plan ${expectedPlanPath}.`);
   const plan = await readValidatedArtifactSnapshot({ path: planPath, artifactType: 'Implementation Plan', expectedRevision: binding.planRevision, policy });
   const spec = await readValidatedArtifactSnapshot({ path: specPath, artifactType: 'Design Spec', expectedRevision: binding.specRevision, policy });
   const planText = plan.text;
-  if (exactField(planText, 'Spec', 'bound Implementation Plan') !== specPath) fail('Bound Implementation Plan Spec path differs from the SDD binding.');
-  if (exactField(planText, 'Spec Revision', 'bound Implementation Plan') !== binding.specRevision) fail('Bound Implementation Plan Spec Revision differs from the SDD binding.');
-
-  const foundationValues = [
-    binding.foundationManifestPath,
-    binding.foundationBaseRevision,
-    binding.foundationResultRevision,
-    binding.foundationApplicationReceipt,
-  ];
-  const foundationNone = foundationValues.every((value) => value === 'none');
-  const foundationAll = foundationValues.every((value) => value !== 'none');
-  if (!foundationNone && !foundationAll) fail('SDD Foundation binding must provide all four exact values or literal none for all four.');
-  const expected = foundationNone ? {
-    'Foundation Manifest': 'none',
-    'Foundation Base Revision': 'none',
-    'Foundation Result Revision': 'none',
-    'Foundation Application Receipt': 'none',
-  } : {
-    'Foundation Manifest': binding.foundationManifestPath,
-    'Foundation Base Revision': binding.foundationBaseRevision,
-    'Foundation Result Revision': binding.foundationResultRevision,
-    'Foundation Application Receipt': binding.foundationApplicationReceipt,
-  };
-  for (const [label, value] of Object.entries(expected)) {
-    if (exactField(planText, label, 'bound Implementation Plan') !== value) fail(`Bound Implementation Plan ${label} differs from the SDD binding.`);
-  }
+  validateImplementationBinding(plan, spec, binding);
+  const foundationAll = binding.foundationManifestPath !== 'none';
   let foundation = null;
   if (foundationAll) {
     assertRevision(binding.foundationBaseRevision, 'SDD foundationBaseRevision');
     assertRevision(binding.foundationResultRevision, 'SDD foundationResultRevision');
-    const manifestPath = await physicalFile(root, binding.foundationManifestPath, 'SDD Foundation manifest');
-    const receiptPath = await physicalFile(root, binding.foundationApplicationReceipt, 'SDD Foundation Application Receipt');
+    const manifestPath = await physicalFile(binding.foundationManifestPath, root, 'SDD Foundation manifest');
+    const receiptPath = await physicalFile(binding.foundationApplicationReceipt, root, 'SDD Foundation Application Receipt');
     const { validateApprovedFoundation } = await import('./foundations.mjs');
     foundation = await validateApprovedFoundation({
       root,
@@ -207,7 +145,7 @@ async function validateSddBinding({ cwd, bindingPath, expectedPlanPath }) {
       policy,
     });
   }
-  return { path: physicalBinding, binding, policy, plan, planText, spec, foundation };
+  return { path: physicalBinding, root, binding, policy, plan, planText, spec, foundation };
 }
 
 function renderBindingContext(validated) {
@@ -312,11 +250,79 @@ async function acquireProgressLock(lockPath) {
   }
 }
 
+async function pathState(path) {
+  try { return await lstat(path); } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+async function assertOutputSafe(path, protectedPaths = []) {
+  // Inspect every ancestor, including an existing symlink/junction above a new file.
+  for (let directory = dirname(path); ; directory = dirname(directory)) {
+    const state = await pathState(directory);
+    if (state && (state.isSymbolicLink() || !state.isDirectory())) fail(`Output ancestor must be a physical directory: ${directory}.`);
+    if (dirname(directory) === directory) break;
+  }
+  const state = await pathState(path);
+  if (!state) return null;
+  if (state.isSymbolicLink() || !state.isFile() || state.nlink > 1) fail(`Output must be an unlinked regular file: ${path}.`);
+  const physical = await realpath(path);
+  for (const { path: input, subject } of protectedPaths) {
+    const inputState = await stat(input);
+    if (physical === await realpath(input) || (state.dev === inputState.dev && state.ino === inputState.ino)) {
+      fail(`Output must not overwrite ${subject}: ${input}.`);
+    }
+  }
+  const text = maskMarkdownFences(await readFile(path, 'utf8'));
+  if (/^\s*\*\*(?:Artifact Type|Status|Revision|Approved Revision|Approved At):/m.test(text)) {
+    fail(`Output must not overwrite a managed or malformed lifecycle artifact: ${path}.`);
+  }
+  return state;
+}
+
+function protectedInputs(validated, extra = []) {
+  if (!validated) return extra.map((path) => ({ path, subject: 'protected input' }));
+  const { root, path, plan, spec, foundation } = validated;
+  return [...new Set([...extra, path, plan.path, spec.path, ...(foundation ? [
+    foundation.manifestPath, foundation.applicationReceiptPath,
+    ...foundation.files.map((file) => resolve(root, file)),
+  ] : [])])].map((input) => ({ path: input, subject: input === path ? 'the SDD binding' : 'protected input' }));
+}
+
+async function writeGeneratedOutput(path, output, protectedPaths = []) {
+  await assertOutputSafe(path, protectedPaths);
+  await mkdir(dirname(path), { recursive: true });
+  const temporaryPath = `${path}.tmp-${process.pid}-${randomUUID()}`;
+  let created = false;
+  try {
+    const file = await open(temporaryPath, 'wx');
+    created = true;
+    try { await file.writeFile(output, 'utf8'); } finally { await file.close(); }
+    await assertOutputSafe(path, protectedPaths);
+    await rename(temporaryPath, path);
+  } finally {
+    if (created) await rm(temporaryPath, { force: true });
+  }
+}
+
 export async function resolveSddWorkspace({ cwd = process.cwd() } = {}) {
-  const root = runGit(cwd, ['rev-parse', '--show-toplevel']).trim();
+  const root = await realpath(runGit(cwd, ['rev-parse', '--show-toplevel']).trim());
   const workspace = resolve(root, '.superpowers', 'sdd');
+  const metadata = join(workspace, '.gitignore');
+  const existing = await assertOutputSafe(metadata);
+  if (existing) {
+    if (normalizeLf(await readFile(metadata, 'utf8')) !== '*\n') fail(`Incompatible SDD workspace metadata at ${metadata}; preserve and reconcile it before retrying.`);
+    return workspace;
+  }
   await mkdir(workspace, { recursive: true });
-  await writeFile(join(workspace, '.gitignore'), '*\n', 'utf8');
+  await assertOutputSafe(metadata);
+  try { await writeFile(metadata, '*\n', { encoding: 'utf8', flag: 'wx' }); } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    // Another cooperative caller may have initialized the same workspace.
+    await assertOutputSafe(metadata);
+    if (normalizeLf(await readFile(metadata, 'utf8')) !== '*\n') fail(`Incompatible SDD workspace metadata at ${metadata}.`);
+  }
   return workspace;
 }
 
@@ -350,12 +356,9 @@ export async function extractTaskBrief({
   const outputPath = outFile
     ? resolveFrom(cwd, outFile)
     : join(await resolveSddWorkspace({ cwd }), `task-${task}-brief.md`);
-  if (outputPath === planPath) fail('Task brief output must not overwrite the implementation plan.');
-  if (validatedBinding && outputPath === validatedBinding.path) fail('Task brief output must not overwrite the SDD binding.');
-  await mkdir(dirname(outputPath), { recursive: true });
   const taskText = lines.join('\n').endsWith('\n') ? lines.join('\n') : `${lines.join('\n')}\n`;
   const output = `${renderBindingContext(validatedBinding)}${taskText}`;
-  await writeFile(outputPath, output, 'utf8');
+  await writeGeneratedOutput(outputPath, output, protectedInputs(validatedBinding, [planPath]));
   return { path: outputPath, lineCount: lines.length, bound: Boolean(validatedBinding), policy: validatedBinding?.policy ?? null };
 }
 
@@ -367,6 +370,7 @@ export async function createReviewPackage({
   bindingPath,
 }) {
   const validatedBinding = await validateSddBinding({ cwd, bindingPath });
+  if (outFile) await assertOutputSafe(resolveFrom(cwd, outFile), protectedInputs(validatedBinding));
   const base = resolveCommit(cwd, baseRevision, 'Base revision');
   const head = resolveCommit(cwd, headRevision, 'Head revision');
   const range = `${base}..${head}`;
@@ -379,7 +383,6 @@ export async function createReviewPackage({
   const outputPath = outFile
     ? resolveFrom(cwd, outFile)
     : join(await resolveSddWorkspace({ cwd }), `review-${baseShort}..${headShort}.diff`);
-  if (validatedBinding && outputPath === validatedBinding.path) fail('Review-package output must not overwrite the SDD binding.');
   const output = [
     `# Review package: ${base}..${head}`,
     '',
@@ -395,8 +398,7 @@ export async function createReviewPackage({
     '',
   ].join('\n');
 
-  await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, output, 'utf8');
+  await writeGeneratedOutput(outputPath, output, protectedInputs(validatedBinding));
   return { path: outputPath, commitCount, byteCount: Buffer.byteLength(output, 'utf8'), bound: Boolean(validatedBinding), policy: validatedBinding?.policy ?? null };
 }
 
@@ -433,8 +435,6 @@ export async function markProgressComplete({
   const workspace = await resolveSddWorkspace({ cwd });
   const path = join(workspace, 'progress.md');
   const lockPath = `${path}.lock`;
-  let temporaryPath;
-
   await acquireProgressLock(lockPath);
   try {
     const current = await readProgress({ cwd });
@@ -443,13 +443,9 @@ export async function markProgressComplete({
     }
     const entries = current.entries.filter(({ task: existingTask }) => existingTask !== taskNumber);
     entries.push(entry);
-    temporaryPath = `${path}.tmp-${process.pid}-${randomUUID()}`;
-    await writeFile(temporaryPath, formatProgress(entries), { encoding: 'utf8', flag: 'wx' });
-    await rename(temporaryPath, path);
-    temporaryPath = undefined;
+    await writeGeneratedOutput(path, formatProgress(entries));
     return { path, entry, entries: entries.sort((left, right) => left.task - right.task) };
   } finally {
-    if (temporaryPath) await rm(temporaryPath, { force: true });
     await rm(lockPath, { recursive: true, force: true });
   }
 }
